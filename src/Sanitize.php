@@ -32,12 +32,7 @@ final class Sanitize
      */
     public static function richText(mixed $value, int $maxLength = 600): string
     {
-        $value = is_string($value) ? $value : '';
-        if (function_exists('mb_substr')) {
-            $value = mb_substr(trim($value), 0, $maxLength);
-        } else {
-            $value = substr(trim($value), 0, $maxLength);
-        }
+        $value = is_string($value) ? trim($value) : '';
 
         // Normalise <div>/<p> line breaks some contenteditable browsers insert.
         $value = preg_replace('#</(div|p)>#i', '<br>', $value) ?? $value;
@@ -49,7 +44,58 @@ final class Sanitize
         // Remove any attributes that survived on the allowed tags (e.g. onclick=).
         $clean = preg_replace('/<(b|strong|i|em|br)\b[^>]*>/i', '<$1>', $stripped) ?? $stripped;
 
-        return $clean;
+        // Truncate by *visible* character count, not raw markup length, and
+        // never cut in the middle of a tag - doing the length check before
+        // stripping tags (as this used to) could sever a tag like "<b>" mid
+        // way through, leaving invalid HTML that renderers can choke on or
+        // silently drop.
+        return self::truncateHtmlSafe($clean, $maxLength);
+    }
+
+    private static function truncateHtmlSafe(string $html, int $maxLength): string
+    {
+        $visibleCount = 0;
+        $result = '';
+        $openTags = [];
+        $len = function_exists('mb_strlen') ? mb_strlen($html) : strlen($html);
+        $charAt = function (int $i) use ($html) {
+            return function_exists('mb_substr') ? mb_substr($html, $i, 1) : substr($html, $i, 1);
+        };
+
+        for ($i = 0; $i < $len; $i++) {
+            $ch = $charAt($i);
+
+            if ($ch === '<') {
+                $tagEnd = function_exists('mb_strpos') ? mb_strpos($html, '>', $i) : strpos($html, '>', $i);
+                if ($tagEnd === false) {
+                    break; // malformed trailing fragment - stop here
+                }
+                $tag = function_exists('mb_substr') ? mb_substr($html, $i, $tagEnd - $i + 1) : substr($html, $i, $tagEnd - $i + 1);
+                $result .= $tag;
+                if (preg_match('#^</(\w+)>$#', $tag, $m)) {
+                    $idx = array_search(strtolower($m[1]), array_reverse($openTags, true), true);
+                    if ($idx !== false) {
+                        unset($openTags[$idx]);
+                    }
+                } elseif (preg_match('#^<(\w+)>$#', $tag, $m) && strtolower($m[1]) !== 'br') {
+                    $openTags[] = strtolower($m[1]);
+                }
+                $i = $tagEnd;
+                continue;
+            }
+
+            if ($visibleCount >= $maxLength) {
+                break;
+            }
+            $result .= $ch;
+            $visibleCount++;
+        }
+
+        foreach (array_reverse($openTags) as $tag) {
+            $result .= "</{$tag}>";
+        }
+
+        return $result;
     }
 
     /** True/false from an HTML checkbox's presence in POST data. */

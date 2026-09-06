@@ -133,10 +133,10 @@ $initialFonts = $fontManager->listFonts();
             <input type="text" class="text-input" name="student-name" id="student-name" placeholder="Enter student name">
 
             <label class="row-check"><input type="checkbox" name="show-student-id" id="show-student-id" checked><span>ID</span></label>
-            <input type="text" class="text-input" name="student-id" id="student-id" placeholder="Enter student ID"">
+            <input type="text" class="text-input" name="student-id" id="student-id" placeholder="Enter student ID">
 
             <label class="row-check"><input type="checkbox" name="show-student-section" id="show-student-section" checked><span>Section</span></label>
-            <input type="text" class="text-input" name="student-section" id="student-section" placeholder="Enter section"">
+            <input type="text" class="text-input" name="student-section" id="student-section" placeholder="Enter section">
 
             <label class="row-check"><input type="checkbox" name="show-student-batch" id="show-student-batch" checked><span>Batch</span></label>
             <input type="text" class="text-input" name="student-batch" id="student-batch" placeholder="Enter batch">

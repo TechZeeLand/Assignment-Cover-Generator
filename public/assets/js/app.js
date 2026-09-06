@@ -223,7 +223,7 @@
     function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
     function checked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
 
-    function buildRow(labelText, valueHtml, primaryColor, secondaryColor, secondaryFamily) {
+    function buildRow(labelText, valueHtml, primaryColor, secondaryColor) {
         return `<p class="pv-row">
             <span class="pv-label" style="color:${primaryColor}">${esc(labelText)}</span>
             <span class="pv-colon">:</span>
@@ -242,17 +242,17 @@
         const suffix = val('header-suffix').trim() || '---';
 
         let studentRows = '';
-        if (checked('show-student-name')) studentRows += buildRow('Name', esc(val('student-name')));
-        if (checked('show-student-id')) studentRows += buildRow('ID', esc(val('student-id')));
-        if (checked('show-student-section')) studentRows += buildRow('Section', esc(val('student-section')));
-        if (checked('show-student-batch')) studentRows += buildRow('Batch', esc(val('student-batch')));
-        if (checked('show-student-program')) studentRows += buildRow('Program', esc(val('student-program')));
-        if (checked('show-semester')) studentRows += buildRow(val('semester-type'), esc(val('semester')));
+        if (checked('show-student-name')) studentRows += buildRow('Name', esc(val('student-name')), primaryColor, secondaryColor);
+        if (checked('show-student-id')) studentRows += buildRow('ID', esc(val('student-id')), primaryColor, secondaryColor);
+        if (checked('show-student-section')) studentRows += buildRow('Section', esc(val('student-section')), primaryColor, secondaryColor);
+        if (checked('show-student-batch')) studentRows += buildRow('Batch', esc(val('student-batch')), primaryColor, secondaryColor);
+        if (checked('show-student-program')) studentRows += buildRow('Program', esc(val('student-program')), primaryColor, secondaryColor);
+        if (checked('show-semester')) studentRows += buildRow(val('semester-type'), esc(val('semester')), primaryColor, secondaryColor);
 
         let courseRows = '';
-        if (checked('show-course-code')) courseRows += buildRow('Code', esc(val('course-code')));
-        if (checked('show-course-title')) courseRows += buildRow('Title', document.getElementById('course-title').innerHTML);
-        if (checked('show-course-teacher-name')) courseRows += buildRow('Teacher', esc(val('course-teacher-name')));
+        if (checked('show-course-code')) courseRows += buildRow('Code', esc(val('course-code')), primaryColor, secondaryColor);
+        if (checked('show-course-title')) courseRows += buildRow('Title', document.getElementById('course-title').innerHTML, primaryColor, secondaryColor);
+        if (checked('show-course-teacher-name')) courseRows += buildRow('Teacher', esc(val('course-teacher-name')), primaryColor, secondaryColor);
 
         const designationHtml = (checked('show-course-teacher-designation') && val('course-teacher-designation').trim() !== '')
             ? `<p class="pv-designation">${esc(val('course-teacher-designation'))}</p>` : '';

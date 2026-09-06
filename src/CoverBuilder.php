@@ -23,6 +23,19 @@ final class CoverBuilder
         $borderPadding = $d->showBorder ? 20 : 0;
         $borderRule    = $d->showBorder ? "border: 20pt solid {$col($d->accentColor)};" : '';
 
+        // mPDF's HTML/CSS engine shrink-wraps block heights to content and
+        // doesn't reliably support calc()/box-sizing, so the full-page
+        // border height has to be computed by hand here instead (the live
+        // preview gets this "for free" from calc(100% - ...) in style.css,
+        // which is why the two used to look different).
+        //   A4 = 595.28 x 841.89pt at mPDF's default 0 margins.
+        //   .page has a 15pt padding + 1pt border on every side.
+        //   .border-box then has its own border+padding ($borderPadding,
+        //   used for both) on every side.
+        $pageHeightPt      = 841.89;
+        $pageInnerHeightPt = $pageHeightPt - 2 * (15 + 1); // .page's content-box height
+        $borderBoxHeightPt = $pageInnerHeightPt - 4 * $borderPadding; // minus border-box's own border+padding, top+bottom
+
         $rows = [];
 
         if ($d->showStudentName) {
@@ -120,10 +133,12 @@ final class CoverBuilder
     .page {
         padding: 15pt;
         border: 1pt solid #000000;
+        height: {$pageInnerHeightPt}pt;
     }
     .border-box {
         {$borderRule}
         padding: {$borderPadding}pt;
+        height: {$borderBoxHeightPt}pt;
     }
     header { text-align: center; }
     header p, header h1 { margin: 0; }
