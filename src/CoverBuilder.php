@@ -21,7 +21,7 @@ final class CoverBuilder
         $col  = fn (string $hex) => htmlspecialchars($hex, ENT_QUOTES);
 
         $borderPadding = $d->showBorder ? 20 : 0;
-        $borderRule    = $d->showBorder ? "border: 20pt solid {$col($d->accentColor)};" : '';
+        $borderRule    = $d->showBorder ? "border: 15pt solid {$col($d->accentColor)};" : '';
 
         // mPDF's HTML/CSS engine shrink-wraps block heights to content and
         // doesn't reliably support calc()/box-sizing, so the full-page
@@ -132,7 +132,6 @@ final class CoverBuilder
     }
     .page {
         padding: 15pt;
-        border: 1pt solid #000000;
         height: {$pageInnerHeightPt}pt;
     }
     .border-box {
@@ -144,12 +143,12 @@ final class CoverBuilder
     header p, header h1 { margin: 0; }
     .bismillah {
         font-family: amiri;
-        font-size: 30pt;
+        font-size: 16pt;
         color: {$col($d->secondaryColor)};
         margin-bottom: 4pt !important;
     }
     .versity-name {
-        font-size: 34pt;
+        font-size: 30pt;
         font-weight: bold;
         font-family: {$font($d->versityFont)};
         color: {$col($d->accentColor)};
@@ -158,6 +157,7 @@ final class CoverBuilder
         font-size: 22pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
+        margin-bottom: 10pt !important;
     }
     .section-h {
         font-size: 26pt;
@@ -184,7 +184,7 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .topic-grid { margin-left: 25pt; margin-top: 10pt; }
+    .topic-grid { margin-left: 25pt; margin-top: 20pt; }
     .topic-label {
         width: 80pt;
         font-weight: bold;
