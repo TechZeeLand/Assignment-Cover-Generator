@@ -175,7 +175,7 @@ final class CoverBuilder
         vertical-align: top;
     }
     table.grid td.label { width: 80pt; color: {$col($d->primaryColor)}; }
-    table.grid td.colon { width: 15pt; text-align: center; }
+    table.grid td.colon { width: 15pt; text-align: center; margin-left: 15px; }
     table.grid td.value { color: {$col($d->secondaryColor)}; }
     .designation {
         margin: 2pt 0 0 0;
