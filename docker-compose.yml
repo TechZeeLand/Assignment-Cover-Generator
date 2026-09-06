@@ -1,0 +1,22 @@
+services:
+  assignment-cover-generator:
+    # For Portainer's "Web editor" with a Git-linked stack, `build:` works
+    # directly. If you'd rather not build on the server at all, comment out
+    # the `build:` block and use the pre-built image from GitHub Container
+    # Registry instead:
+    #   image: ghcr.io/techzeeland/assignment-cover-generator:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: assignment-cover-generator
+    restart: unless-stopped
+    ports:
+      - "8080:80"
+    volumes:
+      # Persists custom uploaded fonts across container recreations/updates.
+      - acg_fonts:/var/www/html/storage/fonts
+    environment:
+      - TZ=UTC
+
+volumes:
+  acg_fonts:

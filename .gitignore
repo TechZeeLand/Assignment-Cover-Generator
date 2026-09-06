@@ -1,0 +1,18 @@
+# Dependencies (installed by Docker at build time / composer install)
+/vendor/
+
+# Persisted, user-uploaded data — should not be committed
+/storage/fonts/*
+!/storage/fonts/.gitkeep
+!/storage/fonts/README.md
+
+# OS / editor cruft
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+
+# Local env overrides
+.env
+.env.*
+!.env.example

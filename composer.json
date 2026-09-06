@@ -1,0 +1,19 @@
+{
+    "name": "assignment-cover-generator/app",
+    "description": "A free, open-source, self-hostable Assignment Cover Page generator (PDF) built with PHP and mPDF.",
+    "type": "project",
+    "license": "AGPL-3.0-or-later",
+    "require": {
+        "php": ">=8.1",
+        "mpdf/mpdf": "^8.2"
+    },
+    "config": {
+        "optimize-autoloader": true,
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    }
+}
