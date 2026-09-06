@@ -21,23 +21,26 @@ RUN composer install \
 # ---------- Stage 2: runtime image (nginx + php-fpm, one container) ----------
 FROM php:8.2-fpm
 
-# nginx + supervisor to run both processes in one container,
-# plus the build/runtime libs mPDF needs (GD, mbstring, zip), plus curl
-# for the container HEALTHCHECK.
+# nginx + supervisor to run both processes in one container, plus curl
+# for fetching the extension installer and for the HEALTHCHECK.
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
         curl \
-        libfreetype6-dev \
-        libjpeg62-turbo-dev \
-        libpng-dev \
-        libzip-dev \
-        unzip \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install -j"$(nproc)" gd mbstring zip \
+        ca-certificates \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
+
+# Install the PHP extensions mPDF needs (gd, mbstring, zip) using
+# mlocati/docker-php-extension-installer instead of manual apt-get +
+# docker-php-ext-configure: it auto-detects the correct system packages
+# for whatever Debian base this PHP image ships (which changes between
+# PHP image releases and was the cause of earlier build failures here).
+RUN curl -sSLf -o /usr/local/bin/install-php-extensions \
+        https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions \
+    && chmod +x /usr/local/bin/install-php-extensions \
+    && install-php-extensions gd mbstring zip
 
 # Keep uploads reasonably sized (font files are small, but be generous).
 RUN { \
