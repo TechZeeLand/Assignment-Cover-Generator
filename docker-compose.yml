@@ -11,7 +11,7 @@ services:
     container_name: assignment-cover-generator
     restart: unless-stopped
     ports:
-      - "8080:80"
+      - "1025:80"
     volumes:
       # Persists custom uploaded fonts across container recreations/updates.
       - acg_fonts:/var/www/html/storage/fonts

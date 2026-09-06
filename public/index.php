@@ -59,7 +59,7 @@ $initialFonts = $fontManager->listFonts();
             <div class="field-row">
                 <div class="field">
                     <label for="primary-color">Primary color</label>
-                    <input type="color" name="primary-color" id="primary-color" value="#0b3d91">
+                    <input type="color" name="primary-color" id="primary-color" value="#3ce9be">
                 </div>
                 <div class="field">
                     <label for="secondary-color">Secondary color</label>
@@ -73,7 +73,7 @@ $initialFonts = $fontManager->listFonts();
             </label>
             <div class="field">
                 <label for="title-border-color">Title / border color</label>
-                <input type="color" name="title-border-color" id="title-border-color" value="#0b3d91" disabled>
+                <input type="color" name="title-border-color" id="title-border-color" value="#3ce9be" disabled>
                 <small class="hint">Leave off to reuse the primary color above.</small>
             </div>
 

@@ -5,13 +5,18 @@ FROM composer:2 AS vendor
 
 WORKDIR /app
 COPY composer.json ./
+# --ignore-platform-reqs: this stage uses the slim `composer:2` image just to
+# resolve/download packages; it doesn't have ext-gd (which mpdf/mpdf
+# requires) installed. The actual runtime image below does install
+# ext-gd/mbstring/zip, so it's safe to skip that check here.
 RUN composer install \
     --no-dev \
     --no-interaction \
     --no-progress \
     --prefer-dist \
     --optimize-autoloader \
-    --no-scripts
+    --no-scripts \
+    --ignore-platform-reqs
 
 # ---------- Stage 2: runtime image (nginx + php-fpm, one container) ----------
 FROM php:8.2-fpm

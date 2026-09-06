@@ -48,7 +48,7 @@ get a PDF that matches the preview exactly.
 ## 🚀 Full setup guide: GitHub → Debian server → Portainer
 
 This walks through everything from an empty GitHub account to a running app
-at `http://<your-server-ip>:8080`. It assumes:
+at `http://<your-server-ip>:1025`. It assumes:
 
 - GitHub username: **TechZeeLand**
 - Repository name: **Assignment-Cover-Generator**
@@ -147,7 +147,7 @@ instead of building it.
        container_name: assignment-cover-generator
        restart: unless-stopped
        ports:
-         - "8080:80"
+         - "1025:80"
        volumes:
          - acg_fonts:/var/www/html/storage/fonts
        environment:
@@ -159,7 +159,7 @@ instead of building it.
 
 3. Deploy the stack.
 
-Either way, once it's running, visit **`http://<your-server-ip>:8080`** —
+Either way, once it's running, visit **`http://<your-server-ip>:1025`** —
 you should see the form and live preview.
 
 ### Part 4 — Updating later
@@ -183,7 +183,7 @@ cd Assignment-Cover-Generator
 docker compose up -d --build
 ```
 
-Then visit `http://<your-server-ip>:8080`.
+Then visit `http://<your-server-ip>:1025`.
 
 ## 🖥️ Local development (without Docker)
 
@@ -191,10 +191,10 @@ Requirements: PHP 8.1+, Composer, and the `mbstring`, `gd`, and `zip` PHP extens
 
 ```bash
 composer install
-php -S localhost:8080 -t public
+php -S localhost:1025 -t public
 ```
 
-Then open `http://localhost:8080`.
+Then open `http://localhost:1025`.
 
 ## 📁 Project structure
 
