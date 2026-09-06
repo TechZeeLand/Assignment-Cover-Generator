@@ -59,8 +59,11 @@ COPY composer.json ./
 COPY public ./public
 COPY src ./src
 
-# Persisted, world-writable-by-www-data font storage (mounted as a volume).
-RUN mkdir -p storage/fonts \
+# Persisted, world-writable-by-www-data font storage (mounted as a volume),
+# plus a scratch dir for mPDF's own temp/cache files (see Config::tempPath()) -
+# mPDF's built-in default tmp dir lives under vendor/, which is owned by
+# root here and isn't writable by the www-data user PHP-FPM runs as.
+RUN mkdir -p storage/fonts storage/tmp \
     && chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/public
 

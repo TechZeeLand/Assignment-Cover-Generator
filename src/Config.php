@@ -16,6 +16,22 @@ final class Config
         return $path;
     }
 
+    /**
+     * Absolute path to a writable scratch folder for mPDF's temp/cache files.
+     * mPDF's own default temp dir lives inside vendor/mpdf/mpdf/tmp, which
+     * usually isn't writable by the web server user (it's owned by whoever
+     * ran `composer install` / built the image), so we give it a folder
+     * inside our own storage/ tree instead, alongside storage/fonts.
+     */
+    public static function tempPath(): string
+    {
+        $path = getenv('MPDF_TEMP_PATH') ?: (dirname(__DIR__) . '/storage/tmp');
+        if (!is_dir($path)) {
+            @mkdir($path, 0775, true);
+        }
+        return $path;
+    }
+
     /** Absolute path to bundled static assets (e.g. the Amiri font). */
     public static function assetsFontsPath(): string
     {

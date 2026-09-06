@@ -21,6 +21,7 @@ final class PdfService
             'fontDir'       => $fontConfig['fontDir'],
             'fontdata'      => $fontConfig['fontdata'],
             'default_font'  => 'sans',
+            'tempDir'       => Config::tempPath(),
         ]);
 
         $mpdf->SetTitle('Assignment Cover' . ($data->versityName !== '' ? ' - ' . $data->versityName : ''));
