@@ -147,18 +147,32 @@
     syncAccentColorState();
 
     // ---------------------------------------------------------------
-    // Show/hide toggle -> fades the paired text field for clarity
+    // Show/hide toggle -> fades the paired field for clarity
     // ---------------------------------------------------------------
-    document.querySelectorAll('.row-check input[type="checkbox"]').forEach((cb) => {
-        if (cb.id === 'border' || cb.id === 'use-title-border-color' || cb.id === 'bismillah') return;
-        const pairedInputId = cb.id.replace(/^show-/, '');
-        const paired = document.getElementById(pairedInputId) || (document.querySelector(`.richtext[data-target="${pairedInputId}-html"]`));
-        function sync() {
-            if (!paired) return;
-            paired.closest ? null : null;
-            const target = paired.classList && paired.classList.contains('richtext') ? paired : paired;
-            target.classList.toggle('field-disabled', !cb.checked);
-        }
+    const SHOW_CHECKBOX_TARGETS = {
+        'show-versity-name': 'versity',
+        'show-dept-name': 'dept-name',
+        'show-student-name': 'student-name',
+        'show-student-id': 'student-id',
+        'show-student-section': 'student-section',
+        'show-student-batch': 'student-batch',
+        'show-student-program': 'student-program',
+        'show-semester': 'semester',
+        'show-course-code': 'course-code',
+        'show-course-title': 'course-title-html', // resolved to the .richtext wrapper below
+        'show-course-teacher-name': 'course-teacher-name',
+        'show-course-teacher-designation': 'course-teacher-designation',
+        'show-topic': 'topic-html', // resolved to the .richtext wrapper below
+        'show-submission-date': 'submission-date',
+    };
+    Object.keys(SHOW_CHECKBOX_TARGETS).forEach((cbId) => {
+        const cb = document.getElementById(cbId);
+        if (!cb) return;
+        const targetId = SHOW_CHECKBOX_TARGETS[cbId];
+        const richtextWrap = document.querySelector(`.richtext[data-target="${targetId}"]`);
+        const target = richtextWrap || document.getElementById(targetId);
+        if (!target) return;
+        function sync() { target.classList.toggle('field-disabled', !cb.checked); }
         cb.addEventListener('change', () => { sync(); renderPreview(); });
         sync();
     });
