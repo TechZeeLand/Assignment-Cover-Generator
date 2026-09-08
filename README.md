@@ -5,7 +5,7 @@ print-ready **assignment cover page PDF** — university name, department,
 student & course details, topic, submission date — with full control over
 fonts, colors, and layout.
 
-Fill in a form and click **Generate** to get a print-ready PDF.
+Fill in a form, click **Generate**, get a print-ready PDF.
 
 ![Example cover](docs/screenshot-cover.png)
 
@@ -14,6 +14,10 @@ Fill in a form and click **Generate** to get a print-ready PDF.
 - **Toggle any field on/off** — show or hide the University name, Bismillah,
   each student/course detail row, the topic, the submission date, and the
   decorative border independently.
+- **Adjustable font sizes** — the Bismillah, University name, Department
+  name, Topic, and Submission date each have their own font-size field, and
+  the whole Student Details group (or Course Details group) can be resized
+  together with a single field, all pre-filled with sensible defaults.
 - **Custom fonts** — pick from the built-in fonts, or upload your own
   `.ttf`/`.otf` files right from the app. Uploaded fonts are saved on the
   server and become available to everyone using the app.
@@ -37,10 +41,10 @@ Fill in a form and click **Generate** to get a print-ready PDF.
 
 > **Design note:** the reference design uses CSS Grid for its label/value
 > rows. mPDF's HTML/CSS engine doesn't support Grid, so the PDF is built from
-> an equivalent HTML `<table>` layout with the same fonts, sizes, and colors
-> — producing the same visual result. Student Details and Course Details
-> share a single `<table>` so mPDF sizes the label column once, keeping every
-> colon in both sections aligned under the widest label.
+> an equivalent HTML `<table>` layout with the same column widths, fonts,
+> sizes, and colors — producing the same visual result. The decorative page
+> border is drawn as a separate, absolutely-positioned element so it never
+> constrains how the content itself flows or paginates.
 
 ## 🚀 Full setup guide: GitHub → Debian server → Portainer
 
@@ -204,10 +208,10 @@ Then open `http://localhost:1025`.
 │   ├── generate.php          # Handles POST -> builds & streams the PDF
 │   ├── fonts.php              # Returns the current font list as JSON
 │   ├── upload_font.php        # Handles custom font uploads
-│   ├── font_file.php           # Streams a stored font file (so the font picker can preview it)
+│   ├── font_file.php           # Streams a stored font file (for the font-select dropdown preview)
 │   └── assets/
 │       ├── css/style.css        # All styling (responsive)
-│       ├── js/app.js             # Rich text, font upload, form logic
+│       ├── js/app.js             # Rich text, font upload, and field-toggle logic
 │       └── fonts/Amiri-Regular.ttf  # Bundled font for the Bismillah glyph
 ├── src/                      # PHP application code (PSR-4: App\)
 │   ├── Config.php              # Central constants (paths, built-in fonts, limits)
@@ -240,6 +244,9 @@ Then open `http://localhost:1025`.
 
 - **Change the default colors/fonts:** edit the `value=""` attributes in the
   Design section of `public/index.php`.
+- **Change a default font size:** edit both the matching `value=""` in
+  `public/index.php` and the matching `DEFAULT_*_FONT_SIZE` constant in
+  `src/CoverData.php` (they should stay in sync).
 - **Add a built-in font:** add an entry to `Config::builtInFonts()` — but
   note built-ins are expected to map to mPDF's core font aliases (`sans`,
   `serif`, `mono`); for anything else, use the in-app font uploader instead.

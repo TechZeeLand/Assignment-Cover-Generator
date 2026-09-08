@@ -20,12 +20,11 @@
 
     function cssFamilyFor(font) {
         if (!font.custom) return builtInCssFamily(font.key);
-        return `"fontpick-${font.key}", Arial, sans-serif`;
+        return `"pv-${font.key}", Arial, sans-serif`;
     }
 
-    // Loads each custom font via @font-face so the <select> options below
-    // can render each font's name in its own typeface, making it easier to
-    // pick a font without guessing what it looks like.
+    // Renders each custom font's own name in that font inside the <select>
+    // dropdowns, so users can preview the look before picking it.
     function refreshCustomFontFaces() {
         let styleEl = document.getElementById('custom-font-faces');
         if (!styleEl) {
@@ -35,7 +34,7 @@
         }
         const rules = fontsCache
             .filter((f) => f.custom)
-            .map((f) => `@font-face { font-family: "fontpick-${f.key}"; src: url("font_file.php?key=${encodeURIComponent(f.key)}&variant=regular") format("truetype"); }`)
+            .map((f) => `@font-face { font-family: "pv-${f.key}"; src: url("font_file.php?key=${encodeURIComponent(f.key)}&variant=regular") format("truetype"); }`)
             .join('\n');
         styleEl.textContent = rules;
     }

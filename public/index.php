@@ -92,18 +92,30 @@ require __DIR__ . '/partials/head.php';
                 <input type="checkbox" name="bismillah" id="bismillah" checked>
                 <span>Show Bismillah (﷽)</span>
             </label>
+            <div class="field field-narrow">
+                <label for="bismillah-font-size">Bismillah font size <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="bismillah-font-size" id="bismillah-font-size" value="16" min="8" max="60" step="1">
+            </div>
 
             <label class="row-check">
                 <input type="checkbox" name="show-versity-name" id="show-versity-name" checked>
                 <span>University name</span>
             </label>
             <input type="text" class="text-input" name="versity" id="versity" placeholder="Enter university name">
+            <div class="field field-narrow">
+                <label for="versity-font-size">University name font size <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="versity-font-size" id="versity-font-size" value="30" min="8" max="60" step="1">
+            </div>
 
             <label class="row-check">
                 <input type="checkbox" name="show-dept-name" id="show-dept-name" checked>
                 <span>Department name</span>
             </label>
             <input type="text" class="text-input" name="dept-name" id="dept-name" placeholder="Enter department">
+            <div class="field field-narrow">
+                <label for="dept-font-size">Department name font size <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="dept-font-size" id="dept-font-size" value="22" min="8" max="60" step="1">
+            </div>
 
             <div class="field">
                 <label for="header-suffix">Header suffix <small>(after "Student/Course Details")</small></label>
@@ -114,6 +126,11 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ STUDENT ============ -->
         <section class="card">
             <h2><i class="fa-solid fa-user-graduate"></i> Student Details</h2>
+
+            <div class="field field-narrow">
+                <label for="student-font-size">Font size for this section <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="student-font-size" id="student-font-size" value="24" min="8" max="60" step="1">
+            </div>
 
             <label class="row-check"><input type="checkbox" name="show-student-name" id="show-student-name" checked><span>Name</span></label>
             <input type="text" class="text-input" name="student-name" id="student-name" placeholder="Enter student name">
@@ -144,6 +161,11 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ COURSE ============ -->
         <section class="card">
             <h2><i class="fa-brands fa-readme"></i> Course Details</h2>
+
+            <div class="field field-narrow">
+                <label for="course-font-size">Font size for this section <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="course-font-size" id="course-font-size" value="24" min="8" max="60" step="1">
+            </div>
 
             <label class="row-check"><input type="checkbox" name="show-course-code" id="show-course-code" checked><span>Course code</span></label>
             <input type="text" class="text-input" name="course-code" id="course-code" placeholder="e.g. ENG 0232-2417">
@@ -178,9 +200,17 @@ require __DIR__ . '/partials/head.php';
                 <div class="richtext-input" id="topic" contenteditable="true" data-placeholder="Enter topic"></div>
             </div>
             <input type="hidden" name="topic-html" id="topic-html">
+            <div class="field field-narrow">
+                <label for="topic-font-size">Topic font size <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="topic-font-size" id="topic-font-size" value="24" min="8" max="60" step="1">
+            </div>
 
             <label class="row-check"><input type="checkbox" name="show-submission-date" id="show-submission-date" checked><span>Submission date</span></label>
             <input type="date" class="text-input" name="submission-date" id="submission-date">
+            <div class="field field-narrow">
+                <label for="submission-font-size">Submission date font size <small>(pt)</small></label>
+                <input type="number" class="text-input input-narrow" name="submission-font-size" id="submission-font-size" value="18" min="8" max="60" step="1">
+            </div>
         </section>
 
         <button type="submit" class="btn btn-primary btn-generate"><i class="fa-solid fa-hammer"></i> Generate PDF</button>

@@ -103,4 +103,22 @@ final class Sanitize
     {
         return $value === '1' || $value === 'true' || $value === 'on' || $value === true;
     }
+
+    /**
+     * Font size in points, from a user-editable number field. Falls back to
+     * $default when the value is missing, non-numeric, or outside the
+     * allowed [$min, $max] range, so a stray/malicious value can never
+     * shrink text to nothing or blow up the layout.
+     */
+    public static function fontSize(mixed $value, float $default, float $min = 6.0, float $max = 72.0): float
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return $default;
+        }
+        $num = (float) $value;
+        if (!is_finite($num) || $num < $min || $num > $max) {
+            return $default;
+        }
+        return round($num, 1);
+    }
 }

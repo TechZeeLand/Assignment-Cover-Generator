@@ -10,6 +10,19 @@ namespace App;
  */
 final class CoverData
 {
+    // Default font sizes (points), matching the original fixed design.
+    // Editable per group via the form; these are the fallback when a
+    // submitted value is missing or fails Sanitize::fontSize() validation.
+    private const DEFAULT_BISMILLAH_FONT_SIZE  = 16.0;
+    private const DEFAULT_VERSITY_FONT_SIZE    = 30.0;
+    private const DEFAULT_DEPT_FONT_SIZE       = 22.0;
+    private const DEFAULT_STUDENT_FONT_SIZE    = 24.0;
+    private const DEFAULT_COURSE_FONT_SIZE     = 24.0;
+    private const DEFAULT_TOPIC_FONT_SIZE      = 24.0;
+    private const DEFAULT_SUBMISSION_FONT_SIZE = 18.0;
+    private const MIN_FONT_SIZE_PT = 8.0;
+    private const MAX_FONT_SIZE_PT = 60.0;
+
     public bool $showBorder;
 
     public string $versityFont;
@@ -66,6 +79,18 @@ final class CoverData
 
     public bool $showSubmissionDate;
     public string $submissionDateDisplay;
+
+    // Editable font sizes (points). Each covers one group as specified:
+    // Bismillah alone, versity name alone, dept name alone, all of Student
+    // Details together, all of Course Details together, Topic alone, and
+    // Submission Date alone.
+    public float $bismillahFontSize;
+    public float $versityFontSize;
+    public float $deptFontSize;
+    public float $studentFontSize;
+    public float $courseFontSize;
+    public float $topicFontSize;
+    public float $submissionFontSize;
 
     public static function fromRequest(array $data, FontManager $fonts): self
     {
@@ -134,6 +159,16 @@ final class CoverData
 
         $c->showSubmissionDate = Sanitize::bool($data['show-submission-date'] ?? null);
         $c->submissionDateDisplay = self::formatDate((string) ($data['submission-date'] ?? ''));
+
+        $min = self::MIN_FONT_SIZE_PT;
+        $max = self::MAX_FONT_SIZE_PT;
+        $c->bismillahFontSize  = Sanitize::fontSize($data['bismillah-font-size'] ?? null, self::DEFAULT_BISMILLAH_FONT_SIZE, $min, $max);
+        $c->versityFontSize    = Sanitize::fontSize($data['versity-font-size'] ?? null, self::DEFAULT_VERSITY_FONT_SIZE, $min, $max);
+        $c->deptFontSize       = Sanitize::fontSize($data['dept-font-size'] ?? null, self::DEFAULT_DEPT_FONT_SIZE, $min, $max);
+        $c->studentFontSize    = Sanitize::fontSize($data['student-font-size'] ?? null, self::DEFAULT_STUDENT_FONT_SIZE, $min, $max);
+        $c->courseFontSize     = Sanitize::fontSize($data['course-font-size'] ?? null, self::DEFAULT_COURSE_FONT_SIZE, $min, $max);
+        $c->topicFontSize      = Sanitize::fontSize($data['topic-font-size'] ?? null, self::DEFAULT_TOPIC_FONT_SIZE, $min, $max);
+        $c->submissionFontSize = Sanitize::fontSize($data['submission-font-size'] ?? null, self::DEFAULT_SUBMISSION_FONT_SIZE, $min, $max);
 
         return $c;
     }
