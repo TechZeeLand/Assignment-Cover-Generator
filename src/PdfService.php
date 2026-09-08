@@ -9,13 +9,14 @@ final class PdfService
     public static function render(CoverData $data, FontManager $fonts): \Mpdf\Mpdf
     {
         $fontConfig = $fonts->buildMpdfFontConfig();
+        $inset = CoverBuilder::contentInsetPt();
 
         $mpdf = new \Mpdf\Mpdf([
             'format'        => 'A4',
-            'margin_left'   => 0,
-            'margin_right'  => 0,
-            'margin_top'    => 0,
-            'margin_bottom' => 0,
+            'margin_left'   => $inset,
+            'margin_right'  => $inset,
+            'margin_top'    => $inset,
+            'margin_bottom' => $inset,
             'margin_header' => 0,
             'margin_footer' => 0,
             'fontDir'       => $fontConfig['fontDir'],

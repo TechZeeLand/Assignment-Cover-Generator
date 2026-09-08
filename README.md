@@ -5,14 +5,12 @@ print-ready **assignment cover page PDF** — university name, department,
 student & course details, topic, submission date — with full control over
 fonts, colors, and layout.
 
-Fill in a form, watch a live preview update as you type, click **Generate**,
-get a PDF that matches the preview exactly.
+Fill in a form and click **Generate** to get a print-ready PDF.
 
 ![Example cover](docs/screenshot-cover.png)
 
 ## ✨ Features
 
-- **Live preview** — the page on the right updates instantly as you edit the form.
 - **Toggle any field on/off** — show or hide the University name, Bismillah,
   each student/course detail row, the topic, the submission date, and the
   decorative border independently.
@@ -39,11 +37,10 @@ get a PDF that matches the preview exactly.
 
 > **Design note:** the reference design uses CSS Grid for its label/value
 > rows. mPDF's HTML/CSS engine doesn't support Grid, so the PDF is built from
-> an equivalent HTML `<table>` layout with the same column widths, fonts,
-> sizes, and colors — producing the same visual result. The in-browser live
-> preview, on the other hand, uses real CSS Grid (browsers support it fine),
-> so what you see in the preview and what comes out in the PDF should match
-> closely.
+> an equivalent HTML `<table>` layout with the same fonts, sizes, and colors
+> — producing the same visual result. Student Details and Course Details
+> share a single `<table>` so mPDF sizes the label column once, keeping every
+> colon in both sections aligned under the widest label.
 
 ## 🚀 Full setup guide: GitHub → Debian server → Portainer
 
@@ -160,7 +157,7 @@ instead of building it.
 3. Deploy the stack.
 
 Either way, once it's running, visit **`http://<your-server-ip>:1025`** —
-you should see the form and live preview.
+you should see the form.
 
 ### Part 4 — Updating later
 
@@ -203,14 +200,14 @@ Then open `http://localhost:1025`.
 ├── Dockerfile              # Multi-stage build: Composer -> php:8.2-fpm + nginx + supervisord
 ├── docker-compose.yml       # Portainer / docker compose stack definition
 ├── public/                  # Web root
-│   ├── index.php             # The form + live preview page
+│   ├── index.php             # The form page
 │   ├── generate.php          # Handles POST -> builds & streams the PDF
 │   ├── fonts.php              # Returns the current font list as JSON
 │   ├── upload_font.php        # Handles custom font uploads
-│   ├── font_file.php           # Streams a stored font file (for browser preview)
+│   ├── font_file.php           # Streams a stored font file (so the font picker can preview it)
 │   └── assets/
 │       ├── css/style.css        # All styling (responsive)
-│       ├── js/app.js             # Live preview, rich text, font upload logic
+│       ├── js/app.js             # Rich text, font upload, form logic
 │       └── fonts/Amiri-Regular.ttf  # Bundled font for the Bismillah glyph
 ├── src/                      # PHP application code (PSR-4: App\)
 │   ├── Config.php              # Central constants (paths, built-in fonts, limits)

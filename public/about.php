@@ -17,7 +17,7 @@ require __DIR__ . '/partials/head.php';
 
     <div class="content-card">
         <h2>What it is</h2>
-        <p>Assignment Cover Generator is a free web app for students and teachers who need a properly formatted cover page for an assignment, lab report, or project submission. Fill in your university, department, student, and course details, watch the live preview update as you type, and export a print-ready PDF in one click.</p>
+        <p>Assignment Cover Generator is a free web app for students and teachers who need a properly formatted cover page for an assignment, lab report, or project submission. Fill in your university, department, student, and course details, and export a print-ready PDF in one click.</p>
 
         <h2>Why it exists</h2>
         <p>Most cover pages get built from scratch in a word processor every single time, with alignment and formatting redone by hand. This tool keeps the layout consistent and correct, so all that's left to do is fill in the details.</p>

@@ -6,9 +6,7 @@ namespace App;
 
 /**
  * A sanitized, validated representation of everything needed to render one
- * assignment cover — shared by the mPDF renderer (CoverBuilder) so the
- * live browser preview and the generated PDF are always built from the
- * exact same data.
+ * assignment cover, consumed by the mPDF renderer (CoverBuilder).
  */
 final class CoverData
 {

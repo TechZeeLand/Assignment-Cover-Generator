@@ -185,16 +185,6 @@ require __DIR__ . '/partials/head.php';
 
         <button type="submit" class="btn btn-primary btn-generate"><i class="fa-solid fa-hammer"></i> Generate PDF</button>
     </form>
-
-    <aside class="panel preview-panel">
-        <div class="preview-sticky">
-            <h2 class="preview-title">Live preview</h2>
-            <div class="preview-stage">
-                <div class="preview-page" id="preview-page"></div>
-            </div>
-            <p class="hint center">This mirrors the generated PDF as closely as a browser can.</p>
-        </div>
-    </aside>
 </main>
 
 <?php require __DIR__ . '/partials/footer.php'; ?>

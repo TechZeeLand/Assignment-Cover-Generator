@@ -7,85 +7,126 @@ namespace App;
 /**
  * Renders a CoverData object into the HTML that gets fed to mPDF.
  *
- * The original reference design uses CSS Grid for the label/colon/value
- * rows, which mPDF's HTML/CSS engine does not support. Every grid row is
- * reproduced here as a small fixed-layout <table> instead (80pt label
- * column, 15pt colon column, flexible value column) so the printed result
- * matches the reference pixel-for-pixel while remaining renderable by mPDF.
+ * mPDF's HTML/CSS engine doesn't support CSS Grid, so every label/colon/
+ * value row is built as a small HTML <table> instead. Student Details and
+ * Course Details are rendered as ONE shared <table> (with colspan="3"
+ * section-header rows) rather than one table per row: mPDF sizes a table's
+ * columns once, based on the widest cell in that table, so putting every
+ * row in the same table is what forces every colon in both sections to
+ * line up under the widest label - separate per-row tables can't do this,
+ * since each one would size its own label column independently.
+ *
+ * The decorative border is a separate, absolutely-positioned empty <div>
+ * pinned to fixed pt coordinates on the page, completely decoupled from
+ * the content flow. The actual reading margin (space between the border
+ * and the text) is reserved as real mPDF page margins (set in
+ * PdfService::render() via contentInsetPt()), not CSS padding - mPDF
+ * shrink-wraps block heights to content and doesn't reliably support
+ * calc()/box-sizing, so a content-flow-based box previously either clipped
+ * the border to the content height or left it sized wrong. Page margins
+ * and the border position are derived from the same constants below so
+ * the two can never drift out of sync.
  */
 final class CoverBuilder
 {
+    // A4 in points at 72pt/inch.
+    private const PAGE_WIDTH_PT  = 595.28;
+    private const PAGE_HEIGHT_PT = 841.89;
+
+    // Space from the physical page edge to the decorative border line.
+    private const OUTER_GAP_PT = 15.0;
+
+    // Thickness of the decorative border stroke itself.
+    private const BORDER_THICKNESS_PT = 15.0;
+
+    // Space between the border line and where text content starts.
+    private const CONTENT_GAP_PT = 20.0;
+
+    /**
+     * Total inset from the physical page edge to where content starts.
+     * Used both to size/position the decorative border and as the real
+     * mPDF page margin (see PdfService::render()), so they can't go out
+     * of sync. This inset is constant whether or not the border is shown,
+     * so toggling the border never reflows the content.
+     */
+    public static function contentInsetPt(): float
+    {
+        return self::OUTER_GAP_PT + self::BORDER_THICKNESS_PT + self::CONTENT_GAP_PT;
+    }
+
     public static function buildHtml(CoverData $d): string
     {
         $font = fn (string $key) => htmlspecialchars($key, ENT_QUOTES);
         $col  = fn (string $hex) => htmlspecialchars($hex, ENT_QUOTES);
 
-        $borderPadding = $d->showBorder ? 20 : 0;
-        $borderRule    = $d->showBorder ? "border: 20pt solid {$col($d->accentColor)};" : '';
+        $borderDiv = '';
+        if ($d->showBorder) {
+            $boxWidth  = self::PAGE_WIDTH_PT - 2 * self::OUTER_GAP_PT - 2 * self::BORDER_THICKNESS_PT;
+            $boxHeight = self::PAGE_HEIGHT_PT - 2 * self::OUTER_GAP_PT - 2 * self::BORDER_THICKNESS_PT;
+            $borderDiv = sprintf(
+                '<div style="position:absolute; top:%1$spt; left:%1$spt; width:%2$spt; height:%3$spt; border:%4$spt solid %5$s;"></div>',
+                self::numFmt(self::OUTER_GAP_PT),
+                self::numFmt($boxWidth),
+                self::numFmt($boxHeight),
+                self::numFmt(self::BORDER_THICKNESS_PT),
+                $col($d->accentColor)
+            );
+        }
 
-        // mPDF's HTML/CSS engine shrink-wraps block heights to content and
-        // doesn't reliably support calc()/box-sizing, so the full-page
-        // border height has to be computed by hand here instead (the live
-        // preview gets this "for free" from calc(100% - ...) in style.css,
-        // which is why the two used to look different).
-        //   A4 = 595.28 x 841.89pt at mPDF's default 0 margins.
-        //   .page has a 15pt padding + 1pt border on every side.
-        //   .border-box then has its own border+padding ($borderPadding,
-        //   used for both) on every side.
-        $pageHeightPt      = 841.89;
-        $pageInnerHeightPt = $pageHeightPt - 2 * (15 + 1); // .page's content-box height
-        $borderBoxHeightPt = $pageInnerHeightPt - 4 * $borderPadding; // minus border-box's own border+padding, top+bottom
-
-        $rows = [];
-
+        $studentRows = [];
         if ($d->showStudentName) {
-            $rows['student'][] = self::row('Name', $d->studentName);
+            $studentRows[] = self::row('Name', $d->studentName);
         }
         if ($d->showStudentId) {
-            $rows['student'][] = self::row('ID', $d->studentId);
+            $studentRows[] = self::row('ID', $d->studentId);
         }
         if ($d->showStudentSection) {
-            $rows['student'][] = self::row('Section', $d->studentSection);
+            $studentRows[] = self::row('Section', $d->studentSection);
         }
         if ($d->showStudentBatch) {
-            $rows['student'][] = self::row('Batch', $d->studentBatch);
+            $studentRows[] = self::row('Batch', $d->studentBatch);
         }
         if ($d->showStudentProgram) {
-            $rows['student'][] = self::row('Program', $d->studentProgram);
+            $studentRows[] = self::row('Program', $d->studentProgram);
         }
         if ($d->showSemester) {
-            $rows['student'][] = self::row($d->semesterType, $d->semester);
+            $studentRows[] = self::row($d->semesterType, $d->semester);
         }
 
+        $courseRows = [];
         if ($d->showCourseCode) {
-            $rows['course'][] = self::row('Code', $d->courseCode);
+            $courseRows[] = self::row('Code', $d->courseCode);
         }
         if ($d->showCourseTitle) {
-            $rows['course'][] = self::row('Title', $d->courseTitleHtml, true);
+            $courseRows[] = self::row('Title', $d->courseTitleHtml, true);
         }
         if ($d->showCourseTeacherName) {
-            $rows['course'][] = self::row('Teacher', $d->courseTeacherName);
+            $courseRows[] = self::row('Teacher', $d->courseTeacherName);
         }
 
-        $studentRowsHtml = implode('', $rows['student'] ?? []);
-        $courseRowsHtml  = implode('', $rows['course'] ?? []);
+        $hasStudentSection = !empty($studentRows);
+        $hasCourseSection  = !empty($courseRows) || $d->showCourseTeacherDesignation;
 
-        $studentSection = '';
-        if (!empty($rows['student'])) {
-            $studentSection = '
-                <h2 class="section-h">Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
-                <div class="grid-wrap">' . $studentRowsHtml . '</div>';
+        $tableRows = '';
+        if ($hasStudentSection) {
+            $tableRows .= self::sectionHeaderRow('Student Details ' . $d->headerSuffix, false);
+            $tableRows .= implode('', $studentRows);
+        }
+        if ($hasCourseSection) {
+            $tableRows .= self::sectionHeaderRow('Course Details ' . $d->headerSuffix, $hasStudentSection);
+            $tableRows .= implode('', $courseRows);
         }
 
-        $courseSection = '';
-        if (!empty($rows['course']) || $d->showCourseTeacherDesignation) {
+        $detailsBlock = '';
+        if ($tableRows !== '') {
             $designationHtml = $d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== ''
                 ? '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES) . '</p>'
                 : '';
-            $courseSection = '
-                <h2 class="section-h" style="margin-top:20pt;">Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
-                <div class="grid-wrap">' . $courseRowsHtml . '</div>'
-                . $designationHtml;
+            $detailsBlock = '
+                <div class="details-wrap">
+                    <table class="details-table" cellpadding="0" cellspacing="0">' . $tableRows . '</table>'
+                    . $designationHtml . '
+                </div>';
         }
 
         $bismillah = $d->showBismillah
@@ -103,13 +144,15 @@ final class CoverBuilder
         $topicBlock = '';
         if ($d->showTopic) {
             $topicBlock = '
-                <table class="grid topic-grid" cellpadding="0" cellspacing="0">
-                    <tr>
-                        <td class="topic-label">Topic</td>
-                        <td class="colon topic-colon">:</td>
-                        <td class="topic-value">' . $d->topicHtml . '</td>
-                    </tr>
-                </table>';
+                <div class="topic-wrap">
+                    <table class="topic-grid" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td class="topic-label">Topic</td>
+                            <td class="topic-colon">:</td>
+                            <td class="topic-value">' . $d->topicHtml . '</td>
+                        </tr>
+                    </table>
+                </div>';
         }
 
         $submissionBlock = '';
@@ -130,22 +173,13 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .page {
-        padding: 15pt;
-        height: {$pageInnerHeightPt}pt;
-    }
-    .border-box {
-        {$borderRule}
-        padding: {$borderPadding}pt;
-        height: {$borderBoxHeightPt}pt;
-    }
-    header { text-align: center; }
-    header p, header h1 { margin: 0; }
+    .cover-header { text-align: center; }
+    .cover-header p, .cover-header h1 { margin: 0; }
     .bismillah {
         font-family: amiri;
         font-size: 16pt;
         color: {$col($d->secondaryColor)};
-        margin-bottom: 4pt !important;
+        margin-bottom: 4pt;
     }
     .versity-name {
         font-size: 30pt;
@@ -157,26 +191,31 @@ final class CoverBuilder
         font-size: 22pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
-        margin-bottom: 50pt !important;
+        margin: 0 0 4pt;
     }
-    .section-h {
-        font-size: 26pt;
-        font-weight: bold;
-        font-family: {$font($d->primaryFont)};
-        color: {$col($d->primaryColor)};
-        margin: 0;
-    }
-    .grid-wrap { margin-left: 25pt; }
-    table.grid { width: 100%; border-collapse: collapse; margin: 0; }
-    table.grid td {
+    .details-wrap { margin-top: 24pt; }
+    table.details-table { width: 100%; border-collapse: collapse; margin: 0; }
+    table.details-table td {
         font-size: 24pt;
         font-family: {$font($d->secondaryFont)};
         padding: 0;
         vertical-align: top;
     }
-    table.grid td.label { width: 80pt; color: {$col($d->primaryColor)}; }
-    table.grid td.colon { width: 15pt; text-align: center; margin-left: 15px; }
-    table.grid td.value { color: {$col($d->secondaryColor)}; }
+    table.details-table td.section-header {
+        font-size: 26pt;
+        font-weight: bold;
+        font-family: {$font($d->primaryFont)};
+        color: {$col($d->primaryColor)};
+        padding: 0;
+    }
+    table.details-table td.section-header.course-header { padding-top: 20pt; }
+    table.details-table td.label {
+        padding-left: 25pt;
+        color: {$col($d->primaryColor)};
+        white-space: nowrap;
+    }
+    table.details-table td.colon { text-align: center; padding: 0 4pt; }
+    table.details-table td.value { color: {$col($d->secondaryColor)}; }
     .designation {
         margin: 2pt 0 0 0;
         text-align: center;
@@ -184,7 +223,8 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .topic-grid { margin-left: 25pt; margin-top: 50pt; }
+    .topic-wrap { margin-left: 25pt; margin-top: 24pt; }
+    table.topic-grid { width: 100%; border-collapse: collapse; margin: 0; }
     .topic-label {
         width: 80pt;
         font-weight: bold;
@@ -194,7 +234,13 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
     }
-    .topic-colon { width: 15pt; vertical-align: top; padding: 0; }
+    .topic-colon {
+        width: 18pt;
+        font-size: 26pt;
+        text-align: center;
+        vertical-align: top;
+        padding: 0;
+    }
     .topic-value {
         font-size: 24pt;
         font-family: {$font($d->secondaryFont)};
@@ -212,19 +258,15 @@ final class CoverBuilder
 </style>
 </head>
 <body>
-    <div class="page">
-        <div class="border-box">
-            <header>
-                {$bismillah}
-                {$versityBlock}
-                {$deptBlock}
-            </header>
-            {$studentSection}
-            {$courseSection}
-            {$topicBlock}
-            {$submissionBlock}
-        </div>
+    {$borderDiv}
+    <div class="cover-header">
+        {$bismillah}
+        {$versityBlock}
+        {$deptBlock}
     </div>
+    {$detailsBlock}
+    {$topicBlock}
+    {$submissionBlock}
 </body>
 </html>
 HTML;
@@ -234,12 +276,26 @@ HTML;
     {
         $labelSafe = htmlspecialchars($label, ENT_QUOTES);
         return '
-                    <table class="grid" cellpadding="0" cellspacing="0">
                         <tr>
                             <td class="label">' . $labelSafe . '</td>
                             <td class="colon">:</td>
                             <td class="value">' . $valueHtml . '</td>
-                        </tr>
-                    </table>';
+                        </tr>';
+    }
+
+    private static function sectionHeaderRow(string $text, bool $isCourseHeader): string
+    {
+        $safe  = htmlspecialchars($text, ENT_QUOTES);
+        $class = $isCourseHeader ? 'section-header course-header' : 'section-header';
+        return '
+                        <tr>
+                            <td colspan="3" class="' . $class . '">' . $safe . '</td>
+                        </tr>';
+    }
+
+    /** Formats a pt value for embedding in inline CSS without trailing zeros/locale surprises. */
+    private static function numFmt(float $value): string
+    {
+        return rtrim(rtrim(number_format($value, 2, '.', ''), '0'), '.');
     }
 }

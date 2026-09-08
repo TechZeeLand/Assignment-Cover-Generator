@@ -21,7 +21,7 @@ require __DIR__ . '/partials/head.php';
 
         <h2>What is not stored</h2>
         <ul>
-            <li>Your university, department, student, or course details are used only to render the live preview in your browser and to generate your PDF. They are never written to disk or logged.</li>
+            <li>Your university, department, student, or course details are used only to generate your PDF. They are never written to disk or logged.</li>
             <li>Generated PDFs are streamed directly to your browser and are not retained on the server afterward.</li>
             <li>No accounts, cookies for tracking, or analytics scripts are used by this app itself.</li>
         </ul>

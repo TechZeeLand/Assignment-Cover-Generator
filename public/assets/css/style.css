@@ -130,12 +130,11 @@ html[data-theme="dark"] .theme-toggle .fa-sun { display: none; }
 html[data-theme="dark"] .theme-toggle .fa-moon { display: inline-block; }
 
 .layout {
-    max-width: 1200px;
+    max-width: 720px;
     margin: 0 auto;
     padding: 20px;
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 420px;
-    gap: 20px;
+    grid-template-columns: minmax(0, 1fr);
     align-items: start;
 }
 
@@ -292,83 +291,7 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
 .richtext-input.field-disabled,
 .richtext.field-disabled { opacity: .45; pointer-events: none; }
 
-/* Preview */
-.preview-panel { position: relative; }
-.preview-sticky { position: sticky; top: 78px; }
-.preview-title { font-size: .95rem; margin: 0 0 10px; text-align: center; color: var(--muted); }
-.preview-stage {
-    background: var(--panel);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    box-shadow: var(--shadow);
-    padding: 16px;
-    display: flex;
-    justify-content: center;
-}
-.preview-page {
-    width: 396px;   /* 595px design width scaled ~0.666 for on-screen preview */
-    height: 561px;
-    background: #fff;
-    border: 1px solid #000;
-    box-shadow: 0 2px 10px rgba(0,0,0,.1);
-    overflow: hidden;
-    position: relative;
-    flex-shrink: 0;
-}
-
-/* ---- Live preview canvas: rendered at true 595x842 design size, then
-   scaled down with a JS-computed transform to fit .preview-page. This
-   mirrors the reference OutputPDF.html design (CSS Grid rows) at 1:1
-   values so it stays visually faithful to the generated PDF. ---- */
-.pv-canvas {
-    width: 595px;
-    height: 842px;
-    background: #fff;
-    transform-origin: top left;
-    position: absolute;
-    top: 0;
-    left: 0;
-}
-.pv-page-pad { padding: 15px; height: 100%; }
-.pv-border-box { height: calc(100% - 30px); }
-.pv-header { text-align: center; }
-.pv-header p, .pv-header h1 { margin: 0; }
-@font-face {
-    font-family: 'Amiri';
-    src: url('../fonts/Amiri-Regular.ttf') format('truetype');
-    font-display: swap;
-}
-.pv-bismillah { font-size: 30px; margin: 0 0 4px; font-family: 'Amiri', serif; }
-.pv-versity { font-size: 34px; font-weight: bold; margin: 0; }
-.pv-dept { font-size: 22px; margin: 0; }
-.pv-h2 { font-size: 26px; font-weight: bold; margin: 0; }
-.pv-grid-wrap { margin-left: 25px; }
-.pv-row {
-    display: grid;
-    grid-template-columns: 80px 15px 1fr;
-    margin: 0;
-    font-size: 24px;
-}
-.pv-label { text-align: left; }
-.pv-colon { text-align: center; }
-.pv-value { text-align: left; }
-.pv-designation { margin: 2px 0 0; text-align: center; font-size: 16px; }
-.pv-topic-row {
-    display: grid;
-    grid-template-columns: 80px 15px 1fr;
-    margin: 10px 0 0 25px;
-    font-size: 24px;
-}
-.pv-topic-label { font-weight: bold; font-size: 26px; }
-.pv-topic-colon { text-align: left; }
-.pv-topic-value { font-size: 24px; }
-.pv-submission { font-size: 18px; margin: 15px 0 0; }
-
 @media (max-width: 980px) {
-    .layout { grid-template-columns: 1fr; }
-    .preview-panel { order: -1; }
-    .preview-sticky { position: static; }
-    .preview-page { width: 100%; max-width: 420px; height: auto; aspect-ratio: 595 / 842; margin: 0 auto; }
     .btn-generate { position: static; }
 }
 
