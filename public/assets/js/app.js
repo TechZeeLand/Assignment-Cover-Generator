@@ -7,6 +7,11 @@
     // Font handling
     // ---------------------------------------------------------------
     const FONT_SELECT_IDS = ['versity-name-font', 'primary-font', 'secondary-font'];
+    const FONT_SELECT_DEFAULTS = {
+        'versity-name-font': 'oldenglish',
+        'primary-font': 'alata',
+        'secondary-font': 'gandhiserif',
+    };
     let fontsCache = Array.isArray(window.__INITIAL_FONTS__) ? window.__INITIAL_FONTS__ : [];
 
     function builtInCssFamily(key) {
@@ -52,7 +57,10 @@
                 select.appendChild(opt);
             });
             const stillExists = fontsCache.some((f) => f.key === previousValue);
-            select.value = stillExists ? previousValue : (fontsCache[0] ? fontsCache[0].key : 'sans');
+            const wantedDefault = FONT_SELECT_DEFAULTS[id];
+            const defaultAvailable = fontsCache.some((f) => f.key === wantedDefault);
+            const fallback = defaultAvailable ? wantedDefault : (fontsCache[0] ? fontsCache[0].key : 'sans');
+            select.value = stillExists ? previousValue : fallback;
         });
         refreshCustomFontFaces();
     }

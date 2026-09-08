@@ -98,9 +98,9 @@ final class CoverData
 
         $c->showBorder = Sanitize::bool($data['border'] ?? null);
 
-        $c->versityFont   = $fonts->resolveFontKey((string) ($data['versity-name-font'] ?? 'sans'));
-        $c->primaryFont   = $fonts->resolveFontKey((string) ($data['primary-font'] ?? 'sans'));
-        $c->secondaryFont = $fonts->resolveFontKey((string) ($data['secondary-font'] ?? 'sans'));
+        $c->versityFont   = $fonts->resolveFontKey((string) ($data['versity-name-font'] ?? 'oldenglish'));
+        $c->primaryFont   = $fonts->resolveFontKey((string) ($data['primary-font'] ?? 'alata'));
+        $c->secondaryFont = $fonts->resolveFontKey((string) ($data['secondary-font'] ?? 'gandhiserif'));
 
         $c->primaryColor   = Sanitize::color($data['primary-color'] ?? null, '#000000');
         $c->secondaryColor = Sanitize::color($data['secondary-color'] ?? null, '#000000');

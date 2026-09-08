@@ -107,6 +107,14 @@ final class FontManager
 
         $fontData = $defaultFontData;
         $fontData['amiri'] = ['R' => 'Amiri-Regular.ttf'];
+        $fontData['oldenglish'] = ['R' => 'oldenglishtextmt.ttf'];
+        $fontData['gandhiserif'] = [
+            'R'  => 'GandhiSerif-Regular.otf',
+            'B'  => 'GandhiSerif-Bold.otf',
+            'I'  => 'GandhiSerif-Italic.otf',
+            'BI' => 'GandhiSerif-BoldItalic.otf',
+        ];
+        $fontData['alata'] = ['R' => 'Alata-Regular.ttf'];
 
         foreach ($this->readIndex() as $entry) {
             $variants = [];

@@ -49,9 +49,12 @@ final class Config
     public static function builtInFonts(): array
     {
         return [
-            'Arial'            => 'sans',
-            'Times New Roman'  => 'serif',
-            'Courier New'      => 'mono',
+            'Arial'                => 'sans',
+            'Times New Roman'      => 'serif',
+            'Courier New'          => 'mono',
+            'Old English Text MT'  => 'oldenglish',
+            'Gandhi Serif'         => 'gandhiserif',
+            'Alata'                => 'alata',
         ];
     }
 
