@@ -228,28 +228,7 @@
 
     // ---------------------------------------------------------------
     // Live preview
-    //
-    // Every constant below (sizes, gaps, border/padding) is kept
-    // numerically identical to its counterpart in CoverBuilder.php, and
-    // the label column width is measured the same way mPDF measures it
-    // server-side (real text metrics, not a guessed fixed column) so the
-    // preview's colon alignment - and everything else - matches the
-    // generated PDF as closely as a browser can.
     // ---------------------------------------------------------------
-    const ROW_FONT_SIZE_PX = 24;
-    const TOPIC_FONT_SIZE_PX = 26;
-    const LABEL_BUFFER_PX = 8;
-    const LABEL_MIN_WIDTH_PX = 40;
-    const COLON_COL_PX = 16;
-
-    const PAGE_PADDING_PX = 15;
-    const BORDER_WIDTH_PX = 15;
-    const BORDER_PADDING_PX = 20;
-
-    const STUDENT_HEADER_GAP_PX = 20;
-    const COURSE_HEADER_GAP_PX = 20;
-    const TOPIC_HEADER_GAP_PX = 26;
-
     function esc(str) {
         const div = document.createElement('div');
         div.textContent = str || '';
@@ -258,23 +237,8 @@
     function val(id) { const el = document.getElementById(id); return el ? el.value : ''; }
     function checked(id) { const el = document.getElementById(id); return el ? el.checked : false; }
 
-    // Off-screen canvas reused for real text-width measurement (matches
-    // mPDF's own font-metric-based measurement on the PDF side).
-    const measureCanvas = document.createElement('canvas');
-    const measureCtx = measureCanvas.getContext('2d');
-    function textWidthPx(text, family, sizePx, weight) {
-        measureCtx.font = `${weight || 'normal'} ${sizePx}px ${family}`;
-        return measureCtx.measureText(text || '').width;
-    }
-    function labelColumnWidth(labels, family, sizePx) {
-        const visible = labels.filter((l) => l !== '');
-        if (!visible.length) return LABEL_MIN_WIDTH_PX;
-        const widest = Math.max(...visible.map((l) => textWidthPx(l, family, sizePx)));
-        return Math.max(widest + LABEL_BUFFER_PX, LABEL_MIN_WIDTH_PX);
-    }
-
-    function buildRow(labelText, valueHtml, primaryColor, secondaryColor, labelColPx) {
-        return `<p class="pv-row" style="grid-template-columns:${labelColPx}px ${COLON_COL_PX}px 1fr">
+    function buildRow(labelText, valueHtml, primaryColor, secondaryColor) {
+        return `<p class="pv-row">
             <span class="pv-label" style="color:${primaryColor}">${esc(labelText)}</span>
             <span class="pv-colon">:</span>
             <span class="pv-value" style="color:${secondaryColor}">${valueHtml}</span>
@@ -291,28 +255,18 @@
         const accentColor = checked('use-title-border-color') ? (val('title-border-color') || primaryColor) : primaryColor;
         const suffix = val('header-suffix').trim() || '---';
 
-        // Gather visible label/value pairs first so the label column width
-        // can be measured against exactly what's shown, across BOTH
-        // sections at once (same rule the PDF applies).
-        const studentPairs = [];
-        if (checked('show-student-name')) studentPairs.push(['Name', esc(val('student-name'))]);
-        if (checked('show-student-id')) studentPairs.push(['ID', esc(val('student-id'))]);
-        if (checked('show-student-section')) studentPairs.push(['Section', esc(val('student-section'))]);
-        if (checked('show-student-batch')) studentPairs.push(['Batch', esc(val('student-batch'))]);
-        if (checked('show-student-program')) studentPairs.push(['Program', esc(val('student-program'))]);
-        if (checked('show-semester')) studentPairs.push([val('semester-type'), esc(val('semester'))]);
+        let studentRows = '';
+        if (checked('show-student-name')) studentRows += buildRow('Name', esc(val('student-name')), primaryColor, secondaryColor);
+        if (checked('show-student-id')) studentRows += buildRow('ID', esc(val('student-id')), primaryColor, secondaryColor);
+        if (checked('show-student-section')) studentRows += buildRow('Section', esc(val('student-section')), primaryColor, secondaryColor);
+        if (checked('show-student-batch')) studentRows += buildRow('Batch', esc(val('student-batch')), primaryColor, secondaryColor);
+        if (checked('show-student-program')) studentRows += buildRow('Program', esc(val('student-program')), primaryColor, secondaryColor);
+        if (checked('show-semester')) studentRows += buildRow(val('semester-type'), esc(val('semester')), primaryColor, secondaryColor);
 
-        const coursePairs = [];
-        if (checked('show-course-code')) coursePairs.push(['Code', esc(val('course-code'))]);
-        if (checked('show-course-title')) coursePairs.push(['Title', document.getElementById('course-title').innerHTML]);
-        if (checked('show-course-teacher-name')) coursePairs.push(['Teacher', esc(val('course-teacher-name'))]);
-
-        const allLabels = studentPairs.map((p) => p[0]).concat(coursePairs.map((p) => p[0]));
-        const labelColPx = labelColumnWidth(allLabels, secondaryFamily, ROW_FONT_SIZE_PX);
-        const topicColPx = labelColumnWidth(['Topic'], secondaryFamily, TOPIC_FONT_SIZE_PX);
-
-        let studentRows = studentPairs.map((p) => buildRow(p[0], p[1], primaryColor, secondaryColor, labelColPx)).join('');
-        let courseRows = coursePairs.map((p) => buildRow(p[0], p[1], primaryColor, secondaryColor, labelColPx)).join('');
+        let courseRows = '';
+        if (checked('show-course-code')) courseRows += buildRow('Code', esc(val('course-code')), primaryColor, secondaryColor);
+        if (checked('show-course-title')) courseRows += buildRow('Title', document.getElementById('course-title').innerHTML, primaryColor, secondaryColor);
+        if (checked('show-course-teacher-name')) courseRows += buildRow('Teacher', esc(val('course-teacher-name')), primaryColor, secondaryColor);
 
         const designationHtml = (checked('show-course-teacher-designation') && val('course-teacher-designation').trim() !== '')
             ? `<p class="pv-designation">${esc(val('course-teacher-designation'))}</p>` : '';
@@ -321,20 +275,17 @@
         const versityHtml = checked('show-versity-name') ? `<h1 class="pv-versity" style="font-family:${versityFamily};color:${accentColor}">${esc(val('versity'))}</h1>` : '';
         const deptHtml = checked('show-dept-name') ? `<p class="pv-dept" style="font-family:${secondaryFamily};color:${secondaryColor}">${esc(val('dept-name'))}</p>` : '';
 
-        const headerHasContent = checked('bismillah') || checked('show-versity-name') || checked('show-dept-name');
-        const studentTopGapPx = headerHasContent ? STUDENT_HEADER_GAP_PX : 0;
-
         const studentSection = studentRows ? `
-            <h2 class="pv-h2" style="font-family:${primaryFamily};color:${primaryColor};margin-top:${studentTopGapPx}px;">Student Details ${esc(suffix)}</h2>
+            <h2 class="pv-h2" style="font-family:${primaryFamily};color:${primaryColor}">Student Details ${esc(suffix)}</h2>
             <div class="pv-grid-wrap" style="font-family:${secondaryFamily}">${studentRows}</div>` : '';
 
         const courseSection = (courseRows || designationHtml) ? `
-            <h2 class="pv-h2" style="font-family:${primaryFamily};color:${primaryColor};margin-top:${COURSE_HEADER_GAP_PX}px;">Course Details ${esc(suffix)}</h2>
+            <h2 class="pv-h2" style="font-family:${primaryFamily};color:${primaryColor};margin-top:8px;">Course Details ${esc(suffix)}</h2>
             <div class="pv-grid-wrap" style="font-family:${secondaryFamily}">${courseRows}</div>
             ${designationHtml}` : '';
 
         const topicHtml = checked('show-topic') ? `
-            <p class="pv-topic-row" style="font-family:${secondaryFamily};margin-top:${TOPIC_HEADER_GAP_PX}px;grid-template-columns:${topicColPx}px ${COLON_COL_PX}px 1fr">
+            <p class="pv-topic-row" style="font-family:${secondaryFamily}">
                 <span class="pv-topic-label" style="color:${primaryColor}">Topic</span>
                 <span class="pv-topic-colon">:</span>
                 <span class="pv-topic-value" style="color:${secondaryColor}">${document.getElementById('topic').innerHTML}</span>
@@ -344,16 +295,7 @@
         const submissionHtml = (checked('show-submission-date') && dateDisplay) ? `
             <p class="pv-submission" style="font-family:${secondaryFamily};color:${secondaryColor}"><b>Submission Date:</b> ${esc(dateDisplay)}</p>` : '';
 
-        // Border-box height, computed the same way CoverBuilder.php computes
-        // it for the PDF: page height minus the page's own padding, minus
-        // the border-box's own border + padding (all four sides) - so the
-        // border always reaches the true edge of the printable area
-        // instead of stopping short of it.
-        const borderWidthPx = showBorder ? BORDER_WIDTH_PX : 0;
-        const borderPadPx = showBorder ? BORDER_PADDING_PX : 0;
-        const pageInnerHeightPx = 842 - 2 * PAGE_PADDING_PX;
-        const borderBoxHeightPx = pageInnerHeightPx - 2 * borderWidthPx - 2 * borderPadPx;
-        const borderStyle = `border:${borderWidthPx}px solid ${accentColor};padding:${borderPadPx}px;height:${borderBoxHeightPx}px;`;
+        const borderStyle = showBorder ? `border:8px solid ${accentColor};padding:8px;` : 'padding:0;';
 
         previewPage.innerHTML = `
             <div class="pv-canvas" style="font-family:${secondaryFamily};color:${secondaryColor}">
@@ -393,12 +335,4 @@
     populateFontSelects();
     renderPreview();
     loadFonts();
-
-    // Custom/uploaded fonts (and Amiri) load asynchronously; the very first
-    // renderPreview() may measure label widths against a fallback font
-    // before they're ready. Re-render once every @font-face has actually
-    // loaded so the colon alignment settles onto the real font metrics.
-    if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(renderPreview).catch(() => {});
-    }
 })();

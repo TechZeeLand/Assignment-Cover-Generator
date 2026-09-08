@@ -19,7 +19,13 @@ $pageDescription = $pageDescription ?? 'Free, open-source assignment cover page 
 <meta property="og:type" content="website" />
 <meta property="og:title" content="<?php echo htmlspecialchars($pageTitle, ENT_QUOTES); ?>" />
 <meta property="og:description" content="<?php echo htmlspecialchars($pageDescription, ENT_QUOTES); ?>" />
-<meta property="og:image" content="assets/favicon/android-chrome-512x512.png" />
+<meta property="og:image" content="assets/img/cover.png" />
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="<?php echo htmlspecialchars($pageTitle, ENT_QUOTES); ?>">
+<meta name="twitter:description" content="<?php echo htmlspecialchars($pageDescription, ENT_QUOTES); ?>">
+<meta name="twitter:image" content="assets/img/cover.png">
 
 <!-- Favicons -->
 <link rel="icon" type="image/svg+xml" href="assets/img/logo.svg" />

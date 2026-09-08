@@ -26,7 +26,7 @@ final class PdfService
 
         $mpdf->SetTitle('Assignment Cover' . ($data->versityName !== '' ? ' - ' . self::unescape($data->versityName) : ''));
         $mpdf->SetAuthor($data->studentName !== '' ? self::unescape($data->studentName) : 'Assignment Cover Generator');
-        $mpdf->WriteHTML(CoverBuilder::buildHtml($data, $mpdf));
+        $mpdf->WriteHTML(CoverBuilder::buildHtml($data));
 
         return $mpdf;
     }
