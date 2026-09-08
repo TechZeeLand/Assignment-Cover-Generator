@@ -247,8 +247,10 @@ final class CoverBuilder
                 {$versityBlock}
                 {$deptBlock}
             </header>
+            <br>
             {$studentSection}
             {$courseSection}
+            <br>
             {$topicBlock}
             {$submissionBlock}
         </div>
