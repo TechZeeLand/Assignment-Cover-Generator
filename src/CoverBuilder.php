@@ -9,81 +9,106 @@ namespace App;
  *
  * The original reference design uses CSS Grid for the label/colon/value
  * rows, which mPDF's HTML/CSS engine does not support. Every grid row is
- * reproduced here as a small fixed-layout <table> instead (80pt label
- * column, 15pt colon column, flexible value column) so the printed result
- * matches the reference pixel-for-pixel while remaining renderable by mPDF.
+ * reproduced here as a small fixed-layout <table> instead so the printed
+ * result matches the reference while remaining renderable by mPDF.
+ *
+ * The label column width is NOT a hardcoded guess: it's measured with
+ * mPDF's own font metrics (Mpdf::GetStringWidth) against whichever labels
+ * are actually visible, so the colon always lines up immediately after the
+ * widest visible label - in both the Student Details and Course Details
+ * sections at once, since both use the same computed width.
  */
 final class CoverBuilder
 {
-    public static function buildHtml(CoverData $d): string
+    /** pt-per-mm, matches \Mpdf\Mpdf::SCALE (72 / 25.4). GetStringWidth()
+     *  returns millimetres internally regardless of the document's units,
+     *  so every measurement below is converted back to points with this. */
+    private const MM_TO_PT = 72 / 25.4;
+
+    private const ROW_FONT_SIZE_PT   = 24.0;
+    private const TOPIC_FONT_SIZE_PT = 26.0;
+
+    /** Breathing room added after the measured label text, before the colon. */
+    private const LABEL_BUFFER_PT = 8.0;
+    private const LABEL_MIN_WIDTH_PT = 40.0;
+
+    private const PAGE_PADDING_PT   = 15.0; // .page padding, all sides
+    private const BORDER_WIDTH_PT   = 15.0; // .border-box border width when shown
+    private const BORDER_PADDING_PT = 20.0; // .border-box padding when shown
+
+    /** Gap between the header block (Bismillah/Versity/Dept) and "Student Details". */
+    private const STUDENT_HEADER_GAP_PT = 20.0;
+    /** Gap between the end of Student Details and "Course Details". */
+    private const COURSE_HEADER_GAP_PT = 20.0;
+    /** Gap between the end of Course Details (incl. designation) and "Topic". */
+    private const TOPIC_HEADER_GAP_PT = 26.0;
+
+    public static function buildHtml(CoverData $d, \Mpdf\Mpdf $mpdf): string
     {
         $font = fn (string $key) => htmlspecialchars($key, ENT_QUOTES);
         $col  = fn (string $hex) => htmlspecialchars($hex, ENT_QUOTES);
 
-        $borderPadding = $d->showBorder ? 20 : 0;
-        $borderRule    = $d->showBorder ? "border: 15pt solid {$col($d->accentColor)};" : '';
+        $showBorder     = $d->showBorder;
+        $borderWidthPt  = $showBorder ? self::BORDER_WIDTH_PT : 0.0;
+        $borderPadPt    = $showBorder ? self::BORDER_PADDING_PT : 0.0;
+        $borderRule     = $showBorder ? "border: {$borderWidthPt}pt solid {$col($d->accentColor)};" : '';
+        $pagePaddingPt  = self::PAGE_PADDING_PT;
+        $topicGapPt     = self::TOPIC_HEADER_GAP_PT;
 
-        // mPDF's HTML/CSS engine shrink-wraps block heights to content and
-        // doesn't reliably support calc()/box-sizing, so the full-page
-        // border height has to be computed by hand here instead (the live
-        // preview gets this "for free" from calc(100% - ...) in style.css,
-        // which is why the two used to look different).
-        //   A4 = 595.28 x 841.89pt at mPDF's default 0 margins.
-        //   .page has a 15pt padding + 1pt border on every side.
-        //   .border-box then has its own border+padding ($borderPadding,
-        //   used for both) on every side.
+        // A4 = 595.28 x 841.89pt. .page reserves PAGE_PADDING_PT on every
+        // side (content-box, no border on .page itself). .border-box then
+        // adds its own border + padding on every side (also content-box),
+        // so its CSS "height" must be the *remaining* space after those are
+        // subtracted - not the full remaining page height, or the border
+        // falls short of the page edge (previously this used a mismatched
+        // 20pt stand-in for the border's actual 15pt width, so the box was
+        // ~10pt short of the page every time it was drawn).
         $pageHeightPt      = 841.89;
-        $pageInnerHeightPt = $pageHeightPt - 2 * (15 + 1); // .page's content-box height
-        $borderBoxHeightPt = $pageInnerHeightPt - 4 * $borderPadding; // minus border-box's own border+padding, top+bottom
+        $pageInnerHeightPt = $pageHeightPt - 2 * $pagePaddingPt;
+        $borderBoxHeightPt = $pageInnerHeightPt - 2 * $borderWidthPt - 2 * $borderPadPt;
 
-        $rows = [];
+        // ---- Collect the rows that will actually be shown, so the width
+        // measurement below only considers labels that are on the page. ----
+        $studentRows = [];
+        if ($d->showStudentName)    $studentRows[] = ['Name', htmlspecialchars($d->studentName, ENT_QUOTES)];
+        if ($d->showStudentId)      $studentRows[] = ['ID', htmlspecialchars($d->studentId, ENT_QUOTES)];
+        if ($d->showStudentSection) $studentRows[] = ['Section', htmlspecialchars($d->studentSection, ENT_QUOTES)];
+        if ($d->showStudentBatch)   $studentRows[] = ['Batch', htmlspecialchars($d->studentBatch, ENT_QUOTES)];
+        if ($d->showStudentProgram) $studentRows[] = ['Program', htmlspecialchars($d->studentProgram, ENT_QUOTES)];
+        if ($d->showSemester)       $studentRows[] = [$d->semesterType, htmlspecialchars($d->semester, ENT_QUOTES)];
 
-        if ($d->showStudentName) {
-            $rows['student'][] = self::row('Name', $d->studentName);
-        }
-        if ($d->showStudentId) {
-            $rows['student'][] = self::row('ID', $d->studentId);
-        }
-        if ($d->showStudentSection) {
-            $rows['student'][] = self::row('Section', $d->studentSection);
-        }
-        if ($d->showStudentBatch) {
-            $rows['student'][] = self::row('Batch', $d->studentBatch);
-        }
-        if ($d->showStudentProgram) {
-            $rows['student'][] = self::row('Program', $d->studentProgram);
-        }
-        if ($d->showSemester) {
-            $rows['student'][] = self::row($d->semesterType, $d->semester);
-        }
+        $courseRows = [];
+        if ($d->showCourseCode)        $courseRows[] = ['Code', htmlspecialchars($d->courseCode, ENT_QUOTES)];
+        if ($d->showCourseTitle)       $courseRows[] = ['Title', $d->courseTitleHtml];
+        if ($d->showCourseTeacherName) $courseRows[] = ['Teacher', htmlspecialchars($d->courseTeacherName, ENT_QUOTES)];
 
-        if ($d->showCourseCode) {
-            $rows['course'][] = self::row('Code', $d->courseCode);
-        }
-        if ($d->showCourseTitle) {
-            $rows['course'][] = self::row('Title', $d->courseTitleHtml, true);
-        }
-        if ($d->showCourseTeacherName) {
-            $rows['course'][] = self::row('Teacher', $d->courseTeacherName);
-        }
+        $allLabels = array_merge(
+            array_map(fn ($r) => $r[0], $studentRows),
+            array_map(fn ($r) => $r[0], $courseRows)
+        );
+        $labelColWidthPt = self::measureLabelColumnWidth($mpdf, $allLabels, $d->secondaryFont, self::ROW_FONT_SIZE_PT);
+        $topicColWidthPt = self::measureLabelColumnWidth($mpdf, ['Topic'], $d->secondaryFont, self::TOPIC_FONT_SIZE_PT);
 
-        $studentRowsHtml = implode('', $rows['student'] ?? []);
-        $courseRowsHtml  = implode('', $rows['course'] ?? []);
+        $studentRowsHtml = implode('', array_map(fn ($r) => self::row($r[0], $r[1]), $studentRows));
+        $courseRowsHtml  = implode('', array_map(fn ($r) => self::row($r[0], $r[1]), $courseRows));
+
+        $headerHasContent = $d->showBismillah || $d->showVersityName || $d->showDeptName;
+        $studentTopGap    = $headerHasContent ? self::STUDENT_HEADER_GAP_PT : 0.0;
 
         $studentSection = '';
-        if (!empty($rows['student'])) {
+        if (!empty($studentRows)) {
             $studentSection = '
-                <h2 class="section-h">Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
+                <h2 class="section-h" style="margin-top:' . $studentTopGap . 'pt;">Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
                 <div class="grid-wrap">' . $studentRowsHtml . '</div>';
         }
 
         $courseSection = '';
-        if (!empty($rows['course']) || $d->showCourseTeacherDesignation) {
+        if (!empty($courseRows) || $d->showCourseTeacherDesignation) {
             $designationHtml = $d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== ''
                 ? '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES) . '</p>'
                 : '';
             $courseSection = '
-                <h2 class="section-h" style="margin-top:20pt;">Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
+                <h2 class="section-h" style="margin-top:' . self::COURSE_HEADER_GAP_PT . 'pt;">Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
                 <div class="grid-wrap">' . $courseRowsHtml . '</div>'
                 . $designationHtml;
         }
@@ -131,12 +156,12 @@ final class CoverBuilder
         color: {$col($d->secondaryColor)};
     }
     .page {
-        padding: 15pt;
+        padding: {$pagePaddingPt}pt;
         height: {$pageInnerHeightPt}pt;
     }
     .border-box {
         {$borderRule}
-        padding: {$borderPadding}pt;
+        padding: {$borderPadPt}pt;
         height: {$borderBoxHeightPt}pt;
     }
     header { text-align: center; }
@@ -157,7 +182,7 @@ final class CoverBuilder
         font-size: 22pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
-        margin-bottom: 10pt !important;
+        margin: 0;
     }
     .section-h {
         font-size: 26pt;
@@ -174,8 +199,8 @@ final class CoverBuilder
         padding: 0;
         vertical-align: top;
     }
-    table.grid td.label { width: 80pt; color: {$col($d->primaryColor)}; }
-    table.grid td.colon { width: 15pt; text-align: center; margin-left: 15px; }
+    table.grid td.label { width: {$labelColWidthPt}pt; color: {$col($d->primaryColor)}; }
+    table.grid td.colon { width: 16pt; text-align: center; }
     table.grid td.value { color: {$col($d->secondaryColor)}; }
     .designation {
         margin: 2pt 0 0 0;
@@ -184,9 +209,9 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .topic-grid { margin-left: 25pt; margin-top: 20pt; }
+    .topic-grid { margin-left: 25pt; margin-top: {$topicGapPt}pt; }
     .topic-label {
-        width: 80pt;
+        width: {$topicColWidthPt}pt;
         font-weight: bold;
         font-size: 26pt;
         font-family: {$font($d->secondaryFont)};
@@ -194,7 +219,7 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
     }
-    .topic-colon { width: 15pt; vertical-align: top; padding: 0; }
+    .topic-colon { width: 16pt; vertical-align: top; padding: 0; text-align: center; }
     .topic-value {
         font-size: 24pt;
         font-family: {$font($d->secondaryFont)};
@@ -230,7 +255,7 @@ final class CoverBuilder
 HTML;
     }
 
-    private static function row(string $label, string $valueHtml, bool $isRichText = false): string
+    private static function row(string $label, string $valueHtml): string
     {
         $labelSafe = htmlspecialchars($label, ENT_QUOTES);
         return '
@@ -241,5 +266,35 @@ HTML;
                             <td class="value">' . $valueHtml . '</td>
                         </tr>
                     </table>';
+    }
+
+    /**
+     * Measures the widest of $labels in mPDF's own metrics for $fontKey at
+     * $sizePt, and returns a column width (in pt) generous enough to fit
+     * it plus a small buffer. Falls back to a safe default if the font
+     * can't be loaded for measurement (e.g. mid-upload race), so a label
+     * measurement failure never breaks PDF generation.
+     */
+    private static function measureLabelColumnWidth(\Mpdf\Mpdf $mpdf, array $labels, string $fontKey, float $sizePt): float
+    {
+        $labels = array_filter($labels, fn ($l) => $l !== '');
+        if (empty($labels)) {
+            return self::LABEL_MIN_WIDTH_PT;
+        }
+
+        try {
+            $mpdf->SetFont($fontKey, '', $sizePt, false);
+            $maxMm = 0.0;
+            foreach ($labels as $label) {
+                $w = $mpdf->GetStringWidth($label);
+                if ($w > $maxMm) {
+                    $maxMm = $w;
+                }
+            }
+            $widthPt = $maxMm * self::MM_TO_PT + self::LABEL_BUFFER_PT;
+            return max($widthPt, self::LABEL_MIN_WIDTH_PT);
+        } catch (\Throwable $e) {
+            return self::LABEL_MIN_WIDTH_PT + 20.0;
+        }
     }
 }

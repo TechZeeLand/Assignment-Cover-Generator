@@ -317,9 +317,14 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
 }
 
 /* ---- Live preview canvas: rendered at true 595x842 design size, then
-   scaled down with a JS-computed transform to fit .preview-page. This
-   mirrors the reference OutputPDF.html design (CSS Grid rows) at 1:1
-   values so it stays visually faithful to the generated PDF. ---- */
+   scaled down with a JS-computed transform to fit .preview-page. Every
+   size/spacing value below is kept numerically identical (px == pt) to
+   its counterpart in CoverBuilder.php's PDF template - including the
+   border-box height, which JS computes explicitly (see renderPreview())
+   rather than relying on a CSS calc(), so it can't drift out of sync
+   with the PDF's own hand-computed height again. Label/colon column
+   widths are also computed in JS per render, from real measured text
+   width, and applied as inline grid-template-columns - see buildRow(). ---- */
 .pv-canvas {
     width: 595px;
     height: 842px;
@@ -330,7 +335,6 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     left: 0;
 }
 .pv-page-pad { padding: 15px; height: 100%; }
-.pv-border-box { height: calc(100% - 30px); }
 .pv-header { text-align: center; }
 .pv-header p, .pv-header h1 { margin: 0; }
 @font-face {
@@ -338,14 +342,13 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     src: url('../fonts/Amiri-Regular.ttf') format('truetype');
     font-display: swap;
 }
-.pv-bismillah { font-size: 30px; margin: 0 0 4px; font-family: 'Amiri', serif; }
-.pv-versity { font-size: 34px; font-weight: bold; margin: 0; }
+.pv-bismillah { font-size: 16px; margin: 0 0 4px; font-family: 'Amiri', serif; }
+.pv-versity { font-size: 30px; font-weight: bold; margin: 0; }
 .pv-dept { font-size: 22px; margin: 0; }
 .pv-h2 { font-size: 26px; font-weight: bold; margin: 0; }
 .pv-grid-wrap { margin-left: 25px; }
 .pv-row {
     display: grid;
-    grid-template-columns: 80px 15px 1fr;
     margin: 0;
     font-size: 24px;
 }
@@ -355,12 +358,11 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
 .pv-designation { margin: 2px 0 0; text-align: center; font-size: 16px; }
 .pv-topic-row {
     display: grid;
-    grid-template-columns: 80px 15px 1fr;
-    margin: 10px 0 0 25px;
+    margin-left: 25px;
     font-size: 24px;
 }
 .pv-topic-label { font-weight: bold; font-size: 26px; }
-.pv-topic-colon { text-align: left; }
+.pv-topic-colon { text-align: center; }
 .pv-topic-value { font-size: 24px; }
 .pv-submission { font-size: 18px; margin: 15px 0 0; }
 

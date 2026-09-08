@@ -23,7 +23,6 @@ $currentYear = date('Y');
                     <li><a href="https://www.instagram.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram</a></li>
                     <li><a href="https://www.tiktok.com/@TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok" aria-hidden="true"></i> TikTok</a></li>
                     <li><a href="https://github.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-github" aria-hidden="true"></i> GitHub</a></li>
-                    <li><a href="mailto:azlanaziz@rayaz.org"><i class="fa-solid fa-envelope" aria-hidden="true"></i> azlanaziz@rayaz.org</a></li>
                 </ul>
             </nav>
         </div>
