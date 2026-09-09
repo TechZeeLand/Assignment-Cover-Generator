@@ -7,105 +7,242 @@ namespace App;
 /**
  * Renders a CoverData object into the HTML that gets fed to mPDF.
  *
- * The original reference design uses CSS Grid for the label/colon/value
- * rows, which mPDF's HTML/CSS engine does not support. Every grid row is
- * reproduced here as a small fixed-layout <table> instead (80pt label
- * column, 15pt colon column, flexible value column) so the printed result
- * matches the reference pixel-for-pixel while remaining renderable by mPDF.
- *
- * Two important mPDF-specific constraints drive the structure below:
+ * Several mPDF-specific constraints drive the structure below:
  *
  * 1. Font sizes must be declared via a CSS class in the <style> block, not
  *    via an inline style="" attribute on a <td>. mPDF's table layout engine
  *    computes cell metrics from the stylesheet in an earlier pass and does
- *    not reliably pick up per-cell inline font-size overrides. Each
- *    editable font-size group therefore gets its own CSS class (e.g.
- *    .grid-student, .grid-course) with the size baked into the class rule.
+ *    not reliably pick up per-cell inline font-size overrides.
  *
- * 2. The page border must NOT be a separate, absolutely-positioned div.
- *    mPDF's position:absolute does not reliably remove an element from the
- *    page's normal flow the way a browser does — an empty div given an
- *    explicit height to visually span the page still reserves that height
- *    in the flow, which pushed all real content onto a spurious page 2
- *    (with the border alone on a blank page 1). The border is instead a
- *    plain CSS `border` + `padding` on the same block that holds the
- *    content, with no explicit `height` anywhere, so it hugs the content
- *    naturally and a second page only appears when content genuinely does
- *    not fit on one page.
+ * 2. Colon alignment across "Student Details" and "Course Details" requires
+ *    every label/colon/value row - from BOTH sections - to live in a single
+ *    <table>. mPDF (like a browser) sizes auto-layout table columns once per
+ *    <table>; two separate tables would each size their own label column
+ *    independently and the colons would drift apart. The section headers
+ *    are therefore rows inside that same table (colspan="3"), not separate
+ *    elements outside it.
+ *
+ * 3. The page border must always span the full page, independent of how
+ *    much content is present, and must never itself consume vertical flow
+ *    space (an empty div with an explicit height still reserves that height
+ *    in mPDF's normal flow, which pushes real content onto a spurious
+ *    second page). CSS `position: fixed` is mPDF's supported mechanism for
+ *    content that is pinned to a fixed spot on every page without
+ *    occupying flow space (the same mechanism mPDF documents for running
+ *    headers/footers/watermarks), so the border - and the submission date,
+ *    which must always sit at the bottom of the page above the border even
+ *    when the rest of the content ends much higher up - are both built as
+ *    position:fixed blocks anchored to page coordinates.
+ *
+ * 4. Margins must never be relied upon for spacing on <table> elements or
+ *    inside the <header> tag: mPDF's handling of both is unreliable (a
+ *    margin on a <table> can silently be overridden by a broader selector
+ *    such as `table.grid { margin: 0 }` sized for a different purpose, and
+ *    margins on children of <header> are not dependably applied). Spacing
+ *    between blocks is therefore applied via margin on plain <div>/<p>
+ *    wrappers, and indentation is applied via padding on table cells
+ *    instead of margin on the table.
+ *
+ * $fontScale and $spacingScale let PdfService shrink the page in small
+ * steps (fonts and whitespace independently) so a page that would otherwise
+ * spill onto a second page can be brought back down to exactly one, without
+ * ever needing to touch the content itself.
  */
 final class CoverBuilder
 {
-    // Outer inset between the page edge and the border/content area.
-    private const CONTENT_INSET_PT = 15.0;
+    // ---- Page geometry (points). A4 at 72pt/inch: 210mm x 297mm. ----
+    private const PAGE_WIDTH_PT  = 595.2756;
+    private const PAGE_HEIGHT_PT = 841.8898;
 
-    public static function buildHtml(CoverData $d): string
+    // Gap between the physical page edge and the border stroke.
+    private const OUTER_INSET_PT = 15.0;
+
+    // Border stroke thickness.
+    private const BORDER_THICKNESS_PT = 18.0;
+
+    // Gap between the border's inner edge and normal content (top/left/right).
+    private const CONTENT_PADDING_PT = 20.0;
+
+    // Small breathing gap between the border's inner edge and the
+    // submission-date line pinned above it.
+    private const SUBMISSION_BORDER_GAP_PT = 6.0;
+
+    // Fixed font size for both section headers ("Student Details" /
+    // "Course Details") and, per request, the "Topic" label - so the two
+    // always match regardless of the user-editable Topic font size.
+    private const SECTION_HEADER_FONT_SIZE = 26.0;
+
+    private const MIN_FONT_SCALE_PT = 6.0;
+
+    public static function pageWidthPt(): float
+    {
+        return self::PAGE_WIDTH_PT;
+    }
+
+    public static function pageHeightPt(): float
+    {
+        return self::PAGE_HEIGHT_PT;
+    }
+
+    public static function ptToMm(float $pt): float
+    {
+        return $pt * 25.4 / 72;
+    }
+
+    /**
+     * How much vertical space (points) must be reserved at the bottom of
+     * the normal content flow so the pinned submission-date line - and the
+     * border beneath it - never overlap real content. Sized generously
+     * enough for the line to wrap onto two lines without touching the
+     * border.
+     */
+    public static function bottomReservePt(CoverData $d, float $spacingScale = 1.0): float
+    {
+        if (!$d->showSubmissionDate || $d->submissionDateDisplay === '') {
+            return self::CONTENT_PADDING_PT;
+        }
+        $gap = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
+        $lineHeight = $d->submissionFontSize * 1.32;
+        // Reserve room for up to two lines in case the date line wraps.
+        return $gap + ($lineHeight * 2) + 4.0;
+    }
+
+    /**
+     * The page insets (points) that keep normal body content inside the
+     * border and, at the bottom, above the pinned submission-date line.
+     *
+     * Only 'bottom' is ever passed to mPDF as a real page margin. mPDF
+     * measures CSS `position: fixed` offsets from the margin box's
+     * top-left corner (not the physical page edge) for margin_top /
+     * margin_left, but a fixed element positioned near the bottom or
+     * right of the page is simply clipped away once margin_bottom /
+     * margin_right shrink the margin box - there is no equivalent
+     * "reachable" area past those. So margin_top/left/right are always 0
+     * (leaving fixed elements free to reach every edge, and 'top'/'left'
+     * on them equal to true page-relative points), and the top/left/right
+     * inset for ordinary flowing content is applied as CSS padding on a
+     * wrapping <div> instead (see buildHtml()). margin_bottom is left as
+     * a real mPDF margin because it is what makes mPDF trigger a second
+     * page once flowing content would otherwise run into the reserved
+     * bottom strip - there is no flow-side equivalent to padding for that.
+     *
+     * @return array{top: float, right: float, bottom: float, left: float}
+     */
+    public static function marginsPt(CoverData $d, float $spacingScale = 1.0): array
+    {
+        $sideInset = self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::CONTENT_PADDING_PT;
+
+        return [
+            'top'    => $sideInset,
+            'right'  => $sideInset,
+            'bottom' => self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::bottomReservePt($d, $spacingScale),
+            'left'   => $sideInset,
+        ];
+    }
+
+    public static function buildHtml(CoverData $d, float $fontScale = 1.0, float $spacingScale = 1.0): string
     {
         $font = fn (string $key) => htmlspecialchars($key, ENT_QUOTES);
         $col  = fn (string $hex) => htmlspecialchars($hex, ENT_QUOTES);
 
-        $borderPadding = $d->showBorder ? 20.0 : 0.0;
-        $insetPt       = self::CONTENT_INSET_PT;
-        $borderRule    = $d->showBorder ? "border: {$borderPadding}pt solid {$col($d->accentColor)};" : '';
+        $fscale = fn (float $pt) => max(self::MIN_FONT_SCALE_PT, round($pt * $fontScale, 2));
+        $sscale = fn (float $pt) => max(0.0, round($pt * $spacingScale, 2));
+
+        $margins = self::marginsPt($d, $spacingScale);
+
+        $bismillahFontSize  = $fscale($d->bismillahFontSize);
+        $versityFontSize    = $fscale($d->versityFontSize);
+        $deptFontSize       = $fscale($d->deptFontSize);
+        $studentFontSize    = $fscale($d->studentFontSize);
+        $courseFontSize     = $fscale($d->courseFontSize);
+        $topicFontSize      = $fscale($d->topicFontSize);
+        $submissionFontSize = $fscale($d->submissionFontSize);
+        $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
+
+        $deptGapPt        = $sscale(16.0);
+        $sectionGapPt     = $sscale(20.0);
+        $topicGapPt       = $sscale(20.0);
+        $labelIndentPt    = max(4.0, $sscale(25.0));
+        $topicIndentPt    = max(4.0, $sscale(50.0));
+        $topicLabelColPt  = 90.0;
+        $bismillahGapPt   = $sscale(4.0);
+        $designationGapPt = $sscale(2.0);
 
         $rows = [];
 
         if ($d->showStudentName) {
-            $rows['student'][] = self::row('Name', $d->studentName);
+            $rows['student'][] = ['Name', $d->studentName];
         }
         if ($d->showStudentId) {
-            $rows['student'][] = self::row('ID', $d->studentId);
+            $rows['student'][] = ['ID', $d->studentId];
         }
         if ($d->showStudentSection) {
-            $rows['student'][] = self::row('Section', $d->studentSection);
+            $rows['student'][] = ['Section', $d->studentSection];
         }
         if ($d->showStudentBatch) {
-            $rows['student'][] = self::row('Batch', $d->studentBatch);
+            $rows['student'][] = ['Batch', $d->studentBatch];
         }
         if ($d->showStudentProgram) {
-            $rows['student'][] = self::row('Program', $d->studentProgram);
+            $rows['student'][] = ['Program', $d->studentProgram];
         }
         if ($d->showSemester) {
-            $rows['student'][] = self::row($d->semesterType, $d->semester);
+            $rows['student'][] = [$d->semesterType, $d->semester];
         }
 
         if ($d->showCourseCode) {
-            $rows['course'][] = self::row('Code', $d->courseCode);
+            $rows['course'][] = ['Code', $d->courseCode];
         }
         if ($d->showCourseTitle) {
-            $rows['course'][] = self::row('Title', $d->courseTitleHtml);
+            $rows['course'][] = ['Title', $d->courseTitleHtml];
         }
         if ($d->showCourseTeacherName) {
-            $rows['course'][] = self::row('Teacher', $d->courseTeacherName);
+            $rows['course'][] = ['Teacher', $d->courseTeacherName];
         }
 
-        // "grid-student"/"grid-course" carry the group's editable font
-        // size (declared in <style> below); "grid" carries the shared
-        // structural rules (column widths, alignment, etc).
-        $studentRowsHtml = implode('', array_map(
-            static fn (string $row) => str_replace('class="grid"', 'class="grid grid-student"', $row),
-            $rows['student'] ?? []
-        ));
-        $courseRowsHtml = implode('', array_map(
-            static fn (string $row) => str_replace('class="grid"', 'class="grid grid-course"', $row),
-            $rows['course'] ?? []
-        ));
+        $hasStudent = !empty($rows['student']);
+        $hasCourse  = !empty($rows['course']) || $d->showCourseTeacherDesignation;
 
-        $studentSection = '';
-        if (!empty($rows['student'])) {
-            $studentSection = '
-                <h2 class="section-h">Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
-                <div class="grid-wrap">' . $studentRowsHtml . '</div>';
+        $detailsTable = '';
+        if ($hasStudent || $hasCourse) {
+            $body = '';
+
+            if ($hasStudent) {
+                $body .= self::headerRow('Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES), 0.0);
+                foreach ($rows['student'] as [$label, $valueHtml]) {
+                    $body .= self::row($label, $valueHtml, 'grp-student');
+                }
+            }
+
+            if ($hasCourse) {
+                $body .= self::headerRow(
+                    'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES),
+                    $hasStudent ? $sectionGapPt : 0.0
+                );
+                foreach ($rows['course'] as [$label, $valueHtml]) {
+                    $body .= self::row($label, $valueHtml, 'grp-course');
+                }
+                if ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '') {
+                    $body .= '<tr><td colspan="3" class="designation-cell">'
+                        . '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES) . '</p>'
+                        . '</td></tr>';
+                }
+            }
+
+            $detailsTable = '<table class="grid" cellpadding="0" cellspacing="0">' . $body . '</table>';
         }
 
-        $courseSection = '';
-        if (!empty($rows['course']) || $d->showCourseTeacherDesignation) {
-            $designationHtml = $d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== ''
-                ? '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES) . '</p>'
-                : '';
-            $courseSection = '
-                <h2 class="section-h" style="margin-top:20pt;">Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES) . '</h2>
-                <div class="grid-wrap">' . $courseRowsHtml . '</div>'
-                . $designationHtml;
+        $topicBlock = '';
+        if ($d->showTopic) {
+            $topicBlock = '
+                <div class="topic-wrap" style="margin-top:' . $topicGapPt . 'pt;">
+                    <table class="topic-grid" cellpadding="0" cellspacing="0">
+                        <tr>
+                            <td class="topic-label">Topic</td>
+                            <td class="topic-colon">:</td>
+                            <td class="topic-value">' . $d->topicHtml . '</td>
+                        </tr>
+                    </table>
+                </div>';
         }
 
         $bismillah = $d->showBismillah
@@ -120,25 +257,24 @@ final class CoverBuilder
             ? '<p class="dept-name">' . htmlspecialchars($d->deptName, ENT_QUOTES) . '</p>'
             : '';
 
-        $topicBlock = '';
-        if ($d->showTopic) {
-            $topicBlock = '
-                <table class="grid topic-grid" cellpadding="0" cellspacing="0">
-                    <tr class="topic-row">
-                        <td class="topic-label">Topic</td>
-                        <td class="colon topic-colon">:</td>
-                        <td class="topic-value">' . $d->topicHtml . '</td>
-                    </tr>
-                </table>';
-        }
-
-        $submissionBlock = '';
+        $submissionFixed = '';
         if ($d->showSubmissionDate && $d->submissionDateDisplay !== '') {
-            $submissionBlock = '<p class="submission"><b>Submission Date:</b> '
-                . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '</p>';
+            $bottomReserve  = self::bottomReservePt($d, $spacingScale);
+            $gap            = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
+            $submissionLeft = $margins['left'];
+            $submissionWidth = self::PAGE_WIDTH_PT - $margins['left'] - $margins['right'];
+            // Top of the reserved bottom strip (just inside the border),
+            // so the line renders at the top of that strip and grows
+            // downward - never touching the border - even if it wraps.
+            $submissionTop = self::PAGE_HEIGHT_PT - self::OUTER_INSET_PT - self::BORDER_THICKNESS_PT - $bottomReserve + $gap;
+
+            $submissionFixed = '
+    <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
+        <p><b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '</p>
+    </div>';
         }
 
-        $topicLabelSize = $d->topicFontSize + 2;
+        $borderFixed = $d->showBorder ? self::borderFrameHtml($col($d->accentColor)) : '';
 
         return <<<HTML
 <!DOCTYPE html>
@@ -152,118 +288,146 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .page-frame {
-        padding: {$insetPt}pt;
-        height: 100% !important;
-    }
-    .content {
-        {$borderRule}
-        padding: {$borderPadding}pt;
-    }
-    header { text-align: center; }
-    header p, header h1 { margin: 0; }
+    .header-block { text-align: center; }
+    .header-block p, .header-block h1 { margin: 0; }
     .bismillah {
         font-family: amiri;
-        font-size: {$d->bismillahFontSize}pt;
+        font-size: {$bismillahFontSize}pt;
         color: {$col($d->secondaryColor)};
-        margin-bottom: 4pt !important;
+        margin-bottom: {$bismillahGapPt}pt !important;
     }
     .versity-name {
-        font-size: {$d->versityFontSize}pt;
+        font-size: {$versityFontSize}pt;
         font-weight: bold;
         font-family: {$font($d->versityFont)};
         color: {$col($d->accentColor)};
     }
     .dept-name {
-        font-size: {$d->deptFontSize}pt;
+        font-size: {$deptFontSize}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
-        margin-bottom: 500px !important;
+        margin-bottom: {$deptGapPt}pt !important;
     }
     .section-h {
-        font-size: 26pt;
+        font-size: {$sectionHeaderSize}pt;
         font-weight: bold;
         font-family: {$font($d->primaryFont)};
         color: {$col($d->primaryColor)};
-        margin: 0;
+        text-align: left;
     }
-    .grid-wrap { margin-left: 25pt; }
     table.grid { width: 100%; border-collapse: collapse; margin: 0; }
     table.grid td {
         font-family: {$font($d->secondaryFont)};
         padding: 0;
         vertical-align: top;
     }
-    table.grid td.label { width: 80pt; color: {$col($d->primaryColor)}; }
-    table.grid td.colon { width: 15pt; text-align: center; margin-left: 15px; }
-    table.grid td.value { color: {$col($d->secondaryColor)}; }
-    table.grid-student td { font-size: {$d->studentFontSize}pt; }
-    table.grid-course td { font-size: {$d->courseFontSize}pt; }
+    table.grid td.label { color: {$col($d->primaryColor)}; padding-left: {$labelIndentPt}pt; white-space: nowrap; }
+    table.grid td.colon { text-align: left; padding: 0 4pt; }
+    table.grid td.value { color: {$col($d->secondaryColor)}; width: 100%; }
+    table.grid td.grp-student { font-size: {$studentFontSize}pt; }
+    table.grid td.grp-course { font-size: {$courseFontSize}pt; }
+    .designation-cell { padding: 0; text-align: center; }
     .designation {
-        margin: 2pt 0 0 0;
+        margin: {$designationGapPt}pt 0 0 0;
         text-align: center;
-        font-size: 16pt;
+        font-size: {$fscale(16.0)}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-
-    .topic-row { margin-top: 20pt; }
-    .topic-grid { margin-left: 50pt; margin-top: 500px; }
+    .topic-grid { width: 100%; border-collapse: collapse; margin: 0; }
     .topic-label {
-        width: 80pt;
+        width: {$topicLabelColPt}pt;
         font-weight: bold;
-        font-size: {$topicLabelSize}pt;
+        font-size: {$sectionHeaderSize}pt;
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         vertical-align: top;
         padding: 0;
+        padding-left: {$topicIndentPt}pt;
+        white-space: nowrap;
     }
-    .topic-colon { width: 15pt; vertical-align: top; padding: 0; font-size: {$d->topicFontSize}pt; }
+    .topic-colon { width: 12pt; vertical-align: top; padding: 0 4pt; font-size: {$topicFontSize}pt; }
     .topic-value {
-        font-size: {$d->topicFontSize}pt;
+        font-size: {$topicFontSize}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
         vertical-align: top;
         padding: 0;
+        width: auto;
     }
-    .submission {
-        font-size: {$d->submissionFontSize}pt;
-        margin-top: 15pt;
-        margin-left: 0;
+    .submission p {
+        margin: 0;
+        font-size: {$submissionFontSize}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
+    }
+    .content-pad {
+        padding-top: {$margins['top']}pt;
+        padding-left: {$margins['left']}pt;
+        padding-right: {$margins['right']}pt;
     }
 </style>
 </head>
 <body>
-    <div class="page-frame">
-        <div class="content">
-            <header>
-                {$bismillah}
-                {$versityBlock}
-                {$deptBlock}
-            </header>
-            {$studentSection}
-            {$courseSection}
-            {$topicBlock}
-            {$submissionBlock}
+    {$borderFixed}
+    {$submissionFixed}
+    <div class="content-pad">
+        <div class="header-block">
+            {$bismillah}
+            {$versityBlock}
+            {$deptBlock}
         </div>
+        {$detailsTable}
+        {$topicBlock}
     </div>
 </body>
 </html>
 HTML;
     }
 
-    private static function row(string $label, string $valueHtml): string
+    /**
+     * Builds the full-page border as four independent filled bars
+     * (position:fixed, background-color) rather than a single div with a
+     * CSS `border`. A background-filled box's rendered size is exactly its
+     * declared width/height with no box-model ambiguity, whereas a `border`
+     * shorthand adds the stroke outside (or inside, depending on
+     * box-sizing support) the declared box - a source of drift mPDF does
+     * not reliably resolve for position:fixed elements. Four bars sidestep
+     * that entirely and are trivially exact on every side.
+     */
+    private static function borderFrameHtml(string $accentColorSafe): string
+    {
+        $outerW = self::PAGE_WIDTH_PT - (2 * self::OUTER_INSET_PT);
+        $outerH = self::PAGE_HEIGHT_PT - (2 * self::OUTER_INSET_PT);
+        $t = self::BORDER_THICKNESS_PT;
+        $inset = self::OUTER_INSET_PT;
+
+        $bar = function (float $top, float $left, float $width, float $height) use ($accentColorSafe): string {
+            return '<div style="position:fixed; top:' . round($top, 2) . 'pt; left:' . round($left, 2) . 'pt; '
+                . 'width:' . round($width, 2) . 'pt; height:' . round($height, 2) . 'pt; '
+                . 'background-color:' . $accentColorSafe . ';"></div>';
+        };
+
+        return "\n    " . $bar($inset, $inset, $outerW, $t)                       // top
+            . "\n    " . $bar($inset + $outerH - $t, $inset, $outerW, $t)         // bottom
+            . "\n    " . $bar($inset, $inset, $t, $outerH)                        // left
+            . "\n    " . $bar($inset, $inset + $outerW - $t, $t, $outerH);        // right
+    }
+
+    private static function headerRow(string $labelHtml, float $paddingTopPt): string
+    {
+        $style = $paddingTopPt > 0 ? ' style="padding-top:' . $paddingTopPt . 'pt;"' : '';
+        return '<tr><td colspan="3" class="section-h"' . $style . '>' . $labelHtml . '</td></tr>';
+    }
+
+    private static function row(string $label, string $valueHtml, string $groupClass): string
     {
         $labelSafe = htmlspecialchars($label, ENT_QUOTES);
         return '
-                    <table class="grid" cellpadding="0" cellspacing="0">
-                        <tr>
-                            <td class="label">' . $labelSafe . '</td>
-                            <td class="colon">:</td>
-                            <td class="value">' . $valueHtml . '</td>
-                        </tr>
-                    </table>';
+            <tr>
+                <td class="label ' . $groupClass . '">' . $labelSafe . '</td>
+                <td class="colon ' . $groupClass . '">:</td>
+                <td class="value ' . $groupClass . '">' . $valueHtml . '</td>
+            </tr>';
     }
 }

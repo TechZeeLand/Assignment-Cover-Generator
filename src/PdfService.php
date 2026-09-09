@@ -6,16 +6,67 @@ namespace App;
 
 final class PdfService
 {
+    // Safety cap on shrink attempts. Spacing is shrunk first (cheapest,
+    // least noticeable), then, only if that alone isn't enough, fonts are
+    // shrunk too - both floor out well before this limit is reached for any
+    // input the form actually allows.
+    private const MAX_FIT_ATTEMPTS = 24;
+    private const SPACING_SCALE_FLOOR = 0.35;
+    private const SPACING_SCALE_STEP  = 0.13;
+    private const FONT_SCALE_FLOOR    = 0.6;
+    private const FONT_SCALE_STEP     = 0.04;
+
+    /**
+     * Renders the cover to a single page. If the content is long enough
+     * that it would naturally spill onto a second page, this re-renders
+     * with progressively tighter spacing and, if needed, slightly smaller
+     * fonts until it fits - the cover must never be more than one page.
+     */
     public static function render(CoverData $data, FontManager $fonts): \Mpdf\Mpdf
     {
+        $fontScale    = 1.0;
+        $spacingScale = 1.0;
+        $mpdf         = null;
+
+        for ($attempt = 0; $attempt < self::MAX_FIT_ATTEMPTS; $attempt++) {
+            $mpdf = self::renderAttempt($data, $fonts, $fontScale, $spacingScale);
+
+            if ($mpdf->page <= 1) {
+                break;
+            }
+
+            if ($spacingScale > self::SPACING_SCALE_FLOOR) {
+                $spacingScale = max(self::SPACING_SCALE_FLOOR, $spacingScale - self::SPACING_SCALE_STEP);
+            } else {
+                $fontScale = max(self::FONT_SCALE_FLOOR, $fontScale - self::FONT_SCALE_STEP);
+            }
+        }
+
+        return $mpdf;
+    }
+
+    private static function renderAttempt(CoverData $data, FontManager $fonts, float $fontScale, float $spacingScale): \Mpdf\Mpdf
+    {
         $fontConfig = $fonts->buildMpdfFontConfig();
+        $margins    = CoverBuilder::marginsPt($data, $spacingScale);
 
         $mpdf = new \Mpdf\Mpdf([
             'format'        => 'A4',
+            // Left/top/right stay at 0: mPDF measures position:fixed
+            // offsets from the margin box's top-left corner, and clips
+            // anything beyond the margin box's right/bottom edge, so a
+            // non-zero margin here would both shift and clip the fixed
+            // border/submission-date blocks in CoverBuilder. The visual
+            // top/left/right inset for normal content is applied instead
+            // as CSS padding in CoverBuilder::buildHtml(). margin_bottom
+            // is kept real because it is what makes mPDF trigger a second
+            // page once flowing content would run into the bottom strip
+            // reserved for the pinned submission date - see
+            // CoverBuilder::marginsPt() for the full explanation.
             'margin_left'   => 0,
             'margin_right'  => 0,
             'margin_top'    => 0,
-            'margin_bottom' => 0,
+            'margin_bottom' => CoverBuilder::ptToMm($margins['bottom']),
             'margin_header' => 0,
             'margin_footer' => 0,
             'fontDir'       => $fontConfig['fontDir'],
@@ -26,7 +77,7 @@ final class PdfService
 
         $mpdf->SetTitle('Assignment Cover' . ($data->versityName !== '' ? ' - ' . self::unescape($data->versityName) : ''));
         $mpdf->SetAuthor($data->studentName !== '' ? self::unescape($data->studentName) : 'Assignment Cover Generator');
-        $mpdf->WriteHTML(CoverBuilder::buildHtml($data));
+        $mpdf->WriteHTML(CoverBuilder::buildHtml($data, $fontScale, $spacingScale));
 
         return $mpdf;
     }
