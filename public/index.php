@@ -151,7 +151,7 @@ require __DIR__ . '/partials/head.php';
                 <label for="semester-type">Semester label</label>
                 <select name="semester-type" id="semester-type" class="text-input">
                     <option value="Semester">Semester</option>
-                    <option value="Trimester">Trimester</option>
+                    <option value="Trimester" selected>Trimester</option>
                 </select>
             </div>
             <label class="row-check"><input type="checkbox" name="show-semester" id="show-semester" checked><span>Semester value</span></label>
@@ -209,7 +209,7 @@ require __DIR__ . '/partials/head.php';
             <input type="date" class="text-input" name="submission-date" id="submission-date">
             <div class="field field-narrow">
                 <label for="submission-font-size">Submission date font size <small>(pt)</small></label>
-                <input type="number" class="text-input input-narrow" name="submission-font-size" id="submission-font-size" value="18" min="8" max="60" step="1">
+                <input type="number" class="text-input input-narrow" name="submission-font-size" id="submission-font-size" value="14" min="8" max="60" step="1">
             </div>
         </section>
 

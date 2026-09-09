@@ -160,7 +160,7 @@ final class CoverBuilder
         $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
 
         $deptGapPt        = $sscale(16.0);
-        $sectionGapPt     = $sscale(20.0);
+        $sectionGapPt     = $sscale(200.0);
         $topicGapPt       = $sscale(20.0);
         $labelIndentPt    = max(4.0, $sscale(25.0));
         $topicIndentPt    = max(4.0, $sscale(50.0));
@@ -237,8 +237,7 @@ final class CoverBuilder
                 <div class="topic-wrap" style="margin-top:' . $topicGapPt . 'pt;">
                     <table class="topic-grid" cellpadding="0" cellspacing="0">
                         <tr>
-                            <td class="topic-label">Topic</td>
-                            <td class="topic-colon">:</td>
+                            <td class="topic-label">Topic:</td>
                             <td class="topic-value">' . $d->topicHtml . '</td>
                         </tr>
                     </table>
@@ -311,7 +310,7 @@ final class CoverBuilder
     .section-h {
         font-size: {$sectionHeaderSize}pt;
         font-weight: bold;
-        font-family: {$font($d->primaryFont)};
+        font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
     }
@@ -346,7 +345,6 @@ final class CoverBuilder
         padding-left: {$topicIndentPt}pt;
         white-space: nowrap;
     }
-    .topic-colon { width: 12pt; vertical-align: top; padding: 0 4pt; font-size: {$topicFontSize}pt; }
     .topic-value {
         font-size: {$topicFontSize}pt;
         font-family: {$font($d->secondaryFont)};
