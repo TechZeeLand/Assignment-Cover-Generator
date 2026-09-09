@@ -177,7 +177,7 @@ final class CoverBuilder
         font-size: {$d->deptFontSize}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
-        margin-bottom: 50pt !important;
+        margin-bottom: 500px;
     }
     .section-h {
         font-size: 26pt;
@@ -205,12 +205,12 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .topic-grid { margin-left: 25pt; margin-top: 50pt; }
+    .topic-grid { margin-left: 50pt; margin-top: 500px; }
     .topic-label {
         width: 80pt;
         font-weight: bold;
         font-size: {$topicLabelSize}pt;
-        font-family: {$font($d->secondaryFont)};
+        font-family: {$font($d->primaryFont)};
         color: {$col($d->primaryColor)};
         vertical-align: top;
         padding: 0;
