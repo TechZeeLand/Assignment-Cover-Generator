@@ -104,7 +104,7 @@ require __DIR__ . '/partials/head.php';
             <input type="text" class="text-input" name="versity" id="versity" placeholder="Enter university name">
             <div class="field field-narrow">
                 <label for="versity-font-size">University name font size <small>(pt)</small></label>
-                <input type="number" class="text-input input-narrow" name="versity-font-size" id="versity-font-size" value="30" min="8" max="60" step="1">
+                <input type="number" class="text-input input-narrow" name="versity-font-size" id="versity-font-size" value="36" min="8" max="60" step="1">
             </div>
 
             <label class="row-check">

@@ -124,7 +124,7 @@ final class CoverBuilder
         if ($d->showTopic) {
             $topicBlock = '
                 <table class="grid topic-grid" cellpadding="0" cellspacing="0">
-                    <tr>
+                    <tr class="topic-row">
                         <td class="topic-label">Topic</td>
                         <td class="colon topic-colon">:</td>
                         <td class="topic-value">' . $d->topicHtml . '</td>
@@ -154,6 +154,7 @@ final class CoverBuilder
     }
     .page-frame {
         padding: {$insetPt}pt;
+        height: 100% !important;
     }
     .content {
         {$borderRule}
@@ -177,7 +178,7 @@ final class CoverBuilder
         font-size: {$d->deptFontSize}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
-        margin-bottom: 500px;
+        margin-bottom: 500px !important;
     }
     .section-h {
         font-size: 26pt;
@@ -205,12 +206,14 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
+
+    .topic-row { margin-top: 20pt; }
     .topic-grid { margin-left: 50pt; margin-top: 500px; }
     .topic-label {
         width: 80pt;
         font-weight: bold;
         font-size: {$topicLabelSize}pt;
-        font-family: {$font($d->primaryFont)};
+        font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         vertical-align: top;
         padding: 0;
