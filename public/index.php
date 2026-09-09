@@ -129,7 +129,7 @@ require __DIR__ . '/partials/head.php';
 
             <div class="field field-narrow">
                 <label for="student-font-size">Font size for this section <small>(pt)</small></label>
-                <input type="number" class="text-input input-narrow" name="student-font-size" id="student-font-size" value="24" min="8" max="60" step="1">
+                <input type="number" class="text-input input-narrow" name="student-font-size" id="student-font-size" value="28" min="8" max="60" step="1">
             </div>
 
             <label class="row-check"><input type="checkbox" name="show-student-name" id="show-student-name" checked><span>Name</span></label>
@@ -164,7 +164,7 @@ require __DIR__ . '/partials/head.php';
 
             <div class="field field-narrow">
                 <label for="course-font-size">Font size for this section <small>(pt)</small></label>
-                <input type="number" class="text-input input-narrow" name="course-font-size" id="course-font-size" value="24" min="8" max="60" step="1">
+                <input type="number" class="text-input input-narrow" name="course-font-size" id="course-font-size" value="28" min="8" max="60" step="1">
             </div>
 
             <label class="row-check"><input type="checkbox" name="show-course-code" id="show-course-code" checked><span>Course code</span></label>
