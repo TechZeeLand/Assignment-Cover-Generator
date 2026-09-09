@@ -159,7 +159,7 @@ final class CoverBuilder
         $submissionFontSize = $fscale($d->submissionFontSize);
         $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
 
-        $deptGapPt        = $sscale(20.0);
+        $deptGapPt        = $sscale(25.0);
         $sectionGapPt     = $sscale(20.0);
         $topicGapPt       = $sscale(20.0);
         $labelIndentPt    = max(4.0, $sscale(25.0));
@@ -287,7 +287,6 @@ final class CoverBuilder
     body {
         margin: 0;
         padding: 0;
-        font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
     .header-block { text-align: center; }
