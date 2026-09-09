@@ -109,10 +109,10 @@ final class FontManager
         $fontData['amiri'] = ['R' => 'Amiri-Regular.ttf'];
         $fontData['oldenglish'] = ['R' => 'oldenglishtextmt.ttf'];
         $fontData['gandhiserif'] = [
-            'R'  => 'GandhiSerif-Regular.otf',
-            'B'  => 'GandhiSerif-Bold.otf',
-            'I'  => 'GandhiSerif-Italic.otf',
-            'BI' => 'GandhiSerif-BoldItalic.otf',
+            'R'  => 'GandhiSerif-Regular.ttf',
+            'B'  => 'GandhiSerif-Bold.ttf',
+            'I'  => 'GandhiSerif-Italic.ttf',
+            'BI' => 'GandhiSerif-BoldItalic.ttf',
         ];
         $fontData['alata'] = ['R' => 'Alata-Regular.ttf'];
 
