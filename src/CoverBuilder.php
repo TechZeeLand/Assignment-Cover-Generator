@@ -160,11 +160,11 @@ final class CoverBuilder
         $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
 
         $deptGapPt        = $sscale(20.0);
-        $sectionGapPt     = $sscale(30.0);
+        $sectionGapPt     = $sscale(40.0);
         $topicGapPt       = $sscale(20.0);
         $labelIndentPt    = max(4.0, $sscale(25.0));
         $topicIndentPt    = max(4.0, $sscale(25.0));
-        $topicLabelColPt  = 90.0;
+        $topicLabelColPt  = 10.0;
         $bismillahGapPt   = $sscale(4.0);
         $designationGapPt = $sscale(2.0);
 
