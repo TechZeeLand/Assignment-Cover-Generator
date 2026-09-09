@@ -159,11 +159,11 @@ final class CoverBuilder
         $submissionFontSize = $fscale($d->submissionFontSize);
         $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
 
-        $deptGapPt        = $sscale(16.0);
-        $sectionGapPt     = $sscale(200.0);
+        $deptGapPt        = $sscale(20.0);
+        $sectionGapPt     = $sscale(20.0);
         $topicGapPt       = $sscale(20.0);
         $labelIndentPt    = max(4.0, $sscale(25.0));
-        $topicIndentPt    = max(4.0, $sscale(50.0));
+        $topicIndentPt    = max(4.0, $sscale(25.0));
         $topicLabelColPt  = 90.0;
         $bismillahGapPt   = $sscale(4.0);
         $designationGapPt = $sscale(2.0);
@@ -207,7 +207,10 @@ final class CoverBuilder
             $body = '';
 
             if ($hasStudent) {
-                $body .= self::headerRow('Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES), 0.0);
+                $body .= self::headerRow(
+                    'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES),
+                    $hasStudent ? $sectionGapPt : 0.0
+                );
                 foreach ($rows['student'] as [$label, $valueHtml]) {
                     $body .= self::row($label, $valueHtml, 'grp-student');
                 }
