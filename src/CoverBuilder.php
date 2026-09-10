@@ -317,7 +317,7 @@ final class CoverBuilder
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
-        margin-bottom: 15pt;
+        padding-bottom: 15pt;
     }
     table.grid { width: 100%; border-collapse: collapse; margin: 0; }
     table.grid td {

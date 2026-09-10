@@ -167,9 +167,11 @@ html[data-theme="dark"] .theme-toggle .fa-moon { display: inline-block; }
     border-radius: var(--radius);
     padding: 6px;
     margin-bottom: 18px;
+
     position: sticky;
-    top: 8px;
+    top: 65px;
     z-index: 15;
+
     box-shadow: var(--shadow);
 }
 .section-nav::-webkit-scrollbar { display: none; }
@@ -199,7 +201,7 @@ html[data-theme="dark"] .theme-toggle .fa-moon { display: inline-block; }
     box-shadow: var(--shadow);
     padding: 18px 18px 20px;
     margin-bottom: 16px;
-    scroll-margin-top: 60px;
+    scroll-margin-top: 125px;
 }
 .card-head {
     margin: 0 0 16px;
@@ -515,7 +517,9 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     .topbar h1 { font-size: 1rem; }
     .gh-link span { display: none; }
     .page-title { font-size: 1.2rem; }
-    .section-nav { top: 4px; }
+
+    .section-nav { top: 57px; }
+
     .section-nav-link span { display: none; }
     .section-nav-link { padding: 10px 8px; }
     .section-nav-link i { font-size: 1rem; }
