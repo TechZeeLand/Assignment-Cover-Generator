@@ -34,7 +34,27 @@ namespace App;
  *    when the rest of the content ends much higher up - are both built as
  *    position:fixed blocks anchored to page coordinates.
  *
- * 4. Margins must never be relied upon for spacing on <table> elements or
+ * 4. The section headers ("Student Details" / "Course Details") and the
+ *    "Topic" label render in the user's chosen primary font (Alata by
+ *    default) WITHOUT `font-weight: bold`. Alata - like several of the
+ *    other bundled fonts - only ships a single (Regular) weight; its entry
+ *    in FontManager::buildMpdfFontConfig() has no 'B' variant. Without a
+ *    real bold face, mPDF fakes bold by stroking the outline of the
+ *    regular glyphs (see falseBoldWeight in the mPDF manual) rather than
+ *    substituting a different font - but that outline-stroke is what
+ *    makes a distinctive display face like Alata stop looking like
+ *    itself. Dropping font-weight keeps these labels rendering as genuine,
+ *    undistorted Alata.
+ *
+ *    Separately, both of these live inside `table.grid` / `table.topic-grid`,
+ *    and mPDF has a default behaviour - independent of the page-overflow
+ *    handling in PdfService - where a table's font size is silently
+ *    reduced if the table's unwrapped minimum width would otherwise exceed
+ *    the space available to it. `overflow: visible` on both tables (see
+ *    below) opts out of that, so the font sizes actually rendered are the
+ *    ones this class calculates, never a silent mPDF-chosen substitute.
+ *
+ * 5. Margins must never be relied upon for spacing on <table> elements or
  *    inside the <header> tag: mPDF's handling of both is unreliable (a
  *    margin on a <table> can silently be overridden by a broader selector
  *    such as `table.grid { margin: 0 }` sized for a different purpose, and
@@ -70,7 +90,7 @@ final class CoverBuilder
     // Fixed font size for both section headers ("Student Details" /
     // "Course Details") and, per request, the "Topic" label - so the two
     // always match regardless of the user-editable Topic font size.
-    private const SECTION_HEADER_FONT_SIZE = 26.0;
+    private const SECTION_HEADER_FONT_SIZE = 30.0;
 
     private const MIN_FONT_SCALE_PT = 6.0;
 
@@ -96,13 +116,23 @@ final class CoverBuilder
      * enough for the line to wrap onto two lines without touching the
      * border.
      */
-    public static function bottomReservePt(CoverData $d, float $spacingScale = 1.0): float
+    public static function bottomReservePt(CoverData $d, float $spacingScale = 1.0, float $fontScale = 1.0): float
     {
         if (!$d->showSubmissionDate || $d->submissionDateDisplay === '') {
             return self::CONTENT_PADDING_PT;
         }
         $gap = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
-        $lineHeight = $d->submissionFontSize * 1.32;
+        // Must use the SAME scaled size that buildHtml() actually renders
+        // the submission line at (see $fscale there), not the raw
+        // user-entered value. Reserving space for the raw size would
+        // over-reserve once fontScale shrinks below 1.0, silently eating
+        // into the space available for the rest of the content and
+        // forcing extra, unnecessary shrink attempts - which in turn feeds
+        // back into a smaller rendered submission-date size than the user
+        // actually asked for. Keeping the two in lockstep is what makes
+        // the submission-date font-size field behave predictably.
+        $scaledSubmissionFontSize = max(self::MIN_FONT_SCALE_PT, round($d->submissionFontSize * $fontScale, 2));
+        $lineHeight = $scaledSubmissionFontSize * 1.32;
         // Reserve room for up to two lines in case the date line wraps.
         return $gap + ($lineHeight * 2) + 4.0;
     }
@@ -128,14 +158,14 @@ final class CoverBuilder
      *
      * @return array{top: float, right: float, bottom: float, left: float}
      */
-    public static function marginsPt(CoverData $d, float $spacingScale = 1.0): array
+    public static function marginsPt(CoverData $d, float $spacingScale = 1.0, float $fontScale = 1.0): array
     {
         $sideInset = self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::CONTENT_PADDING_PT;
 
         return [
             'top'    => $sideInset,
             'right'  => $sideInset,
-            'bottom' => self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::bottomReservePt($d, $spacingScale),
+            'bottom' => self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::bottomReservePt($d, $spacingScale, $fontScale),
             'left'   => $sideInset,
         ];
     }
@@ -148,7 +178,7 @@ final class CoverBuilder
         $fscale = fn (float $pt) => max(self::MIN_FONT_SCALE_PT, round($pt * $fontScale, 2));
         $sscale = fn (float $pt) => max(0.0, round($pt * $spacingScale, 2));
 
-        $margins = self::marginsPt($d, $spacingScale);
+        $margins = self::marginsPt($d, $spacingScale, $fontScale);
 
         $bismillahFontSize  = $fscale($d->bismillahFontSize);
         $versityFontSize    = $fscale($d->versityFontSize);
@@ -164,7 +194,6 @@ final class CoverBuilder
         $topicGapPt       = $sscale(20.0);
         $labelIndentPt    = max(4.0, $sscale(25.0));
         $topicIndentPt    = max(4.0, $sscale(25.0));
-        $topicLabelColPt  = 10.0;
         $bismillahGapPt   = $sscale(4.0);
         $designationGapPt = $sscale(2.0);
 
@@ -261,7 +290,7 @@ final class CoverBuilder
 
         $submissionFixed = '';
         if ($d->showSubmissionDate && $d->submissionDateDisplay !== '') {
-            $bottomReserve  = self::bottomReservePt($d, $spacingScale);
+            $bottomReserve  = self::bottomReservePt($d, $spacingScale, $fontScale);
             $gap            = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
             $submissionLeft = $margins['left'];
             $submissionWidth = self::PAGE_WIDTH_PT - $margins['left'] - $margins['right'];
@@ -305,18 +334,18 @@ final class CoverBuilder
     }
     .dept-name {
         font-size: {$deptFontSize}pt;
+        font-weight: lighter !important;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
         margin-bottom: {$deptGapPt}pt !important;
     }
     .section-h {
         font-size: {$sectionHeaderSize}pt;
-        font-weight: bold;
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
     }
-    table.grid { width: 100%; border-collapse: collapse; margin: 0; }
+    table.grid { width: 100%; border-collapse: collapse; margin: 0; overflow: visible; }
     table.grid td {
         font-family: {$font($d->secondaryFont)};
         padding: 0;
@@ -335,10 +364,8 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
-    .topic-grid { width: 100%; border-collapse: collapse; margin: 0; }
+    .topic-grid { width: 100%; border-collapse: collapse; margin: 0; overflow: visible; }
     .topic-label {
-        width: {$topicLabelColPt}pt;
-        font-weight: bold;
         font-size: {$sectionHeaderSize}pt;
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
