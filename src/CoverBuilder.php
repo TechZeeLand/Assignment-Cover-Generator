@@ -70,7 +70,7 @@ final class CoverBuilder
     // Fixed font size for both section headers ("Student Details" /
     // "Course Details") and, per request, the "Topic" label - so the two
     // always match regardless of the user-editable Topic font size.
-    private const SECTION_HEADER_FONT_SIZE = 34.0;
+    private const SECTION_HEADER_FONT_SIZE = 30.0;
 
     private const MIN_FONT_SCALE_PT = 6.0;
 
@@ -353,7 +353,7 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
         width: auto;
-        margin-left: -30pt;
+        padding-left: -30pt;
     }
     .submission p {
         margin: 0;
