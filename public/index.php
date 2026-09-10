@@ -19,7 +19,7 @@ require __DIR__ . '/partials/head.php';
 <main class="layout">
 
     <div class="page-intro">
-        <h1 class="page-title">Create your assignment cover</h1>
+        <h1 class="page-title">Create Your Assignment Cover</h1>
         <p class="page-sub">Fill in the sections below, tick the fields you want to show, then generate a print-ready PDF. Everything has a sensible default, so you only need to change what matters to you.</p>
     </div>
 

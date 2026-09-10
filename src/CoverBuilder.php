@@ -272,10 +272,13 @@ final class CoverBuilder
             $submissionTop = self::PAGE_HEIGHT_PT - self::OUTER_INSET_PT - self::BORDER_THICKNESS_PT - $bottomReserve + $gap;
 
             $submissionFixed = '
-    <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
-        <p><b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '</p>
-    </div>';
-        }
+
+                <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
+                    <p style="font-size:' . $submissionFontSize . 'pt;">
+                        <b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '
+                    </p>
+                </div>';
+            }
 
         $borderFixed = $d->showBorder ? self::borderFrameHtml($col($d->accentColor)) : '';
 
@@ -360,10 +363,9 @@ final class CoverBuilder
         padding-left: -30pt;
     }
     .submission p {
-        margin: 0;
-        font-size: {$submissionFontSize}pt;
-        font-family: {$font($d->secondaryFont)};
-        color: {$col($d->accentColor)};
+    margin: 0;
+    font-family: {$font($d->secondaryFont)};
+    color: {$col($d->accentColor)};
     }
     .content-pad {
         padding-top: {$margins['top']}pt;
