@@ -273,7 +273,9 @@ final class CoverBuilder
 
             $submissionFixed = '
     <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
-        <p><b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '</p>
+        <p style="margin:0; font-size:' . $submissionFontSize . 'pt; font-family:' . $font($d->secondaryFont) . '; color:' . $col($d->accentColor) . ';">
+            <b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '
+        </p>
     </div>';
         }
 
@@ -317,8 +319,10 @@ final class CoverBuilder
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
-        padding-bottom: 50pt;
     }
+    table.grid td.section-h {
+    padding-bottom: 15pt;
+}
     table.grid { width: 100%; border-collapse: collapse; margin: 0; }
     table.grid td {
         padding: 0;
@@ -356,12 +360,6 @@ final class CoverBuilder
         padding: 0;
         width: auto;
         padding-left: -30pt;
-    }
-    .submission p {
-        margin: 0;
-        font-size: {$submissionFontSize}pt;
-        font-family: {$font($d->secondaryFont)};
-        color: {$col($d->accentColor)};
     }
     .content-pad {
         padding-top: {$margins['top']}pt;
