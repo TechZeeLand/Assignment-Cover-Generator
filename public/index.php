@@ -55,7 +55,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <label class="row-check">
-                <input type="checkbox" name="use-title-border-color" id="use-title-border-color">
+                <input type="checkbox" name="use-title-border-color" id="use-title-border-color" checked>
                 <span>Use a custom color for the title &amp; thick border</span>
             </label>
             <div class="field">
