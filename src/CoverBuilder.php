@@ -363,7 +363,7 @@ final class CoverBuilder
         padding-left: -30pt;
     }
     .submission p {
-    margin: 0;
+    margin: 10 0;
     font-family: {$font($d->secondaryFont)};
     color: {$col($d->accentColor)};
     }

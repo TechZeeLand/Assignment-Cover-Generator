@@ -317,7 +317,7 @@ require __DIR__ . '/partials/head.php';
                     </div>
                     <div class="field">
                         <label for="submission-font-size">Submission date <small>(pt)</small></label>
-                        <input type="number" class="text-input input-narrow" name="submission-font-size" id="submission-font-size" value="14" min="8" max="60" step="1">
+                        <input type="number" class="text-input input-narrow" name="submission-font-size" id="submission-font-size" value="16" min="8" max="60" step="1">
                     </div>
                 </div>
             </details>
