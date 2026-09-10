@@ -299,6 +299,7 @@ final class CoverBuilder
     }
     .versity-name {
         font-size: {$versityFontSize}pt;
+        font-weight: lighter !important;
         font-family: {$font($d->versityFont)};
         color: {$col($d->accentColor)};
     }
@@ -352,6 +353,7 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
         width: auto;
+        margin-left: -30pt;
     }
     .submission p {
         margin: 0;
