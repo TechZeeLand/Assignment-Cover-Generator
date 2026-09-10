@@ -317,6 +317,7 @@ final class CoverBuilder
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
+        margin-bottom: 15pt;
     }
     table.grid { width: 100%; border-collapse: collapse; margin: 0; }
     table.grid td {
@@ -360,7 +361,7 @@ final class CoverBuilder
         margin: 0;
         font-size: {$submissionFontSize}pt;
         font-family: {$font($d->secondaryFont)};
-        color: {$col($d->secondaryColor)};
+        color: {$col($d->accentColor)};
     }
     .content-pad {
         padding-top: {$margins['top']}pt;
