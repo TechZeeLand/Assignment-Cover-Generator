@@ -318,13 +318,12 @@ final class CoverBuilder
     }
     table.grid { width: 100%; border-collapse: collapse; margin: 0; }
     table.grid td {
-        font-family: {$font($d->secondaryFont)};
         padding: 0;
         vertical-align: top;
     }
-    table.grid td.label { color: {$col($d->primaryColor)}; padding-left: {$labelIndentPt}pt; white-space: nowrap; }
-    table.grid td.colon { text-align: left; padding: 0 4pt; }
-    table.grid td.value { color: {$col($d->secondaryColor)}; width: 100%; }
+    table.grid td.label { color: {$col($d->primaryColor)}; padding-left: {$labelIndentPt}pt; white-space: nowrap; font-family: {$font($d->secondaryFont)};}
+    table.grid td.colon { color: {$col($d->primaryColor)}; text-align: left; padding: 0 4pt; }
+    table.grid td.value { color: {$col($d->secondaryColor)}; width: 100%; font-family: {$font($d->secondaryFont)};}
     table.grid td.grp-student { font-size: {$studentFontSize}pt; }
     table.grid td.grp-course { font-size: {$courseFontSize}pt; }
     .designation-cell { padding: 0; text-align: center; }
@@ -353,8 +352,6 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
         width: auto;
-        margin-left: -50pt;
-        padding-left: -50pt;
     }
     .submission p {
         margin: 0;
