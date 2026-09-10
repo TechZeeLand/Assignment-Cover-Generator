@@ -169,7 +169,7 @@ html[data-theme="dark"] .theme-toggle .fa-moon { display: inline-block; }
     margin-bottom: 18px;
 
     position: sticky;
-    top: 65px;
+    top: 80px;
     z-index: 15;
 
     box-shadow: var(--shadow);
@@ -518,7 +518,7 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     .gh-link span { display: none; }
     .page-title { font-size: 1.2rem; }
 
-    .section-nav { top: 57px; }
+    .section-nav { top: 65px; }
 
     .section-nav-link span { display: none; }
     .section-nav-link { padding: 10px 8px; }

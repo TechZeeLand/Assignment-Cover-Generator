@@ -102,7 +102,7 @@ final class CoverBuilder
             return self::CONTENT_PADDING_PT;
         }
         $gap = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
-        $scaledSubmissionFontSize = max(self::MIN_FONT_SCALE_PT, round($d->submissionFontSize * $fontScale, 2));
+        $scaledSubmissionFontSize = $d->submissionFontSize;
         $lineHeight = $scaledSubmissionFontSize * 1.32;
         // Reserve room for up to two lines in case the date line wraps.
         return $gap + ($lineHeight * 2) + 4.0;
@@ -157,7 +157,7 @@ final class CoverBuilder
         $studentFontSize    = $fscale($d->studentFontSize);
         $courseFontSize     = $fscale($d->courseFontSize);
         $topicFontSize      = $fscale($d->topicFontSize);
-        $submissionFontSize = $fscale($d->submissionFontSize);
+        $submissionFontSize = $d->submissionFontSize;
         $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
 
         $deptGapPt        = $sscale(20.0);
@@ -317,7 +317,7 @@ final class CoverBuilder
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
-        padding-bottom: 15pt;
+        padding-bottom: 50pt;
     }
     table.grid { width: 100%; border-collapse: collapse; margin: 0; }
     table.grid td {
