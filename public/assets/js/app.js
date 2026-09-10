@@ -216,4 +216,66 @@
 
     populateFontSelects();
     loadFonts();
+
+    // ---------------------------------------------------------------
+    // Color swatch hex readout
+    // ---------------------------------------------------------------
+    document.querySelectorAll('.color-field input[type="color"]').forEach((input) => {
+        const hex = document.querySelector(`.color-hex[data-for="${input.id}"]`);
+        if (!hex) return;
+        function sync() { hex.textContent = input.value.toUpperCase(); }
+        input.addEventListener('input', sync);
+        sync();
+    });
+
+    // ---------------------------------------------------------------
+    // Section jump nav: smooth-scroll + highlight the active section
+    // ---------------------------------------------------------------
+    const navLinks = Array.from(document.querySelectorAll('.section-nav-link'));
+    if (navLinks.length) {
+        const sections = navLinks
+            .map((link) => document.querySelector(link.getAttribute('href')))
+            .filter(Boolean);
+
+        function setActive(id) {
+            navLinks.forEach((link) => {
+                link.classList.toggle('active', link.getAttribute('href') === `#${id}`);
+            });
+        }
+
+        if ('IntersectionObserver' in window) {
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) setActive(entry.target.id);
+                });
+            }, { rootMargin: '-30% 0px -55% 0px', threshold: 0 });
+            sections.forEach((section) => observer.observe(section));
+        }
+
+        if (sections[0]) setActive(sections[0].id);
+    }
+
+    // ---------------------------------------------------------------
+    // Reset button: also clear the rich-text fields and disabled state,
+    // since the browser's native "reset" only restores form controls.
+    // ---------------------------------------------------------------
+    form.addEventListener('reset', () => {
+        setTimeout(() => {
+            document.querySelectorAll('.richtext').forEach((wrap) => {
+                const editable = wrap.querySelector('.richtext-input');
+                const hidden = document.getElementById(wrap.dataset.target);
+                editable.innerHTML = '';
+                hidden.value = '';
+            });
+            Object.keys(SHOW_CHECKBOX_TARGETS).forEach((cbId) => {
+                const cb = document.getElementById(cbId);
+                if (!cb) return;
+                cb.dispatchEvent(new Event('change'));
+            });
+            syncAccentColorState();
+            document.querySelectorAll('.color-field input[type="color"]').forEach((input) => {
+                input.dispatchEvent(new Event('input'));
+            });
+        }, 0);
+    });
 })();
