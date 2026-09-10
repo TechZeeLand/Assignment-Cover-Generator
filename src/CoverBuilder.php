@@ -337,6 +337,7 @@ final class CoverBuilder
     }
     .topic-grid { width: 100%; border-collapse: collapse; margin: 0; }
     .topic-label {
+        width: {$topicLabelColPt}pt;
         font-weight: bold;
         font-size: {$topicFontSize}pt;
         font-family: {$font($d->primaryFont)} !important;
@@ -344,7 +345,6 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
         padding-left: {$topicIndentPt}pt;
-        white-space: nowrap;
     }
     .topic-value {
         font-size: {$topicFontSize}pt;
@@ -354,6 +354,7 @@ final class CoverBuilder
         padding: 0;
         width: auto;
         margin-left: -50pt;
+        padding-left: -50pt;
     }
     .submission p {
         margin: 0;
