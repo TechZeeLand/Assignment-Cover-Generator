@@ -48,7 +48,7 @@ final class PdfService
     private static function renderAttempt(CoverData $data, FontManager $fonts, float $fontScale, float $spacingScale): \Mpdf\Mpdf
     {
         $fontConfig = $fonts->buildMpdfFontConfig();
-        $margins    = CoverBuilder::marginsPt($data, $spacingScale, $fontScale);
+        $margins    = CoverBuilder::marginsPt($data, $spacingScale);
 
         $mpdf = new \Mpdf\Mpdf([
             'format'        => 'A4',
@@ -74,14 +74,6 @@ final class PdfService
             'default_font'  => 'sans',
             'tempDir'       => Config::tempPath(),
         ]);
-
-        // mPDF's own table-shrinking (separate from the fit-to-one-page
-        // loop above, which already handles overflow deliberately) only
-        // kicks in for a table with page-break-inside:avoid that won't
-        // fit on the page - our tables don't set that - but setting this
-        // to 1 ("no shrink") makes sure it can never silently override
-        // the font sizes CoverBuilder has already calculated.
-        $mpdf->shrink_tables_to_fit = 1;
 
         $mpdf->SetTitle('Assignment Cover' . ($data->versityName !== '' ? ' - ' . self::unescape($data->versityName) : ''));
         $mpdf->SetAuthor($data->studentName !== '' ? self::unescape($data->studentName) : 'Assignment Cover Generator');
