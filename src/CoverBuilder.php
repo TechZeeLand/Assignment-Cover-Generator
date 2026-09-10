@@ -70,7 +70,7 @@ final class CoverBuilder
     // Fixed font size for both section headers ("Student Details" /
     // "Course Details") and, per request, the "Topic" label - so the two
     // always match regardless of the user-editable Topic font size.
-    private const SECTION_HEADER_FONT_SIZE = 30.0;
+    private const SECTION_HEADER_FONT_SIZE = 32.0;
 
     private const MIN_FONT_SCALE_PT = 6.0;
 
@@ -96,13 +96,14 @@ final class CoverBuilder
      * enough for the line to wrap onto two lines without touching the
      * border.
      */
-    public static function bottomReservePt(CoverData $d, float $spacingScale = 1.0): float
+    public static function bottomReservePt(CoverData $d, float $spacingScale = 1.0, float $fontScale = 1.0): float
     {
         if (!$d->showSubmissionDate || $d->submissionDateDisplay === '') {
             return self::CONTENT_PADDING_PT;
         }
         $gap = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
-        $lineHeight = $d->submissionFontSize * 1.32;
+        $scaledSubmissionFontSize = max(self::MIN_FONT_SCALE_PT, round($d->submissionFontSize * $fontScale, 2));
+        $lineHeight = $scaledSubmissionFontSize * 1.32;
         // Reserve room for up to two lines in case the date line wraps.
         return $gap + ($lineHeight * 2) + 4.0;
     }
@@ -128,14 +129,14 @@ final class CoverBuilder
      *
      * @return array{top: float, right: float, bottom: float, left: float}
      */
-    public static function marginsPt(CoverData $d, float $spacingScale = 1.0): array
+    public static function marginsPt(CoverData $d, float $spacingScale = 1.0, float $fontScale = 1.0): array
     {
         $sideInset = self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::CONTENT_PADDING_PT;
 
         return [
             'top'    => $sideInset,
             'right'  => $sideInset,
-            'bottom' => self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::bottomReservePt($d, $spacingScale),
+            'bottom' => self::OUTER_INSET_PT + self::BORDER_THICKNESS_PT + self::bottomReservePt($d, $spacingScale, $fontScale),
             'left'   => $sideInset,
         ];
     }
@@ -148,7 +149,7 @@ final class CoverBuilder
         $fscale = fn (float $pt) => max(self::MIN_FONT_SCALE_PT, round($pt * $fontScale, 2));
         $sscale = fn (float $pt) => max(0.0, round($pt * $spacingScale, 2));
 
-        $margins = self::marginsPt($d, $spacingScale);
+        $margins = self::marginsPt($d, $spacingScale, $fontScale);
 
         $bismillahFontSize  = $fscale($d->bismillahFontSize);
         $versityFontSize    = $fscale($d->versityFontSize);
@@ -261,7 +262,7 @@ final class CoverBuilder
 
         $submissionFixed = '';
         if ($d->showSubmissionDate && $d->submissionDateDisplay !== '') {
-            $bottomReserve  = self::bottomReservePt($d, $spacingScale);
+            $bottomReserve  = self::bottomReservePt($d, $spacingScale, $fontScale);
             $gap            = max(3.0, self::SUBMISSION_BORDER_GAP_PT * $spacingScale);
             $submissionLeft = $margins['left'];
             $submissionWidth = self::PAGE_WIDTH_PT - $margins['left'] - $margins['right'];

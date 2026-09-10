@@ -48,7 +48,7 @@ final class PdfService
     private static function renderAttempt(CoverData $data, FontManager $fonts, float $fontScale, float $spacingScale): \Mpdf\Mpdf
     {
         $fontConfig = $fonts->buildMpdfFontConfig();
-        $margins    = CoverBuilder::marginsPt($data, $spacingScale);
+        $margins    = CoverBuilder::marginsPt($data, $spacingScale, $fontScale);
 
         $mpdf = new \Mpdf\Mpdf([
             'format'        => 'A4',
