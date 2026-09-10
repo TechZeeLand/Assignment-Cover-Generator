@@ -70,7 +70,7 @@ final class CoverBuilder
     // Fixed font size for both section headers ("Student Details" /
     // "Course Details") and, per request, the "Topic" label - so the two
     // always match regardless of the user-editable Topic font size.
-    private const SECTION_HEADER_FONT_SIZE = 30.0;
+    private const SECTION_HEADER_FONT_SIZE = 34.0;
 
     private const MIN_FONT_SCALE_PT = 6.0;
 
@@ -299,7 +299,6 @@ final class CoverBuilder
     }
     .versity-name {
         font-size: {$versityFontSize}pt;
-        font-weight: bold;
         font-family: {$font($d->versityFont)};
         color: {$col($d->accentColor)};
     }
@@ -312,6 +311,7 @@ final class CoverBuilder
     }
     .section-h {
         font-size: {$sectionHeaderSize}pt;
+        font-weight: bold;
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->primaryColor)};
         text-align: left;
@@ -337,6 +337,7 @@ final class CoverBuilder
     }
     .topic-grid { width: 100%; border-collapse: collapse; margin: 0; }
     .topic-label {
+        width: {$topicLabelColPt}pt;
         font-weight: bold;
         font-size: {$sectionHeaderSize}pt;
         font-family: {$font($d->primaryFont)} !important;
@@ -344,6 +345,7 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
         padding-left: {$topicIndentPt}pt;
+        white-space: nowrap;
     }
     .topic-value {
         font-size: {$topicFontSize}pt;
