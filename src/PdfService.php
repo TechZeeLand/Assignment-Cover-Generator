@@ -85,7 +85,7 @@ final class PdfService
     /** Suggests a safe download filename based on the student's details. */
     public static function suggestFilename(CoverData $data): string
     {
-        $parts = array_filter([self::unescape($data->courseCode), self::unescape($data->studentId), 'Assignment Cover']);
+        $parts = array_filter([self::unescape($data->studentName), self::unescape($data->studentId), 'Assignment Cover']);
         $base = implode(' - ', $parts);
         $base = preg_replace('/[^A-Za-z0-9 _\-]/', '', $base) ?? 'Assignment Cover';
         $base = trim($base) !== '' ? trim($base) : 'Assignment Cover';
