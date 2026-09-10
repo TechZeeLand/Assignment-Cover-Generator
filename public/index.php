@@ -46,11 +46,11 @@ require __DIR__ . '/partials/head.php';
             <div class="field-row">
                 <div class="field">
                     <label for="primary-color">Primary color</label>
-                    <input type="color" name="primary-color" id="primary-color" value="#3ce9be">
+                    <input type="color" name="primary-color" id="primary-color" value="#0384fc">
                 </div>
                 <div class="field">
                     <label for="secondary-color">Secondary color</label>
-                    <input type="color" name="secondary-color" id="secondary-color" value="#000000">
+                    <input type="color" name="secondary-color" id="secondary-color" value="#fc9803">
                 </div>
             </div>
 
@@ -60,7 +60,7 @@ require __DIR__ . '/partials/head.php';
             </label>
             <div class="field">
                 <label for="title-border-color">Title / border color</label>
-                <input type="color" name="title-border-color" id="title-border-color" value="#3ce9be" disabled>
+                <input type="color" name="title-border-color" id="title-border-color" value="#000000" disabled>
                 <small class="hint">Leave off to reuse the primary color above.</small>
             </div>
 
