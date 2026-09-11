@@ -8,11 +8,11 @@ $currentYear = date('Y');
             <nav class="footer-col" aria-label="Site pages">
                 <h3>Pages</h3>
                 <ul class="footer-links">
-                    <li><a href="index.php">Home</a></li>
-                    <li><a href="about.php">About</a></li>
-                    <li><a href="contact.php">Contact</a></li>
-                    <li><a href="privacy-policy.php">Privacy Policy</a></li>
-                    <li><a href="terms-and-conditions.php">Terms &amp; Conditions</a></li>
+                    <li><a href="/index.php">Home</a></li>
+                    <li><a href="/about.php">About</a></li>
+                    <li><a href="/contact.php">Contact</a></li>
+                    <li><a href="/privacy-policy.php">Privacy Policy</a></li>
+                    <li><a href="/terms-and-conditions.php">Terms &amp; Conditions</a></li>
                 </ul>
             </nav>
             <nav class="footer-col" aria-label="Social links">
@@ -33,4 +33,4 @@ $currentYear = date('Y');
     </div>
 </footer>
 
-<script src="assets/js/theme.js"></script>
+<script src="/assets/js/theme.js"></script>

@@ -1,8 +1,8 @@
 <header class="topbar">
     <div class="topbar-inner">
         <h1>
-            <a class="brand-link" href="index.php">
-                <img class="brand-logo" src="assets/img/logo.svg" alt="Assignment Cover Generator logo" width="26" height="26">
+            <a class="brand-link" href="/index.php">
+                <img class="brand-logo" src="/assets/img/logo.svg" alt="Assignment Cover Generator logo" width="26" height="26">
                 <span>Assignment Cover Generator</span>
             </a>
         </h1>

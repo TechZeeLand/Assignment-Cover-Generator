@@ -85,9 +85,9 @@ require __DIR__ . '/partials/head.php';
                 </div>
             </div>
 
-            <details class="adv-block">
-                <summary><i class="fa-solid fa-font"></i> Choose fonts <span class="adv-hint">optional &mdash; good defaults are pre-selected</span></summary>
-                <div class="adv-body">
+            <details class="font-block">
+                <summary><i class="fa-solid fa-font"></i> Choose fonts <span class="font-hint">optional &mdash; good defaults are pre-selected</span></summary>
+                <div class="font-body">
                     <div class="field">
                         <label for="versity-name-font">University name font</label>
                         <select name="versity-name-font" id="versity-name-font" class="font-select"></select>
@@ -103,9 +103,9 @@ require __DIR__ . '/partials/head.php';
                 </div>
             </details>
 
-            <details class="adv-block">
-                <summary><i class="fa-solid fa-circle-plus"></i> Add a custom font <span class="adv-hint">shared with everyone</span></summary>
-                <div class="adv-body">
+            <details class="font-block">
+                <summary><i class="fa-solid fa-circle-plus"></i> Add a custom font <span class="font-hint">shared with everyone</span></summary>
+                <div class="font-body">
                     <p class="hint">Upload TTF/OTF font files (max 2 MB each). Only "Regular" is required; add Bold/Italic for better results with bold/italic text.</p>
                     <div class="field">
                         <label for="font-name">Font name</label>
@@ -165,9 +165,9 @@ require __DIR__ . '/partials/head.php';
                 </div>
             </div>
 
-            <details class="adv-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="adv-hint">optional</span></summary>
-                <div class="adv-body adv-grid">
+            <details class="font-block">
+                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span></summary>
+                <div class="font-body font-grid">
                     <div class="field">
                         <label for="bismillah-font-size">Bismillah <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="bismillah-font-size" id="bismillah-font-size" value="16" min="8" max="60" step="1">
@@ -228,9 +228,9 @@ require __DIR__ . '/partials/head.php';
                 <input type="text" class="text-input" name="semester" id="semester" placeholder="e.g. Summer">
             </div>
 
-            <details class="adv-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="adv-hint">optional</span></summary>
-                <div class="adv-body">
+            <details class="font-block">
+                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span></summary>
+                <div class="font-body">
                     <div class="field field-narrow">
                         <label for="student-font-size">Font size for this section <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="student-font-size" id="student-font-size" value="28" min="8" max="60" step="1">
@@ -273,9 +273,9 @@ require __DIR__ . '/partials/head.php';
                 <input type="text" class="text-input" name="course-teacher-designation" id="course-teacher-designation" placeholder="e.g. Assistant Professor">
             </div>
 
-            <details class="adv-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="adv-hint">optional</span></summary>
-                <div class="adv-body">
+            <details class="font-block">
+                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span></summary>
+                <div class="font-body">
                     <div class="field field-narrow">
                         <label for="course-font-size">Font size for this section <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="course-font-size" id="course-font-size" value="28" min="8" max="60" step="1">
@@ -308,9 +308,9 @@ require __DIR__ . '/partials/head.php';
                 <input type="date" class="text-input" name="submission-date" id="submission-date">
             </div>
 
-            <details class="adv-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="adv-hint">optional</span></summary>
-                <div class="adv-body adv-grid adv-grid-2">
+            <details class="font-block">
+                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span></summary>
+                <div class="font-body font-grid font-grid-2">
                     <div class="field">
                         <label for="topic-font-size">Topic <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="topic-font-size" id="topic-font-size" value="24" min="8" max="60" step="1">
