@@ -406,8 +406,6 @@ input[type="color"]:disabled { opacity: .4; cursor: not-allowed; }
 .font-block summary::-webkit-details-marker { display: none; }
 .font-block summary i { color: var(--accent); font-size: .85rem; }
 .font-block summary .fa-caret-down {
-    content: "\f0d7";
-    font-family: "Font Awesome 6 Free";
     font-weight: 900;
     margin-left: auto;
     font-size: .75rem;
