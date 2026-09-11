@@ -364,11 +364,14 @@ final class CoverBuilder
     }
     .submission {
         padding-bottom: 10pt;
+        margin-bottom: 10pt;
     }
     .submission p {
         margin: 0;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->accentColor)};
+        padding-bottom: 10pt;
+        margin-bottom: 10pt;
     }
     .content-pad {
         padding-top: {$margins['top']}pt;
