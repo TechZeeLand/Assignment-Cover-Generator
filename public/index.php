@@ -86,7 +86,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-font"></i> Choose fonts <span class="font-hint">optional &mdash; good defaults are pre-selected</span></summary>
+                <summary><i class="fa-solid fa-font"></i> Choose fonts <span class="font-hint">optional &mdash; good defaults are pre-selected</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body">
                     <div class="field">
                         <label for="versity-name-font">University name font</label>
@@ -104,7 +104,7 @@ require __DIR__ . '/partials/head.php';
             </details>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-circle-plus"></i> Add a custom font <span class="font-hint">shared with everyone</span></summary>
+                <summary><i class="fa-solid fa-circle-plus"></i> Add a custom font <span class="font-hint">shared with everyone</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body">
                     <p class="hint">Upload TTF/OTF font files (max 2 MB each). Only "Regular" is required; add Bold/Italic for better results with bold/italic text.</p>
                     <div class="field">
@@ -166,7 +166,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span></summary>
+                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body font-grid">
                     <div class="field">
                         <label for="bismillah-font-size">Bismillah <small>(pt)</small></label>
@@ -229,7 +229,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span></summary>
+                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body">
                     <div class="field field-narrow">
                         <label for="student-font-size">Font size for this section <small>(pt)</small></label>
@@ -274,7 +274,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span></summary>
+                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body">
                     <div class="field field-narrow">
                         <label for="course-font-size">Font size for this section <small>(pt)</small></label>
@@ -309,7 +309,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span></summary>
+                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body font-grid font-grid-2">
                     <div class="field">
                         <label for="topic-font-size">Topic <small>(pt)</small></label>
