@@ -64,7 +64,10 @@ final class FontManager
 
         // De-duplicate: if already exists, suffix with a short counter.
         $index = $this->readIndex();
-        $existingKeys = array_column($index, 'key');
+        // Built-in keys (oldenglish, gandhiserif, alata, ...) are taken too:
+        // otherwise uploading a font called e.g. "Alata" would silently
+        // override the built-in one in the mPDF font table.
+        $existingKeys = array_merge(array_column($index, 'key'), array_values(Config::builtInFonts()), ['amiri']);
         $baseKey = $key;
         $i = 2;
         while (in_array($key, $existingKeys, true)) {
@@ -73,11 +76,19 @@ final class FontManager
         }
 
         $stored = [];
-        foreach (['regular', 'bold', 'italic', 'bolditalic'] as $variant) {
-            if (empty($files[$variant])) {
-                continue;
+        try {
+            foreach (['regular', 'bold', 'italic', 'bolditalic'] as $variant) {
+                if (empty($files[$variant])) {
+                    continue;
+                }
+                $stored[$variant] = $this->storeVariant($files[$variant], $key, $variant);
             }
-            $stored[$variant] = $this->storeVariant($files[$variant], $key, $variant);
+        } catch (\RuntimeException $e) {
+            // Don't leave orphaned files behind when a later variant is rejected.
+            foreach ($stored as $storedFile) {
+                @unlink($this->storageDir . '/' . $storedFile);
+            }
+            throw $e;
         }
 
         $entry = [

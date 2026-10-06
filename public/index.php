@@ -3,9 +3,11 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\FontManager;
+use App\Templates\TemplateRegistry;
 
 $fontManager = new FontManager();
 $initialFonts = $fontManager->listFonts();
+$designs = TemplateRegistry::all();
 
 $pageTitle = 'Assignment Cover Generator';
 $pageDescription = 'Free, open-source assignment cover page generator. Design your cover, then export a print-ready PDF.';
@@ -37,7 +39,24 @@ require __DIR__ . '/partials/head.php';
         <section class="card" id="sec-design">
             <div class="card-head">
                 <h2><span class="step-badge">1</span><i class="fa-solid fa-palette"></i> Design</h2>
-                <p class="card-sub">The border, colors and fonts used across your cover page.</p>
+                <p class="card-sub">Pick a layout, then set the border, colors and fonts used across your cover page.</p>
+            </div>
+
+            <div class="field-group">
+                <div class="field">
+                    <span class="field-label" id="design-label">Cover design</span>
+                    <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
+                        <?php foreach ($designs as $design): ?>
+                        <label class="design-card">
+                            <input type="radio" name="design" value="<?php echo htmlspecialchars($design->key(), ENT_QUOTES); ?>"<?php echo $design->key() === TemplateRegistry::DEFAULT_KEY ? ' checked' : ''; ?>>
+                            <span class="design-thumb"><?php echo $design->thumbnailSvg(); ?></span>
+                            <span class="design-name"><?php echo htmlspecialchars($design->label(), ENT_QUOTES); ?></span>
+                            <span class="design-desc"><?php echo htmlspecialchars($design->description(), ENT_QUOTES); ?></span>
+                        </label>
+                        <?php endforeach; ?>
+                    </div>
+                    <p class="hint">The previews follow your colors below. Every design uses the same details you fill in.</p>
+                </div>
             </div>
 
             <div class="field-group">
@@ -46,6 +65,7 @@ require __DIR__ . '/partials/head.php';
                     <span class="switch" aria-hidden="true"></span>
                     <span class="row-check-label">Show decorative border</span>
                 </label>
+                <p class="hint">Frame, bands, panel or rules &mdash; whichever the chosen design uses.</p>
             </div>
 
             <div class="field-group">
@@ -160,8 +180,8 @@ require __DIR__ . '/partials/head.php';
 
             <div class="field-group">
                 <div class="field">
-                    <label for="header-suffix">Header suffix <small>(after "Student/Course Details")</small></label>
-                    <input type="text" class="text-input" name="header-suffix" id="header-suffix" placeholder="---" value="---" maxlength="10">
+                    <label for="header-suffix">Header suffix <small>(after "Student/Course Details" &mdash; clear it for none)</small></label>
+                    <input type="text" class="text-input" name="header-suffix" id="header-suffix" placeholder="none" value="---" maxlength="10">
                 </div>
             </div>
 

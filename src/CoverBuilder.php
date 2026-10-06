@@ -201,7 +201,7 @@ final class CoverBuilder
         }
 
         $hasStudent = !empty($rows['student']);
-        $hasCourse  = !empty($rows['course']) || $d->showCourseTeacherDesignation;
+        $hasCourse  = !empty($rows['course']) || ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '');
 
         $detailsTable = '';
         if ($hasStudent || $hasCourse) {
@@ -209,7 +209,7 @@ final class CoverBuilder
 
             if ($hasStudent) {
                 $body .= self::headerRow(
-                    'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES),
+                    'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
                     $hasStudent ? $sectionGapPt : 0.0
                 );
                 foreach ($rows['student'] as [$label, $valueHtml]) {
@@ -219,7 +219,7 @@ final class CoverBuilder
 
             if ($hasCourse) {
                 $body .= self::headerRow(
-                    'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES),
+                    'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
                     $hasStudent ? $sectionGapPt : 0.0
                 );
                 foreach ($rows['course'] as [$label, $valueHtml]) {
@@ -227,7 +227,7 @@ final class CoverBuilder
                 }
                 if ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '') {
                     $body .= '<tr><td colspan="3" class="designation-cell">'
-                        . '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES) . '</p>'
+                        . '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES, 'UTF-8', false) . '</p>'
                         . '</td></tr>';
                 }
             }
@@ -253,11 +253,11 @@ final class CoverBuilder
             : '';
 
         $versityBlock = $d->showVersityName
-            ? '<h1 class="versity-name">' . htmlspecialchars($d->versityName, ENT_QUOTES) . '</h1>'
+            ? '<h1 class="versity-name">' . htmlspecialchars($d->versityName, ENT_QUOTES, 'UTF-8', false) . '</h1>'
             : '';
 
         $deptBlock = $d->showDeptName
-            ? '<p class="dept-name">' . htmlspecialchars($d->deptName, ENT_QUOTES) . '</p>'
+            ? '<p class="dept-name">' . htmlspecialchars($d->deptName, ENT_QUOTES, 'UTF-8', false) . '</p>'
             : '';
 
         $submissionFixed = '';
@@ -275,7 +275,7 @@ final class CoverBuilder
 
                 <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
                     <p style="font-size:' . $submissionFontSize . 'pt;">
-                        <b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES) . '
+                        <b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false) . '
                     </p>
                 </div>';
             }

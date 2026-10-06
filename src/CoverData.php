@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Templates\TemplateRegistry;
+
 /**
  * A sanitized, validated representation of everything needed to render one
  * assignment cover, consumed by the mPDF renderer (CoverBuilder).
@@ -14,14 +16,17 @@ final class CoverData
     // Editable per group via the form; these are the fallback when a
     // submitted value is missing or fails Sanitize::fontSize() validation.
     private const DEFAULT_BISMILLAH_FONT_SIZE  = 16.0;
-    private const DEFAULT_VERSITY_FONT_SIZE    = 30.0;
+    private const DEFAULT_VERSITY_FONT_SIZE    = 36.0;
     private const DEFAULT_DEPT_FONT_SIZE       = 22.0;
-    private const DEFAULT_STUDENT_FONT_SIZE    = 24.0;
-    private const DEFAULT_COURSE_FONT_SIZE     = 24.0;
+    private const DEFAULT_STUDENT_FONT_SIZE    = 28.0;
+    private const DEFAULT_COURSE_FONT_SIZE     = 28.0;
     private const DEFAULT_TOPIC_FONT_SIZE      = 24.0;
-    private const DEFAULT_SUBMISSION_FONT_SIZE = 18.0;
+    private const DEFAULT_SUBMISSION_FONT_SIZE = 16.0;
     private const MIN_FONT_SIZE_PT = 8.0;
     private const MAX_FONT_SIZE_PT = 60.0;
+
+    /** Key of the selected cover design (see Templates\TemplateRegistry). */
+    public string $design;
 
     public bool $showBorder;
 
@@ -96,6 +101,8 @@ final class CoverData
     {
         $c = new self();
 
+        $c->design = TemplateRegistry::resolveKey((string) ($data['design'] ?? ''));
+
         $c->showBorder = Sanitize::bool($data['border'] ?? null);
 
         $c->versityFont   = $fonts->resolveFontKey((string) ($data['versity-name-font'] ?? 'oldenglish'));
@@ -110,8 +117,13 @@ final class CoverData
             ? Sanitize::color($data['title-border-color'] ?? null, $c->primaryColor)
             : $c->primaryColor;
 
-        $suffix = trim((string) ($data['header-suffix'] ?? ''));
-        $c->headerSuffix = Sanitize::text($suffix === '' ? '---' : $suffix, 10);
+        // Not submitted at all -> the default "---"; submitted but emptied by
+        // the user -> no suffix (previously an empty box silently came back
+        // as "---", so the suffix could never be removed).
+        $suffix = array_key_exists('header-suffix', $data)
+            ? trim((string) $data['header-suffix'])
+            : '---';
+        $c->headerSuffix = Sanitize::text($suffix, 10);
 
         $c->showBismillah = Sanitize::bool($data['bismillah'] ?? null);
 

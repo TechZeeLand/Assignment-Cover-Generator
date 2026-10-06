@@ -11,6 +11,10 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 
 ## ✨ Features
 
+- **Six cover designs** — pick one in the Design section, with live previews
+  that follow your colors: **Classic** (the original), **Modern Bands**,
+  **Double Frame**, **Corner Brackets**, **Side Panel** and **Minimal Lines**.
+  All of them use the same form data, fonts, colors and toggles.
 - **Toggle any field on/off** — show or hide the University name, Bismillah,
   each student/course detail row, the topic, the submission date, and the
   decorative border independently.
@@ -241,6 +245,14 @@ Then open `http://localhost:1025`.
   sends.
 
 ## 🎨 Customizing further
+
+- **Add a new cover design:** create a class in `src/Templates/` extending
+  `BaseTemplate` (implement `key()`, `label()`, `description()`,
+  `thumbnailSvg()`, `bottomMarginPt()` and `buildHtml()`), then add it to
+  `TemplateRegistry::all()`. The picker, validation and PDF output pick it up
+  automatically. Follow the mPDF rules documented at the top of
+  `BaseTemplate.php` (no Grid/Flex, one details table, fixed boxes for
+  decoration).
 
 - **Change the default colors/fonts:** edit the `value=""` attributes in the
   Design section of `public/index.php`.

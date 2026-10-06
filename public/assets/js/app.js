@@ -149,6 +149,29 @@
     syncAccentColorState();
 
     // ---------------------------------------------------------------
+    // Design picker: keep the wireframe previews in the user's colors
+    // (mirrors CoverData: accent = title/border color, or primary when
+    // the "different color" switch is off).
+    // ---------------------------------------------------------------
+    const designGrid = document.getElementById('design-grid');
+    function syncDesignColors() {
+        if (!designGrid) return;
+        const primary = document.getElementById('primary-color').value;
+        const secondary = document.getElementById('secondary-color').value;
+        const accent = useAccentCheckbox.checked
+            ? document.getElementById('title-border-color').value
+            : primary;
+        designGrid.style.setProperty('--t-primary', primary);
+        designGrid.style.setProperty('--t-secondary', secondary);
+        designGrid.style.setProperty('--t-accent', accent);
+    }
+    ['primary-color', 'secondary-color', 'title-border-color'].forEach((id) => {
+        document.getElementById(id).addEventListener('input', syncDesignColors);
+    });
+    useAccentCheckbox.addEventListener('change', syncDesignColors);
+    syncDesignColors();
+
+    // ---------------------------------------------------------------
     // Show/hide toggle -> fades the paired field for clarity
     // ---------------------------------------------------------------
     const SHOW_CHECKBOX_TARGETS = {
@@ -197,6 +220,14 @@
             hidden.value = editable.innerHTML;
         }
         editable.addEventListener('input', syncRichText);
+        // Paste as plain text: pasted web/Word content would otherwise bring
+        // along fonts, colors and block tags the cover can't use.
+        editable.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const clip = e.clipboardData || window.clipboardData;
+            const text = clip ? clip.getData('text/plain') : '';
+            document.execCommand('insertText', false, text);
+        });
         editable.addEventListener('keyup', () => {
             wrap.querySelectorAll('.richtext-toolbar button').forEach((btn) => {
                 btn.classList.toggle('active', document.queryCommandState(btn.dataset.cmd));
@@ -273,9 +304,18 @@
                 cb.dispatchEvent(new Event('change'));
             });
             syncAccentColorState();
+            // The browser's native reset sends the (script-filled) font
+            // <select>s back to their first option; put the real defaults back.
+            FONT_SELECT_IDS.forEach((id) => {
+                const wanted = FONT_SELECT_DEFAULTS[id];
+                if (fontsCache.some((f) => f.key === wanted)) {
+                    document.getElementById(id).value = wanted;
+                }
+            });
             document.querySelectorAll('.color-field input[type="color"]').forEach((input) => {
                 input.dispatchEvent(new Event('input'));
             });
+            syncDesignColors();
         }, 0);
     });
 })();

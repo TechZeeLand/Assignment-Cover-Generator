@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App;
 
+use App\Templates\TemplateRegistry;
+
 final class PdfService
 {
     // Safety cap on shrink attempts. Spacing is shrunk first (cheapest,
@@ -48,7 +50,8 @@ final class PdfService
     private static function renderAttempt(CoverData $data, FontManager $fonts, float $fontScale, float $spacingScale): \Mpdf\Mpdf
     {
         $fontConfig = $fonts->buildMpdfFontConfig();
-        $margins    = CoverBuilder::marginsPt($data, $spacingScale, $fontScale);
+        $template   = TemplateRegistry::get($data->design);
+        $bottomPt   = $template->bottomMarginPt($data, $spacingScale, $fontScale);
 
         $mpdf = new \Mpdf\Mpdf([
             'format'        => 'A4',
@@ -66,7 +69,7 @@ final class PdfService
             'margin_left'   => 0,
             'margin_right'  => 0,
             'margin_top'    => 0,
-            'margin_bottom' => CoverBuilder::ptToMm($margins['bottom']),
+            'margin_bottom' => CoverBuilder::ptToMm($bottomPt),
             'margin_header' => 0,
             'margin_footer' => 0,
             'fontDir'       => $fontConfig['fontDir'],
@@ -77,7 +80,7 @@ final class PdfService
 
         $mpdf->SetTitle('Assignment Cover' . ($data->versityName !== '' ? ' - ' . self::unescape($data->versityName) : ''));
         $mpdf->SetAuthor($data->studentName !== '' ? self::unescape($data->studentName) : 'Assignment Cover Generator');
-        $mpdf->WriteHTML(CoverBuilder::buildHtml($data, $fontScale, $spacingScale));
+        $mpdf->WriteHTML($template->buildHtml($data, $fontScale, $spacingScale));
 
         return $mpdf;
     }

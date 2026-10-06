@@ -34,9 +34,18 @@ final class Sanitize
     {
         $value = is_string($value) ? trim($value) : '';
 
-        // Normalise <div>/<p> line breaks some contenteditable browsers insert.
-        $value = preg_replace('#</(div|p)>#i', '<br>', $value) ?? $value;
-        $value = preg_replace('#<(div|p)[^>]*>#i', '', $value) ?? $value;
+        // Normalise the <div>/<p> line wrappers contenteditable browsers
+        // insert (Chrome/Edge/Safari wrap every new line in a <div>, e.g.
+        // "one<div>two</div>"). A wrapper starts a new line, so each opening
+        // tag becomes a <br> and closing tags are dropped; an empty wrapper
+        // ("<div><br></div>") is a blank line. Previously the closing tag
+        // became the <br>, which glued "one" and "two" together.
+        $value = preg_replace('#<(div|p)[^>]*>\s*<br\s*/?>\s*</\1>#i', '<br>', $value) ?? $value;
+        $value = preg_replace('#<(div|p)[^>]*>#i', '<br>', $value) ?? $value;
+        $value = preg_replace('#</(div|p)>#i', '', $value) ?? $value;
+        // No leading / trailing blank lines.
+        $value = preg_replace('#^(?:\s*<br\s*/?>)+#i', '', $value) ?? $value;
+        $value = preg_replace('#(?:<br\s*/?>\s*)+$#i', '', $value) ?? $value;
 
         $allowed = Config::allowedRichTextTags();
         $stripped = strip_tags($value, $allowed);
