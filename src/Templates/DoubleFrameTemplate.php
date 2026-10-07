@@ -19,6 +19,11 @@ final class DoubleFrameTemplate extends CenteredTemplate
         return 'double';
     }
 
+    public function category(): string
+    {
+        return 'Professional';
+    }
+
     public function label(): string
     {
         return 'Double Frame';

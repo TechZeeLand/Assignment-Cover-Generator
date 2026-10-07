@@ -11,10 +11,24 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 
 ## ✨ Features
 
-- **Six cover designs** — pick one in the Design section, with live previews
-  that follow your colors: **Classic** (the original), **Modern Bands**,
-  **Double Frame**, **Corner Brackets**, **Side Panel** and **Minimal Lines**.
-  All of them use the same form data, fonts, colors and toggles.
+- **Twelve cover designs** — a horizontally scrollable picker (with an
+  **Expand all** button) and live previews that follow your colors.
+  *Classic* (the original) · *Professional:* Double Frame, Corner Brackets,
+  Official Form, Heritage, Executive · *Modern:* Modern Bands, Side Panel,
+  Minimal Lines, Hero Block, Mosaic, Duo Tone. All use the same form data,
+  fonts, colors and toggles. Text on a design's own colored areas is always
+  given a readable color derived from that background.
+- **More cover fields** — university logo upload, faculty/school line, cover
+  title (e.g. "Lab Report No. 3"), session, student email, and group
+  assignments (group name + up to 12 members).
+- **Optional Google sign-in** — signed-in users can save their details and
+  have them pre-filled next time. Only a **name and email** are taken from
+  Google; no passwords, no email verification, no SMTP.
+- **Admin portal** at `/admin/` — turn designs on/off, see user and PDF
+  statistics, configure Google OAuth and AdSense (publisher ID, ad units,
+  `ads.txt`), manage users and shared fonts, and edit site settings.
+- **Ads (optional)** — Google AdSense in three placements, loaded only after
+  cookie consent by default. Cookie banner + Cookie Policy included.
 - **Toggle any field on/off** — show or hide the University name, Bismillah,
   each student/course detail row, the topic, the submission date, and the
   decorative border independently.
@@ -31,9 +45,10 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 - **Bismillah support** — renders the ﷽ ligature correctly using the bundled,
   open-source [Amiri](https://github.com/aliftype/amiri) font (SIL OFL),
   regardless of which fonts you pick elsewhere.
-- **Stateless** — nothing about your cover is stored on the server; a PDF is
-  generated on demand and never saved. (Only the *fonts* you optionally
-  upload are persisted, since they're meant to be shared.)
+- **Private by default** — without signing in, nothing about your cover is
+  stored; a PDF is generated on demand and never saved, and no cookie is set.
+  Only visitors who sign in *and* press "Save my details" have anything
+  stored, and they can delete it (or their whole account) at any time.
 - **Self-hosted & open source** — AGPL-3.0 licensed, runs entirely on your
   own server via Docker.
 
@@ -155,11 +170,14 @@ instead of building it.
          - "1025:80"
        volumes:
          - acg_fonts:/var/www/html/storage/fonts
+         - acg_data:/var/www/html/storage/data
        environment:
          - TZ=UTC
+         - ADMIN_PASSWORD=choose-a-long-random-password
 
    volumes:
      acg_fonts:
+     acg_data:
    ```
 
 3. Deploy the stack.
@@ -190,14 +208,59 @@ docker compose up -d --build
 
 Then visit `http://<your-server-ip>:1025`.
 
+## 🔐 Admin portal, Google sign-in & ads
+
+### 1. Set the admin password (first run)
+
+Set the `ADMIN_PASSWORD` environment variable (Portainer: *Environment
+variables*; Compose: put `ADMIN_PASSWORD=...` in a `.env` file next to
+`docker-compose.yml`, see `.env.example`). Then open
+**`https://your-site/admin/`** and log in with it. The password is stored
+hashed on first login and can be changed under *Admin password*. If you lose
+it, set `ADMIN_PASSWORD` plus `ADMIN_PASSWORD_RESET=1`, restart, log in, then
+remove the reset flag. After 5 wrong attempts an IP is locked out for 15
+minutes. Put the site behind HTTPS (e.g. a reverse proxy) before using it on
+the internet.
+
+### 2. Google sign-in
+
+Admin → **Sign-in (Google)** shows the exact *redirect URI* to register. In
+the [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
+create an *OAuth client ID → Web application*, add that URI, paste the client
+ID and secret into the admin panel and save. Set **Site URL** (Site settings)
+to your public `https://…` address so the redirect URI is exact.
+Sign-in is optional for visitors and uses the default `openid email profile`
+scopes; only name and email are kept.
+
+### 3. Ads
+
+Admin → **Ads & ads.txt**: enter your AdSense publisher ID
+(`ca-pub-…`), the numeric ad unit IDs for the top / middle / bottom
+placements and switch ads on. `ads.txt` is served at `/ads.txt` (generated
+from the publisher ID, or paste your own lines). By default ads load only
+after the visitor accepts the cookie banner. If you serve the EEA, UK or
+Switzerland, Google additionally requires a certified consent platform for
+personalised ads — enable Google's own consent message in AdSense.
+
+### Where data lives
+
+A single SQLite file and the PHP sessions live in `storage/data` (the
+`acg_data` volume): settings (including the Google client secret — keep this
+volume private and back it up), signed-in users (name + email), saved
+details, and anonymous daily counters. Fonts live in `acg_fonts`.
+
 ## 🖥️ Local development (without Docker)
 
-Requirements: PHP 8.1+, Composer, and the `mbstring`, `gd`, and `zip` PHP extensions.
+Requirements: PHP 8.1+, Composer, and the `mbstring`, `gd`, `zip`, `curl`
+and `pdo_sqlite` PHP extensions.
 
 ```bash
 composer install
-php -S localhost:1025 -t public
+ADMIN_PASSWORD='dev-password-123' php -S localhost:1025 -t public
 ```
+
+(`/ads.txt` is routed by nginx in Docker; with the built-in server open
+`/ads-txt.php` instead.)
 
 Then open `http://localhost:1025`.
 
@@ -210,6 +273,11 @@ Then open `http://localhost:1025`.
 ├── public/                  # Web root
 │   ├── index.php             # The form page
 │   ├── generate.php          # Handles POST -> builds & streams the PDF
+│   ├── auth/                  # Google sign-in start / callback / sign-out / delete account
+│   ├── api/profile.php        # Save / load / delete a signed-in user's saved details
+│   ├── admin/                 # Admin portal (dashboard, designs, sign-in, ads, users, ...)
+│   ├── cookie-policy.php      # Cookie policy (plus privacy-policy.php, terms-and-conditions.php)
+│   ├── ads-txt.php            # Serves /ads.txt from the admin settings
 │   ├── fonts.php              # Returns the current font list as JSON
 │   ├── upload_font.php        # Handles custom font uploads
 │   ├── font_file.php           # Streams a stored font file (for the font-select dropdown preview)
@@ -221,24 +289,34 @@ Then open `http://localhost:1025`.
 │   ├── Config.php              # Central constants (paths, built-in fonts, limits)
 │   ├── FontManager.php          # Built-in + custom font registry, mPDF font config
 │   ├── Sanitize.php              # Input sanitization (text, color, rich text)
+│   ├── Templates/                 # One class per cover design + TemplateRegistry
+│   ├── Db.php, Settings.php       # SQLite storage and admin-editable settings
+│   ├── Auth.php, GoogleOAuth.php  # Optional Google sign-in (OAuth code flow + PKCE)
+│   ├── AdminAuth.php              # Password-only admin login with throttling
+│   ├── Users.php, ProfileStore.php, Stats.php, Ads.php, Logo.php, Color.php
 │   ├── CoverData.php              # Validated data object built from the form POST
 │   ├── CoverBuilder.php            # Renders CoverData -> mPDF-ready HTML (tables)
 │   └── PdfService.php              # Wires it all together into an mPDF instance
-└── storage/fonts/             # Persisted custom font uploads (Docker volume)
+├── storage/fonts/             # Persisted custom font uploads (Docker volume)
+└── storage/data/              # SQLite database + sessions (Docker volume, keep private)
 ```
 
 ## 🔒 Security & privacy notes
 
-- No data from the form is ever written to disk or a database — PDFs are
-  generated in memory and streamed straight to your browser.
+- Without signing in, no data from the form is written anywhere — PDFs are
+  generated in memory and streamed straight to your browser. Signed-in users'
+  saved details are whitelisted and sanitised before they are stored.
+- Admin and user forms are CSRF-protected, sessions use `HttpOnly` +
+  `SameSite=Lax` cookies (and `Secure` over HTTPS), the Google flow uses
+  `state`, `nonce` and PKCE, and uploaded logos are re-encoded through GD.
 - Font uploads are validated by file extension **and** a binary signature
   check (so a renamed `.exe` won't pass as a `.ttf`), size-limited to 2 MB
   per file, and stored with sanitized, generated filenames.
 - Font uploads are open to anyone who can reach the app, by design (per the
   project's goal of a shared, growing font library). If you're deploying
-  this somewhere more exposed than a home server/LAN, consider putting it
-  behind a reverse proxy with basic auth, or fork and add an admin gate
-  around `upload_font.php`.
+  this somewhere more exposed than a home server/LAN, switch uploads off in
+  the admin panel (Site settings) and remove unwanted fonts under
+  *Custom fonts*.
 - All user-supplied text is HTML-escaped; the Course Title and Topic rich
   text fields only ever allow `<b>`, `<i>`, and `<br>` — every other tag and
   every attribute is stripped server-side, regardless of what the browser
@@ -253,6 +331,11 @@ Then open `http://localhost:1025`.
   automatically. Follow the mPDF rules documented at the top of
   `BaseTemplate.php` (no Grid/Flex, one details table, fixed boxes for
   decoration).
+
+- **Colors on coloured areas:** designs that draw their own fills (bands,
+  panels, tinted rows) must derive text colors from that fill with
+  `Color::contrastText()` / `Color::ensureContrast()` and apply them as
+  **inline** styles — never rely on a stylesheet rule that might not match.
 
 - **Change the default colors/fonts:** edit the `value=""` attributes in the
   Design section of `public/index.php`.

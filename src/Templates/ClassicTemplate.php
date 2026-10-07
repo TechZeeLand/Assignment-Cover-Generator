@@ -18,6 +18,11 @@ final class ClassicTemplate implements Template
         return 'classic';
     }
 
+    public function category(): string
+    {
+        return 'Classic';
+    }
+
     public function label(): string
     {
         return 'Classic';

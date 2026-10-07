@@ -27,6 +27,11 @@ final class ModernBandsTemplate extends BaseTemplate
         return 'modern';
     }
 
+    public function category(): string
+    {
+        return 'Modern';
+    }
+
     public function label(): string
     {
         return 'Modern Bands';
@@ -93,10 +98,19 @@ final class ModernBandsTemplate extends BaseTemplate
         $fSec = self::e($d->secondaryFont);
 
         $bands   = $d->showBorder;
-        $onAcc   = Color::contrastText($d->accentColor);          // text colour on the accent fill
-        $onAccDim = Color::mix($onAcc, $d->accentColor, 0.18);    // slightly softer, for the department
-        $zebra   = self::e(Color::tint($d->primaryColor, 0.88));
-        $callout = self::e(Color::tint($d->accentColor, 0.9));
+        // Every colour that sits on a fill of this design's own is derived
+        // from that fill, and applied INLINE (inline styles always win in
+        // mPDF), so text can never end up the same colour as its background.
+        $onAcc    = Color::contrastText($d->accentColor);          // text on the accent band
+        $onAccDim = Color::mix($onAcc, $d->accentColor, 0.18);     // slightly softer, for the department
+        $zebraBg  = Color::tint($d->primaryColor, 0.88);
+        $zebraLab = Color::ensureContrast($d->primaryColor, $zebraBg, 4.5);
+        $zebraVal = Color::ensureContrast($d->secondaryColor, $zebraBg, 4.5);
+        $calloutBg = Color::tint($d->accentColor, 0.9);
+        $calloutLabel = Color::ensureContrast($d->accentColor, $calloutBg, 4.5);
+        $calloutText  = Color::ensureContrast($d->secondaryColor, $calloutBg, 4.5);
+        $zebra   = self::e($zebraBg);
+        $callout = self::e($calloutBg);
 
         $bandTop = self::sp(34.0, $spacingScale);
         $bandBot = self::sp(22.0, $spacingScale);
@@ -120,31 +134,17 @@ table.grid td.section-h {
 table.grid td.label { padding: {$rowPad}pt 0 {$rowPad}pt 10pt; }
 table.grid td.colon { padding: {$rowPad}pt 6pt; }
 table.grid td.value { padding: {$rowPad}pt 8pt {$rowPad}pt 0; }
-table.grid td.alt { background-color: {$zebra}; }
 table.grid td.designation { padding: 0 8pt 3pt 0; }
-td.topic-cell {
-    background-color: {$callout};
-    border-left: 7pt solid {$acc};
-    padding: 10pt 14pt 12pt 14pt;
-}
+td.topic-cell { padding: 10pt 14pt 12pt 14pt; }
 .topic-label {
     font-size: 13pt;
     letter-spacing: 2pt;
     margin-bottom: 3pt !important;
-    color: {$acc};
 }
 .foot-text { margin: 0; font-family: {$fSec}; }
 
 CSS;
 
-        if ($bands) {
-            $css .= <<<CSS
-td.band-cell { background-color: {$acc}; }
-td.band-cell .bismillah, td.band-cell .versity-name { color: {$onAcc}; }
-td.band-cell .dept-name { color: {$onAccDim}; }
-
-CSS;
-        }
 
         // ---- Footer (pinned to the bottom edge) ----
         $footer = '';
@@ -171,13 +171,19 @@ CSS;
         }
 
         // ---- Header: band + stripe ----
-        $header = '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="band-cell">'
-            . self::headerBlock($d) . '</td></tr></table>';
+        $headerOpts = ['scale' => $fontScale];
         if ($bands) {
-            $header .= '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="stripe">&nbsp;</td></tr></table>';
+            $headerOpts['colors'] = ['bismillah' => $onAcc, 'versity' => $onAcc, 'faculty' => $onAccDim, 'dept' => $onAccDim];
+            $headerOpts['plate'] = '#ffffff';   // logos sit on a white plate, never straight on the band
+        }
+        $header = '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="band-cell"'
+            . ($bands ? ' style="background-color:' . $acc . ';"' : '') . '>'
+            . self::headerBlock($d, $headerOpts) . '</td></tr></table>';
+        if ($bands) {
+            $header .= '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="stripe" style="background-color:' . $pri . ';">&nbsp;</td></tr></table>';
         } else {
             $header .= '<div style="padding:0 ' . $side . 'pt;"><table width="100%" cellpadding="0" cellspacing="0">'
-                . '<tr><td class="stripe-thin">&nbsp;</td></tr></table></div>';
+                . '<tr><td class="stripe-thin" style="background-color:' . $acc . ';">&nbsp;</td></tr></table></div>';
         }
 
         // ---- Details ----
@@ -186,20 +192,32 @@ CSS;
             'zebra'  => true,
             'spacer' => true,
             'gapPt'  => $gap,
+            'hStyle' => 'border-left:6pt solid ' . $acc . ';',
+            'alt'    => [
+                'l' => 'background-color:' . $zebra . '; color:' . self::e($zebraLab) . ';',
+                'c' => 'background-color:' . $zebra . '; color:' . self::e($zebraLab) . ';',
+                'v' => 'background-color:' . $zebra . '; color:' . self::e($zebraVal) . ';',
+            ],
         ]);
 
         // ---- Topic ----
         $topic = '';
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $topicGap . 'pt;">'
-                . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="topic-cell">'
-                . '<p class="topic-label">TOPIC</p>'
-                . '<p class="topic-text">' . $d->topicHtml . '</p>'
+                . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="topic-cell"'
+                . ' style="background-color:' . $callout . '; border-left:7pt solid ' . $acc . ';">'
+                . '<p class="topic-label" style="color:' . self::e($calloutLabel) . ';">TOPIC</p>'
+                . '<p class="topic-text" style="color:' . self::e($calloutText) . ';">' . $d->topicHtml . '</p>'
                 . '</td></tr></table></div>';
         }
 
+        $title = self::titleBlock($d, [
+            'scale' => $fontScale, 'color' => Color::ensureContrast($d->primaryColor, '#ffffff', 3.0),
+            'before' => 0.0, 'after' => 18.0, 'align' => 'left',
+        ]);
+
         $body = $footer . "\n" . $header . "\n"
-            . '<div class="pad">' . $details . $topic . '</div>';
+            . '<div class="pad">' . $title . $details . $topic . '</div>';
 
         return self::document($css, $body);
     }

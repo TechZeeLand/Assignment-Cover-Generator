@@ -2,8 +2,28 @@
 declare(strict_types=1);
 /**
  * Shared <head>. Expects $pageTitle and $pageDescription to be set by the
- * including page before this file is required.
+ * including page before this file is required. Also resolves the signed-in
+ * user ($acgUser) for the top bar - this must happen before any output,
+ * which is why it lives here.
  */
+require_once __DIR__ . '/../../vendor/autoload.php';
+
+use App\Ads;
+use App\Auth;
+use App\Csrf;
+use App\Html;
+use App\Settings;
+
+$siteName = Settings::get('site_name') ?: 'Assignment Cover Generator';
+$acgUser = Auth::user();
+$acgConfig = [
+    'signedIn'      => $acgUser !== null,
+    'csrf'          => $acgUser !== null ? Csrf::token() : '',
+    'cookieBanner'  => Settings::bool('cookie_banner_enabled'),
+    'adsEnabled'    => Ads::enabled(),
+    'adsConsent'    => Ads::requiresConsent(),
+    'adsClient'     => Ads::publisherId(),
+];
 $pageTitle = $pageTitle ?? 'Assignment Cover Generator';
 $pageDescription = $pageDescription ?? 'Free, open-source assignment cover page generator. Design your cover, then export a print-ready PDF.';
 ?>
@@ -14,6 +34,9 @@ $pageDescription = $pageDescription ?? 'Free, open-source assignment cover page 
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title><?php echo htmlspecialchars($pageTitle, ENT_QUOTES); ?></title>
 <meta name="description" content="<?php echo htmlspecialchars($pageDescription, ENT_QUOTES); ?>" />
+<?php if (Ads::publisherId() !== ''): ?>
+<meta name="google-adsense-account" content="<?php echo Html::e(Ads::publisherId()); ?>" />
+<?php endif; ?>
 
 <!-- Open Graph -->
 <meta property="og:type" content="website" />
@@ -38,6 +61,7 @@ $pageDescription = $pageDescription ?? 'Free, open-source assignment cover page 
 <meta name="theme-color" content="#0f1420" media="(prefers-color-scheme: dark)" />
 
 <link rel="stylesheet" href="/assets/css/style.css" />
+<script>window.__ACG__ = <?php echo Html::json($acgConfig); ?>;</script>
 <script src="https://kit.fontawesome.com/43a3c20016.js" crossorigin="anonymous"></script>
 
 <!-- Blocking (render-before-paint) theme script: applies the saved/system

@@ -19,6 +19,9 @@ interface Template
     /** Stable machine key posted by the form, e.g. "modern". */
     public function key(): string;
 
+    /** Grouping label shown on the picker card: "Classic", "Professional" or "Modern". */
+    public function category(): string;
+
     /** Short human name shown in the design picker. */
     public function label(): string;
 

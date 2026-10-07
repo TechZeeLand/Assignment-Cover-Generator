@@ -29,6 +29,18 @@ abstract class CenteredTemplate extends BaseTemplate
     /** Thumbnail shapes for the decoration. */
     abstract protected function thumbDecor(): string;
 
+    /** The ornament between header and details. Override for a different look. */
+    protected function divider(CoverData $d, float $gap): string
+    {
+        $acc = self::e($d->accentColor);
+        return '<div style="margin-top:' . $gap . 'pt; margin-bottom:' . $gap . 'pt;">'
+            . '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
+            . '<td width="35%" style="font-size:1pt;">&nbsp;</td>'
+            . '<td width="30%" style="border-top:2pt solid ' . $acc . '; font-size:1pt; line-height:1pt;">&nbsp;</td>'
+            . '<td width="35%" style="font-size:1pt;">&nbsp;</td>'
+            . '</tr></table></div>';
+    }
+
     public function thumbnailSvg(): string
     {
         $svg = $this->thumbDecor()
@@ -131,12 +143,10 @@ CSS;
         }
 
         // ---- Header + divider ----
-        $divider = '<div style="margin-top:' . $dividerGap . 'pt; margin-bottom:' . $dividerGap . 'pt;">'
-            . '<table width="100%" cellpadding="0" cellspacing="0"><tr>'
-            . '<td width="35%" style="font-size:1pt;">&nbsp;</td>'
-            . '<td width="30%" style="border-top:2pt solid ' . $acc . '; font-size:1pt; line-height:1pt;">&nbsp;</td>'
-            . '<td width="35%" style="font-size:1pt;">&nbsp;</td>'
-            . '</tr></table></div>';
+        $divider = $this->divider($d, $dividerGap);
+        $title = self::titleBlock($d, [
+            'scale' => $fontScale, 'color' => $d->accentColor, 'before' => $dividerGap, 'after' => 0.0, 'size' => 19.0,
+        ]);
 
         $details = self::detailsTable($d, self::collectRows($d), [
             'colon'      => true,
@@ -154,7 +164,7 @@ CSS;
         }
 
         $body = $decor . "\n" . $date . "\n"
-            . '<div class="pad">' . self::headerBlock($d) . $divider . $details . $topic . '</div>';
+            . '<div class="pad">' . self::headerBlock($d, ['scale' => $fontScale]) . $title . $divider . $details . $topic . '</div>';
 
         return self::document($css, $body);
     }

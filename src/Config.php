@@ -32,6 +32,20 @@ final class Config
         return $path;
     }
 
+    /**
+     * Absolute path to the folder for everything that is not a font: the
+     * SQLite database (settings, signed-in users, saved details, anonymous
+     * counters) and PHP session files. Mount this as a volume.
+     */
+    public static function dataPath(): string
+    {
+        $path = getenv('DATA_STORAGE_PATH') ?: (dirname(__DIR__) . '/storage/data');
+        if (!is_dir($path)) {
+            @mkdir($path, 0770, true);
+        }
+        return $path;
+    }
+
     /** Absolute path to bundled static assets (e.g. the Amiri font). */
     public static function assetsFontsPath(): string
     {

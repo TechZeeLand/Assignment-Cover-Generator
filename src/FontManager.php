@@ -103,6 +103,47 @@ final class FontManager
     }
 
     /**
+     * Custom (uploaded) fonts with their file names, for the admin panel.
+     * @return array<int, array{key:string,name:string,files:array<string,string>}>
+     */
+    public function listCustom(): array
+    {
+        $out = [];
+        foreach ($this->readIndex() as $entry) {
+            $out[] = [
+                'key'   => (string) ($entry['key'] ?? ''),
+                'name'  => (string) ($entry['name'] ?? ''),
+                'files' => is_array($entry['files'] ?? null) ? $entry['files'] : [],
+            ];
+        }
+        return $out;
+    }
+
+    /** Removes an uploaded font and its files. Returns false if there is no such font. */
+    public function deleteFont(string $key): bool
+    {
+        $kept = [];
+        $found = false;
+        foreach ($this->readIndex() as $entry) {
+            if (($entry['key'] ?? '') === $key) {
+                $found = true;
+                foreach (($entry['files'] ?? []) as $file) {
+                    $path = $this->storageDir . '/' . basename((string) $file);
+                    if (is_file($path)) {
+                        @unlink($path);
+                    }
+                }
+                continue;
+            }
+            $kept[] = $entry;
+        }
+        if ($found) {
+            $this->writeIndex($kept);
+        }
+        return $found;
+    }
+
+    /**
      * Build the fontDir / fontdata arrays mPDF needs, merging defaults with
      * the bundled Amiri font and any custom uploaded fonts.
      */

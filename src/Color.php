@@ -52,6 +52,38 @@ final class Color
         return self::luminance($bgHex) > 0.35 ? '#111111' : '#ffffff';
     }
 
+    /** WCAG contrast ratio between two colours (1 = identical, 21 = black on white). */
+    public static function ratio(string $a, string $b): float
+    {
+        $l1 = self::luminance($a);
+        $l2 = self::luminance($b);
+        if ($l1 < $l2) {
+            [$l1, $l2] = [$l2, $l1];
+        }
+        return ($l1 + 0.05) / ($l2 + 0.05);
+    }
+
+    /**
+     * Returns $fg unchanged when it is readable on $bg; otherwise the
+     * nearest colour to $fg (shaded towards black or white) that is.
+     * Used wherever a design puts text on a background colour of its own
+     * (bands, panels, tinted rows) so text can never vanish into its fill.
+     */
+    public static function ensureContrast(string $fg, string $bg, float $min = 3.0): string
+    {
+        if (self::ratio($fg, $bg) >= $min) {
+            return $fg;
+        }
+        $target = self::luminance($bg) > 0.5 ? '#000000' : '#ffffff';
+        for ($t = 0.1; $t <= 1.0001; $t += 0.1) {
+            $c = self::mix($fg, $target, $t);
+            if (self::ratio($c, $bg) >= $min) {
+                return $c;
+            }
+        }
+        return $target;
+    }
+
     /** Linear mix: 0 = $a, 1 = $b. */
     public static function mix(string $a, string $b, float $t): string
     {

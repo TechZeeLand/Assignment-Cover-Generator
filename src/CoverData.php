@@ -42,6 +42,27 @@ final class CoverData
 
     public bool $showBismillah;
 
+    // Optional extras (all off / empty unless the form asks for them).
+    public bool $showFaculty;
+    public string $faculty;
+
+    /** @var array{uri:string,w:int,h:int}|null validated, re-encoded university logo */
+    public ?array $logo;
+    public float $logoHeight; // points
+
+    public bool $showCoverTitle;
+    public string $coverTitle; // e.g. "Lab Report No. 3"
+
+    public bool $showStudentSession;
+    public string $studentSession;
+    public bool $showStudentEmail;
+    public string $studentEmail;
+
+    public bool $showGroup;
+    public string $groupName;
+    /** @var list<array{name:string,id:string}> */
+    public array $groupMembers;
+
     public bool $showVersityName;
     public string $versityName;
 
@@ -127,6 +148,18 @@ final class CoverData
 
         $c->showBismillah = Sanitize::bool($data['bismillah'] ?? null);
 
+        $c->showFaculty = Sanitize::bool($data['show-faculty'] ?? null);
+        $c->faculty     = Sanitize::text($data['faculty'] ?? '', 120);
+
+        $c->logo = Logo::fromDataUri($data['logo-data'] ?? null);
+        $c->logoHeight = Sanitize::fontSize($data['logo-size'] ?? null, 70.0, 30.0, 140.0);
+
+        $c->showCoverTitle = Sanitize::bool($data['show-cover-title'] ?? null);
+        $type = Sanitize::text($data['assignment-type'] ?? '', 40);
+        $no   = Sanitize::text($data['assignment-no'] ?? '', 12);
+        $type = $type !== '' ? $type : 'Assignment';
+        $c->coverTitle = $no !== '' ? $type . ' No. ' . $no : $type;
+
         $c->showVersityName = Sanitize::bool($data['show-versity-name'] ?? null);
         $c->versityName     = Sanitize::text($data['versity'] ?? '', 120);
 
@@ -153,6 +186,16 @@ final class CoverData
 
         $c->showSemester = Sanitize::bool($data['show-semester'] ?? null);
         $c->semester     = Sanitize::text($data['semester'] ?? '', 40);
+
+        $c->showStudentSession = Sanitize::bool($data['show-student-session'] ?? null);
+        $c->studentSession     = Sanitize::text($data['student-session'] ?? '', 30);
+
+        $c->showStudentEmail = Sanitize::bool($data['show-student-email'] ?? null);
+        $c->studentEmail     = Sanitize::text($data['student-email'] ?? '', 80);
+
+        $c->showGroup     = Sanitize::bool($data['show-group'] ?? null);
+        $c->groupName     = Sanitize::text($data['group-name'] ?? '', 60);
+        $c->groupMembers  = self::parseMembers($data['group-members'] ?? '');
 
         $c->showCourseCode = Sanitize::bool($data['show-course-code'] ?? null);
         $c->courseCode     = Sanitize::text($data['course-code'] ?? '', 40);
@@ -183,6 +226,39 @@ final class CoverData
         $c->submissionFontSize = Sanitize::fontSize($data['submission-font-size'] ?? null, self::DEFAULT_SUBMISSION_FONT_SIZE, $min, $max);
 
         return $c;
+    }
+
+    /**
+     * One member per line: "Name, ID" (or "Name | ID", or just "Name").
+     * Up to 12 members; values are HTML-escaped like every other field.
+     *
+     * @return list<array{name:string,id:string}>
+     */
+    private static function parseMembers(mixed $raw): array
+    {
+        if (!is_string($raw) || trim($raw) === '') {
+            return [];
+        }
+        $members = [];
+        foreach (preg_split('/\R/', $raw) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            $name = $line;
+            $id = '';
+            if (str_contains($line, '|')) {
+                [$name, $id] = array_map('trim', explode('|', $line, 2));
+            } elseif (($pos = strrpos($line, ',')) !== false) {
+                $name = trim(substr($line, 0, $pos));
+                $id = trim(substr($line, $pos + 1));
+            }
+            $members[] = ['name' => Sanitize::text($name, 80), 'id' => Sanitize::text($id, 40)];
+            if (count($members) >= 12) {
+                break;
+            }
+        }
+        return $members;
     }
 
     private static function formatDate(string $isoDate): string

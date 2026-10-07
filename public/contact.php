@@ -2,6 +2,7 @@
 declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
+$contactEmail = App\Settings::get('contact_email') ?: 'azlanaziz@rayaz.org';
 $pageTitle = 'Contact — Assignment Cover Generator';
 $pageDescription = 'Get in touch with TechZeeLand, the team behind Assignment Cover Generator.';
 require __DIR__ . '/partials/head.php';
@@ -19,7 +20,7 @@ require __DIR__ . '/partials/head.php';
         <p>For bugs or feature requests, opening an issue on GitHub is the fastest way to reach us. For anything else, reach out by email or on social media below.</p>
 
         <ul class="contact-list">
-            <li><a href="mailto:azlanaziz@rayaz.org"><i class="fa-solid fa-envelope"></i> azlanaziz@rayaz.org</a></li>
+            <li><a href="mailto:<?php echo App\Html::e($contactEmail); ?>"><i class="fa-solid fa-envelope"></i> <?php echo App\Html::e($contactEmail); ?></a></li>
             <li><a href="https://github.com/TechZeeLand/Assignment-Cover-Generator" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Open an issue on GitHub</a></li>
             <li><a href="https://www.youtube.com/@TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i> YouTube — @TechZeeLand</a></li>
             <li><a href="https://www.facebook.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-facebook"></i> Facebook — TechZeeLand</a></li>

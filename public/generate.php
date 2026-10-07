@@ -7,6 +7,7 @@ require __DIR__ . '/../vendor/autoload.php';
 use App\CoverData;
 use App\FontManager;
 use App\PdfService;
+use App\Stats;
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     http_response_code(405);
@@ -21,6 +22,10 @@ try {
 
     $mpdf = PdfService::render($data, $fonts);
     $filename = PdfService::suggestFilename($data);
+
+    // Anonymous counters for the admin dashboard (no personal data).
+    Stats::hit('pdf');
+    Stats::hit('pdf:' . $data->design);
 
     // 'I' streams inline (browser opens/downloads the PDF directly).
     $mpdf->Output($filename, \Mpdf\Output\Destination::INLINE);

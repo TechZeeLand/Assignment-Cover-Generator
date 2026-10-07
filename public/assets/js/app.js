@@ -85,7 +85,7 @@
     const uploadBtn = document.getElementById('upload-font-btn');
     const uploadMsg = document.getElementById('upload-font-msg');
 
-    uploadBtn.addEventListener('click', async () => {
+    if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         const name = document.getElementById('font-name').value.trim();
         const regular = document.getElementById('font-regular').files[0];
         uploadMsg.textContent = '';
@@ -189,6 +189,11 @@
         'show-course-teacher-designation': 'course-teacher-designation',
         'show-topic': 'topic-html', // resolved to the .richtext wrapper below
         'show-submission-date': 'submission-date',
+        'show-faculty': 'faculty',
+        'show-cover-title': 'assignment-type',
+        'show-student-session': 'student-session',
+        'show-student-email': 'student-email',
+        'show-group': 'group-members',
     };
     Object.keys(SHOW_CHECKBOX_TARGETS).forEach((cbId) => {
         const cb = document.getElementById(cbId);
@@ -287,6 +292,213 @@
     }
 
     // ---------------------------------------------------------------
+    // Design picker: horizontal scroller with an "Expand all" toggle
+    // ---------------------------------------------------------------
+    const picker = document.getElementById('design-picker');
+    const expandBtn = document.getElementById('design-expand');
+    const prevBtn = document.getElementById('design-prev');
+    const nextBtn = document.getElementById('design-next');
+
+    function scrollSelectedIntoView() {
+        if (!designGrid || (picker && picker.classList.contains('expanded'))) return;
+        const sel = designGrid.querySelector('input[type="radio"]:checked');
+        if (!sel) return;
+        const card = sel.closest('.design-card');
+        designGrid.scrollTo({ left: Math.max(0, card.offsetLeft - (designGrid.clientWidth - card.offsetWidth) / 2), behavior: 'auto' });
+    }
+    function updateArrows() {
+        if (!designGrid || !prevBtn || !nextBtn) return;
+        const expanded = picker.classList.contains('expanded');
+        prevBtn.hidden = expanded || designGrid.scrollLeft <= 4;
+        nextBtn.hidden = expanded || designGrid.scrollLeft + designGrid.clientWidth >= designGrid.scrollWidth - 4;
+    }
+    if (picker && designGrid) {
+        designGrid.addEventListener('scroll', updateArrows, { passive: true });
+        window.addEventListener('resize', updateArrows);
+        prevBtn.addEventListener('click', () => designGrid.scrollBy({ left: -designGrid.clientWidth * 0.8, behavior: 'smooth' }));
+        nextBtn.addEventListener('click', () => designGrid.scrollBy({ left: designGrid.clientWidth * 0.8, behavior: 'smooth' }));
+        expandBtn.addEventListener('click', () => {
+            const expanded = picker.classList.toggle('expanded');
+            expandBtn.setAttribute('aria-expanded', String(expanded));
+            expandBtn.querySelector('span').textContent = expanded ? 'Collapse' : 'Expand all';
+            expandBtn.querySelector('i').className = expanded ? 'fa-solid fa-compress' : 'fa-solid fa-table-cells-large';
+            updateArrows();
+            if (!expanded) scrollSelectedIntoView();
+        });
+        scrollSelectedIntoView();
+        updateArrows();
+    }
+
+    // ---------------------------------------------------------------
+    // University logo: resized in the browser, sent as a data: URI
+    // ---------------------------------------------------------------
+    const logoFile = document.getElementById('logo-file');
+    const logoData = document.getElementById('logo-data');
+    const logoPreview = document.getElementById('logo-preview');
+    const logoRemove = document.getElementById('logo-remove');
+
+    function setLogo(uri) {
+        logoData.value = uri || '';
+        logoPreview.innerHTML = '';
+        if (uri) {
+            const img = new Image();
+            img.src = uri;
+            img.alt = 'Logo preview';
+            logoPreview.appendChild(img);
+        } else {
+            const span = document.createElement('span');
+            span.className = 'logo-empty';
+            span.textContent = 'No logo';
+            logoPreview.appendChild(span);
+        }
+        logoRemove.hidden = !uri;
+    }
+    function encodeLogo(img) {
+        for (const max of [600, 450, 300]) {
+            const scale = Math.min(1, max / Math.max(img.width, img.height));
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.max(1, Math.round(img.width * scale));
+            canvas.height = Math.max(1, Math.round(img.height * scale));
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            let uri = canvas.toDataURL('image/png');
+            if (uri.length <= 600000) return uri;
+            ctx.globalCompositeOperation = 'destination-over';
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            uri = canvas.toDataURL('image/jpeg', 0.85);
+            if (uri.length <= 600000) return uri;
+        }
+        return '';
+    }
+    logoFile.addEventListener('change', () => {
+        const file = logoFile.files[0];
+        if (!file) return;
+        if (!/^image\/(png|jpe?g|webp)$/.test(file.type) || file.size > 10 * 1024 * 1024) {
+            alert('Please choose a PNG, JPG or WebP image under 10 MB.');
+            logoFile.value = '';
+            return;
+        }
+        const reader = new FileReader();
+        reader.onload = () => {
+            const img = new Image();
+            img.onload = () => {
+                const uri = encodeLogo(img);
+                if (!uri) { alert('That image is too large. Please use a smaller one.'); return; }
+                setLogo(uri);
+            };
+            img.onerror = () => alert('Could not read that image.');
+            img.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+    });
+    logoRemove.addEventListener('click', () => { logoFile.value = ''; setLogo(''); });
+
+    // ---------------------------------------------------------------
+    // Saved details (signed-in users)
+    // ---------------------------------------------------------------
+    const NOT_SAVED = new Set(['topic-html', 'submission-date']);
+    const acg = window.__ACG__ || {};
+
+    function syncRichTexts() {
+        document.querySelectorAll('.richtext').forEach((wrap) => {
+            document.getElementById(wrap.dataset.target).value = wrap.querySelector('.richtext-input').innerHTML;
+        });
+    }
+    function collectState() {
+        syncRichTexts();
+        const state = {};
+        Array.from(form.elements).forEach((el) => {
+            if (!el.name || NOT_SAVED.has(el.name) || ['file', 'submit', 'button', 'reset'].includes(el.type)) return;
+            if (el.type === 'radio') { if (el.checked) state[el.name] = el.value; }
+            else if (el.type === 'checkbox') state[el.name] = el.checked;
+            else state[el.name] = el.value;
+        });
+        return state;
+    }
+    function applyState(state) {
+        Object.keys(state).forEach((name) => {
+            if (NOT_SAVED.has(name)) return;
+            const el = form.elements[name];
+            const val = state[name];
+            if (!el) return;
+            if (el instanceof RadioNodeList) {
+                if (Array.from(el).some((r) => r.value === val)) el.value = val;
+            } else if (el.type === 'checkbox') {
+                el.checked = !!val;
+            } else if (el.tagName === 'SELECT') {
+                if (Array.from(el.options).some((o) => o.value === val)) el.value = val;
+            } else if (name === 'logo-data') {
+                setLogo(typeof val === 'string' ? val : '');
+            } else if (name === 'course-title-html') {
+                el.value = String(val);
+                document.getElementById('course-title').innerHTML = String(val);
+            } else if (typeof val === 'string') {
+                el.value = val;
+            }
+        });
+        form.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.dispatchEvent(new Event('change', { bubbles: true })));
+        form.querySelectorAll('input[type="color"]').forEach((c) => c.dispatchEvent(new Event('input', { bubbles: true })));
+        syncAccentColorState();
+        syncDesignColors();
+        scrollSelectedIntoView();
+        updateArrows();
+    }
+
+    if (window.__SAVED_PROFILE__ && typeof window.__SAVED_PROFILE__ === 'object') {
+        applyState(window.__SAVED_PROFILE__);
+    }
+
+    const saveBtn = document.getElementById('profile-save');
+    const clearBtn = document.getElementById('profile-clear');
+    const statusEl = document.getElementById('profile-status');
+    const noteEl = document.getElementById('profile-note');
+
+    async function profileCall(payload) {
+        const res = await fetch('/api/profile.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': acg.csrf || '' },
+            body: JSON.stringify(payload),
+        });
+        const data = await res.json().catch(() => ({ ok: false, error: 'Unexpected response.' }));
+        if (!data.ok) throw new Error(data.error || 'Could not complete that.');
+        return data;
+    }
+    function say(msg, ok) {
+        if (!statusEl) return;
+        statusEl.textContent = msg;
+        statusEl.className = 'profile-status ' + (ok ? 'ok' : 'error');
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', async () => {
+            saveBtn.disabled = true;
+            try {
+                await profileCall({ action: 'save', data: collectState() });
+                say('Saved. Your details will be filled in next time you sign in.', true);
+                if (noteEl) noteEl.textContent = 'Loaded automatically below.';
+                if (clearBtn) clearBtn.disabled = false;
+            } catch (e) {
+                say(e.message, false);
+            } finally {
+                saveBtn.disabled = false;
+            }
+        });
+    }
+    if (clearBtn) {
+        clearBtn.addEventListener('click', async () => {
+            if (!confirm('Delete your saved details from this site?')) return;
+            try {
+                await profileCall({ action: 'delete' });
+                say('Your saved details were deleted.', true);
+                if (noteEl) noteEl.textContent = 'Nothing saved yet.';
+                clearBtn.disabled = true;
+            } catch (e) {
+                say(e.message, false);
+            }
+        });
+    }
+
+    // ---------------------------------------------------------------
     // Reset button: also clear the rich-text fields and disabled state,
     // since the browser's native "reset" only restores form controls.
     // ---------------------------------------------------------------
@@ -316,6 +528,9 @@
                 input.dispatchEvent(new Event('input'));
             });
             syncDesignColors();
+            setLogo('');
+            logoFile.value = '';
+            scrollSelectedIntoView();
         }, 0);
     });
 })();

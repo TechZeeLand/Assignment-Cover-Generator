@@ -189,6 +189,12 @@ final class CoverBuilder
         if ($d->showSemester) {
             $rows['student'][] = [$d->semesterType, $d->semester];
         }
+        if ($d->showStudentSession) {
+            $rows['student'][] = ['Session', $d->studentSession];
+        }
+        if ($d->showStudentEmail) {
+            $rows['student'][] = ['Email', $d->studentEmail];
+        }
 
         if ($d->showCourseCode) {
             $rows['course'][] = ['Code', $d->courseCode];
@@ -200,11 +206,20 @@ final class CoverBuilder
             $rows['course'][] = ['Teacher', $d->courseTeacherName];
         }
 
+        if ($d->showGroup) {
+            if ($d->groupName !== '') {
+                $rows['group'][] = ['Group', $d->groupName];
+            }
+            foreach ($d->groupMembers as $i => $member) {
+                $rows['group'][] = [(string) ($i + 1), $member['name'] . ($member['id'] !== '' ? ' (' . $member['id'] . ')' : '')];
+            }
+        }
+
         $hasStudent = !empty($rows['student']);
         $hasCourse  = !empty($rows['course']) || ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '');
 
         $detailsTable = '';
-        if ($hasStudent || $hasCourse) {
+        if ($hasStudent || $hasCourse || !empty($rows['group'])) {
             $body = '';
 
             if ($hasStudent) {
@@ -232,6 +247,16 @@ final class CoverBuilder
                 }
             }
 
+            if (!empty($rows['group'])) {
+                $body .= self::headerRow(
+                    'Group Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    $sectionGapPt
+                );
+                foreach ($rows['group'] as [$label, $valueHtml]) {
+                    $body .= self::row($label, $valueHtml, 'grp-student');
+                }
+            }
+
             $detailsTable = '<table class="grid" cellpadding="0" cellspacing="0">' . $body . '</table>';
         }
 
@@ -250,6 +275,27 @@ final class CoverBuilder
 
         $bismillah = $d->showBismillah
             ? '<p class="bismillah">&#xFDFD;</p>'
+            : '';
+
+        // Optional extras - all empty unless the form turned them on, so the
+        // original layout is unchanged by default.
+        $logoBlock = '';
+        if ($d->logo !== null) {
+            $logoH = max(20.0, round($d->logoHeight * $fontScale, 2));
+            $logoW = round($logoH * $d->logo['w'] / max(1, $d->logo['h']), 2);
+            if ($logoW > 300.0) {
+                $logoW = 300.0;
+                $logoH = round($logoW * $d->logo['h'] / max(1, $d->logo['w']), 2);
+            }
+            $logoBlock = '<div style="text-align:center; margin-bottom:8pt;"><img src="' . $d->logo['uri']
+                . '" style="width:' . $logoW . 'pt; height:' . $logoH . 'pt;" /></div>';
+        }
+        $facultyBlock = ($d->showFaculty && $d->faculty !== '')
+            ? '<p class="faculty-name">' . htmlspecialchars($d->faculty, ENT_QUOTES, 'UTF-8', false) . '</p>'
+            : '';
+        $titleBlock = $d->showCoverTitle
+            ? '<div style="margin-top:' . $sscale(10.0) . 'pt; margin-bottom:' . $sscale(10.0) . 'pt;"><p class="cover-title">'
+                . htmlspecialchars($d->coverTitle, ENT_QUOTES, 'UTF-8', false) . '</p></div>'
             : '';
 
         $versityBlock = $d->showVersityName
@@ -313,6 +359,21 @@ final class CoverBuilder
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
         margin-bottom: {$deptGapPt}pt !important;
+    }
+    .faculty-name {
+        font-size: {$fscale($d->deptFontSize * 0.78)}pt;
+        font-family: {$font($d->secondaryFont)};
+        color: {$col($d->secondaryColor)};
+        margin-bottom: {$designationGapPt}pt !important;
+    }
+    .cover-title {
+        font-size: {$fscale(22.0)}pt;
+        font-weight: bold;
+        font-family: {$font($d->primaryFont)} !important;
+        color: {$col($d->accentColor)};
+        text-align: center;
+        text-transform: uppercase;
+        letter-spacing: 3pt;
     }
     .section-h {
         font-size: {$sectionHeaderSize}pt;
@@ -386,9 +447,12 @@ final class CoverBuilder
     <div class="content-pad">
         <div class="header-block">
             {$bismillah}
+            {$logoBlock}
             {$versityBlock}
+            {$facultyBlock}
             {$deptBlock}
         </div>
+        {$titleBlock}
         {$detailsTable}
         {$topicBlock}
     </div>

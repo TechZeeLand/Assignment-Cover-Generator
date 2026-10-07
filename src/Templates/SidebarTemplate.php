@@ -35,6 +35,11 @@ final class SidebarTemplate extends BaseTemplate
         return 'sidebar';
     }
 
+    public function category(): string
+    {
+        return 'Modern';
+    }
+
     public function label(): string
     {
         return 'Side Panel';
@@ -196,7 +201,8 @@ CSS;
                 . '</td></tr></table></div>';
         }
 
-        $header = self::headerBlock($d);
+        $header = self::headerBlock($d, ['scale' => $fontScale])
+            . self::titleBlock($d, ['scale' => $fontScale, 'color' => $d->accentColor, 'before' => 10.0, 'after' => 0.0, 'size' => 19.0]);
         $spacer = '<div style="height:' . $dividerGap . 'pt; font-size:1pt; line-height:1pt;">&nbsp;</div>';
 
         $body = $deco . "\n"

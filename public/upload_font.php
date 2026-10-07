@@ -5,6 +5,7 @@ declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
 use App\FontManager;
+use App\Settings;
 
 header('Content-Type: application/json; charset=utf-8');
 
@@ -15,6 +16,11 @@ if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
 }
 
 try {
+    if (!Settings::bool('font_uploads_enabled')) {
+        http_response_code(403);
+        echo json_encode(['ok' => false, 'error' => 'Font uploads are turned off on this site.']);
+        exit;
+    }
     $fonts = new FontManager();
 
     $familyName = (string) ($_POST['font-name'] ?? '');

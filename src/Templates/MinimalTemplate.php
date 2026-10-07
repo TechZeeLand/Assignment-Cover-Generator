@@ -28,6 +28,11 @@ final class MinimalTemplate extends BaseTemplate
         return 'minimal';
     }
 
+    public function category(): string
+    {
+        return 'Modern';
+    }
+
     public function label(): string
     {
         return 'Minimal Lines';
@@ -185,7 +190,9 @@ CSS;
         }
 
         $body = $deco . "\n"
-            . '<div class="pad">' . self::headerBlock($d) . $details . $topic . '</div>';
+            . '<div class="pad">' . self::headerBlock($d, ['scale' => $fontScale, 'align' => 'left'])
+            . self::titleBlock($d, ['scale' => $fontScale, 'color' => $d->primaryColor, 'align' => 'left', 'before' => 0.0, 'after' => 16.0, 'size' => 16.0, 'spacing' => 4.0])
+            . $details . $topic . '</div>';
 
         return self::document($css, $body);
     }

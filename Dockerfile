@@ -49,6 +49,9 @@ RUN { \
         echo "memory_limit = 256M"; \
     } > /usr/local/etc/php/conf.d/assignment-cover-generator.ini
 
+# Let PHP-FPM workers see the container's environment (ADMIN_PASSWORD, ...).
+RUN printf '[www]\nclear_env = no\n' > /usr/local/etc/php-fpm.d/zz-env.conf
+
 COPY docker/nginx.conf /etc/nginx/conf.d/default.conf
 COPY docker/supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -63,11 +66,13 @@ COPY src ./src
 # plus a scratch dir for mPDF's own temp/cache files (see Config::tempPath()) -
 # mPDF's built-in default tmp dir lives under vendor/, which is owned by
 # root here and isn't writable by the www-data user PHP-FPM runs as.
-RUN mkdir -p storage/fonts storage/tmp \
+RUN mkdir -p storage/fonts storage/tmp storage/data \
     && chown -R www-data:www-data /var/www/html/storage \
     && chown -R www-data:www-data /var/www/html/public
 
-VOLUME ["/var/www/html/storage/fonts"]
+# fonts = shared uploaded fonts; data = SQLite database (settings, users,
+# saved details, counters) and PHP sessions.
+VOLUME ["/var/www/html/storage/fonts", "/var/www/html/storage/data"]
 
 EXPOSE 80
 

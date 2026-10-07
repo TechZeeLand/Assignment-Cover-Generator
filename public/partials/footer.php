@@ -1,7 +1,9 @@
 <?php
 declare(strict_types=1);
 $currentYear = date('Y');
+$footerSite = \App\Settings::get('site_name') ?: 'Assignment Cover Generator';
 ?>
+<?php echo \App\Ads::slot('bottom'); ?>
 <footer class="site-footer">
     <div class="footer-inner">
         <div class="footer-cols">
@@ -13,6 +15,8 @@ $currentYear = date('Y');
                     <li><a href="/contact.php">Contact</a></li>
                     <li><a href="/privacy-policy.php">Privacy Policy</a></li>
                     <li><a href="/terms-and-conditions.php">Terms &amp; Conditions</a></li>
+                    <li><a href="/cookie-policy.php">Cookie Policy</a></li>
+                    <li><button type="button" class="link-button" data-cookie-settings>Cookie settings</button></li>
                 </ul>
             </nav>
             <nav class="footer-col" aria-label="Social links">
@@ -33,4 +37,13 @@ $currentYear = date('Y');
     </div>
 </footer>
 
+<div id="cookie-banner" class="cookie-banner" role="dialog" aria-live="polite" aria-label="Cookie preferences" hidden>
+    <p>We use a few essential cookies to keep you signed in, and &mdash; only if you agree &mdash; Google AdSense cookies to show ads that help keep this free. See our <a href="/cookie-policy.php">Cookie Policy</a>.</p>
+    <div class="cookie-actions">
+        <button type="button" class="btn btn-secondary" data-consent="rejected">Essential only</button>
+        <button type="button" class="btn btn-primary" data-consent="accepted">Accept all</button>
+    </div>
+</div>
+
 <script src="/assets/js/theme.js"></script>
+<script src="/assets/js/consent.js"></script>

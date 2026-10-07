@@ -20,6 +20,11 @@ final class CornersTemplate extends CenteredTemplate
         return 'corners';
     }
 
+    public function category(): string
+    {
+        return 'Professional';
+    }
+
     public function label(): string
     {
         return 'Corner Brackets';

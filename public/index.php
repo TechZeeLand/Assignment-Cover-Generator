@@ -2,12 +2,31 @@
 declare(strict_types=1);
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Ads;
+use App\Auth;
 use App\FontManager;
+use App\Html;
+use App\ProfileStore;
+use App\Settings;
 use App\Templates\TemplateRegistry;
 
 $fontManager = new FontManager();
 $initialFonts = $fontManager->listFonts();
-$designs = TemplateRegistry::all();
+$designs = TemplateRegistry::active();
+$defaultDesign = TemplateRegistry::defaultKey();
+
+// Signed-in visitors get their saved details pre-filled (see app.js).
+$acgUser = Auth::user();
+$profilesOn = Settings::bool('profiles_enabled');
+$savedProfile = null;
+if ($acgUser !== null && $profilesOn) {
+    try {
+        $savedProfile = ProfileStore::load($acgUser['id']);
+    } catch (\Throwable $e) {
+        error_log('[assignment-cover-generator] load profile: ' . $e->getMessage());
+    }
+}
+$canSignIn = Auth::signInAvailable() && $profilesOn;
 
 $pageTitle = 'Assignment Cover Generator';
 $pageDescription = 'Free, open-source assignment cover page generator. Design your cover, then export a print-ready PDF.';
@@ -30,8 +49,38 @@ require __DIR__ . '/partials/head.php';
         <a href="#sec-header" class="section-nav-link"><i class="fa-solid fa-heading"></i><span>Header</span></a>
         <a href="#sec-student" class="section-nav-link"><i class="fa-solid fa-user-graduate"></i><span>Student</span></a>
         <a href="#sec-course" class="section-nav-link"><i class="fa-brands fa-readme"></i><span>Course</span></a>
+        <a href="#sec-group" class="section-nav-link"><i class="fa-solid fa-people-group"></i><span>Group</span></a>
         <a href="#sec-topic" class="section-nav-link"><i class="fa-solid fa-square-pen"></i><span>Topic</span></a>
     </nav>
+
+    <?php echo Ads::slot('top'); ?>
+
+    <?php if ($acgUser !== null && $profilesOn): ?>
+    <section class="panel profile-bar" id="profile-bar" aria-label="Saved details">
+        <div class="profile-bar-text">
+            <strong><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Your saved details</strong>
+            <span id="profile-note"><?php echo $savedProfile ? 'Loaded automatically below.' : 'Nothing saved yet &mdash; fill in the form, then save it for next time.'; ?></span>
+        </div>
+        <div class="profile-bar-actions">
+            <button type="button" class="btn btn-secondary" id="profile-save"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save my details</button>
+            <button type="button" class="btn btn-secondary" id="profile-clear"<?php echo $savedProfile ? '' : ' disabled'; ?>><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Delete saved</button>
+        </div>
+        <p class="profile-status" id="profile-status" role="status"></p>
+    </section>
+    <?php elseif ($canSignIn): ?>
+    <section class="panel profile-bar profile-bar-promo" aria-label="Sign in to save your details">
+        <div class="profile-bar-text">
+            <strong><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Tired of retyping the same details?</strong>
+            <span>Optionally sign in with Google and save your university and student details for next time. Signing in is never required.</span>
+        </div>
+        <div class="profile-bar-actions">
+            <a class="google-btn google-btn-lg" href="/auth/google.php?return=<?php echo rawurlencode('/'); ?>">
+                <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+                <span>Sign in with Google</span>
+            </a>
+        </div>
+    </section>
+    <?php endif; ?>
 
     <form id="main-form" class="panel form-panel" action="generate.php" method="post" target="_blank" novalidate>
 
@@ -45,15 +94,28 @@ require __DIR__ . '/partials/head.php';
             <div class="field-group">
                 <div class="field">
                     <span class="field-label" id="design-label">Cover design</span>
-                    <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
-                        <?php foreach ($designs as $design): ?>
-                        <label class="design-card">
-                            <input type="radio" name="design" value="<?php echo htmlspecialchars($design->key(), ENT_QUOTES); ?>"<?php echo $design->key() === TemplateRegistry::DEFAULT_KEY ? ' checked' : ''; ?>>
-                            <span class="design-thumb"><?php echo $design->thumbnailSvg(); ?></span>
-                            <span class="design-name"><?php echo htmlspecialchars($design->label(), ENT_QUOTES); ?></span>
-                            <span class="design-desc"><?php echo htmlspecialchars($design->description(), ENT_QUOTES); ?></span>
-                        </label>
-                        <?php endforeach; ?>
+                    <div class="design-picker" id="design-picker">
+                        <div class="design-toolbar">
+                            <span class="design-count"><?php echo count($designs); ?> designs &middot; swipe or scroll sideways</span>
+                            <button type="button" class="chip-btn" id="design-expand" aria-expanded="false" aria-controls="design-grid">
+                                <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> <span>Expand all</span>
+                            </button>
+                        </div>
+                        <div class="design-scroll-wrap">
+                            <button type="button" class="design-arrow design-arrow-prev" id="design-prev" aria-label="Show previous designs" hidden><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                            <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
+                                <?php foreach ($designs as $design): ?>
+                                <label class="design-card">
+                                    <input type="radio" name="design" value="<?php echo Html::e($design->key()); ?>"<?php echo $design->key() === $defaultDesign ? ' checked' : ''; ?>>
+                                    <span class="design-thumb"><?php echo $design->thumbnailSvg(); ?></span>
+                                    <span class="design-name"><?php echo Html::e($design->label()); ?></span>
+                                    <span class="design-badge"><?php echo Html::e($design->category()); ?></span>
+                                    <span class="design-desc"><?php echo Html::e($design->description()); ?></span>
+                                </label>
+                                <?php endforeach; ?>
+                            </div>
+                            <button type="button" class="design-arrow design-arrow-next" id="design-next" aria-label="Show more designs" hidden><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                        </div>
                     </div>
                     <p class="hint">The previews follow your colors below. Every design uses the same details you fill in.</p>
                 </div>
@@ -123,6 +185,7 @@ require __DIR__ . '/partials/head.php';
                 </div>
             </details>
 
+            <?php if (Settings::bool('font_uploads_enabled')): ?>
             <details class="font-block">
                 <summary><i class="fa-solid fa-circle-plus"></i> Add a custom font <span class="font-hint">shared with everyone</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body">
@@ -143,6 +206,7 @@ require __DIR__ . '/partials/head.php';
                     <p id="upload-font-msg" class="upload-msg" role="status"></p>
                 </div>
             </details>
+            <?php endif; ?>
         </section>
 
         <!-- ============ HEADER ============ -->
@@ -176,6 +240,50 @@ require __DIR__ . '/partials/head.php';
                     <span class="row-check-label">Department name</span>
                 </label>
                 <input type="text" class="text-input" name="dept-name" id="dept-name" placeholder="Enter department">
+            </div>
+
+            <div class="field-group">
+                <label class="row-check"><input type="checkbox" name="show-faculty" id="show-faculty"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Faculty / School <small>(optional)</small></span></label>
+                <input type="text" class="text-input" name="faculty" id="faculty" placeholder="e.g. Faculty of Arts and Social Sciences">
+            </div>
+
+            <div class="field-group logo-field">
+                <span class="field-label">University logo <small>(optional)</small></span>
+                <div class="logo-row">
+                    <div class="logo-preview" id="logo-preview" aria-live="polite"><span class="logo-empty">No logo</span></div>
+                    <div class="logo-controls">
+                        <input type="file" id="logo-file" accept="image/png,image/jpeg,image/webp">
+                        <button type="button" class="btn btn-secondary btn-sm" id="logo-remove" hidden>Remove logo</button>
+                        <div class="field field-narrow">
+                            <label for="logo-size">Logo height <small>(pt)</small></label>
+                            <input type="number" class="text-input input-narrow" name="logo-size" id="logo-size" value="70" min="30" max="140" step="5">
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" name="logo-data" id="logo-data">
+                <p class="hint">PNG, JPG or WebP. It is resized in your browser and only sent when you generate the PDF.</p>
+            </div>
+
+            <div class="field-group">
+                <label class="row-check">
+                    <input type="checkbox" name="show-cover-title" id="show-cover-title">
+                    <span class="switch" aria-hidden="true"></span>
+                    <span class="row-check-label">Cover title <small>(e.g. "Lab Report No. 3")</small></span>
+                </label>
+                <div class="field-row">
+                    <div class="field">
+                        <label for="assignment-type">Type</label>
+                        <input type="text" class="text-input" name="assignment-type" id="assignment-type" list="assignment-types" placeholder="Assignment" maxlength="40">
+                        <datalist id="assignment-types">
+                            <option value="Assignment"><option value="Lab Report"><option value="Term Paper"><option value="Project Report">
+                            <option value="Case Study"><option value="Presentation"><option value="Homework"><option value="Quiz">
+                        </datalist>
+                    </div>
+                    <div class="field">
+                        <label for="assignment-no">Number <small>(optional)</small></label>
+                        <input type="text" class="text-input" name="assignment-no" id="assignment-no" placeholder="e.g. 2" maxlength="12">
+                    </div>
+                </div>
             </div>
 
             <div class="field-group">
@@ -248,6 +356,16 @@ require __DIR__ . '/partials/head.php';
                 <input type="text" class="text-input" name="semester" id="semester" placeholder="e.g. Summer">
             </div>
 
+            <div class="field-group">
+                <label class="row-check"><input type="checkbox" name="show-student-session" id="show-student-session"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Session / academic year <small>(optional)</small></span></label>
+                <input type="text" class="text-input" name="student-session" id="student-session" placeholder="e.g. 2025-2026">
+            </div>
+
+            <div class="field-group">
+                <label class="row-check"><input type="checkbox" name="show-student-email" id="show-student-email"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Email <small>(optional)</small></span></label>
+                <input type="text" class="text-input" name="student-email" id="student-email" placeholder="e.g. you@example.com">
+            </div>
+
             <details class="font-block">
                 <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
                 <div class="font-body">
@@ -304,10 +422,31 @@ require __DIR__ . '/partials/head.php';
             </details>
         </section>
 
+        <!-- ============ GROUP ============ -->
+        <section class="card" id="sec-group">
+            <div class="card-head">
+                <h2><span class="step-badge">5</span><i class="fa-solid fa-people-group"></i> Group <span class="optional-tag">optional</span></h2>
+                <p class="card-sub">For group assignments: add a group name and list the members.</p>
+            </div>
+
+            <div class="field-group">
+                <label class="row-check"><input type="checkbox" name="show-group" id="show-group"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Show group details</span></label>
+                <input type="text" class="text-input" name="group-name" id="group-name" placeholder="Group name or number, e.g. Group 4" maxlength="60">
+            </div>
+            <div class="field-group">
+                <div class="field">
+                    <label for="group-members">Members <small>(one per line &mdash; Name, ID &mdash; up to 12)</small></label>
+                    <textarea class="text-input" name="group-members" id="group-members" rows="5" maxlength="900" placeholder="Azlan Aziz, ME601001&#10;Another Member, ME601002"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <?php echo Ads::slot('middle'); ?>
+
         <!-- ============ TOPIC ============ -->
         <section class="card" id="sec-topic">
             <div class="card-head">
-                <h2><span class="step-badge">5</span><i class="fa-solid fa-square-pen"></i> Topic &amp; Submission</h2>
+                <h2><span class="step-badge">6</span><i class="fa-solid fa-square-pen"></i> Topic &amp; Submission</h2>
                 <p class="card-sub">What you're submitting, and when.</p>
             </div>
 
@@ -352,7 +491,9 @@ require __DIR__ . '/partials/head.php';
 
 <?php require __DIR__ . '/partials/footer.php'; ?>
 
-<script>window.__INITIAL_FONTS__ = <?php echo json_encode($initialFonts, JSON_UNESCAPED_SLASHES); ?>;</script>
+<script>window.__INITIAL_FONTS__ = <?php echo Html::json($initialFonts); ?>;
+window.__SAVED_PROFILE__ = <?php echo Html::json($savedProfile); ?>;
+window.__FONT_UPLOADS__ = <?php echo Settings::bool('font_uploads_enabled') ? 'true' : 'false'; ?>;</script>
 <script src="assets/js/app.js"></script>
 </body>
 </html>

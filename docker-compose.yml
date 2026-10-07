@@ -15,8 +15,16 @@ services:
     volumes:
       # Persists custom uploaded fonts across container recreations/updates.
       - acg_fonts:/var/www/html/storage/fonts
+      # Settings, signed-in users, saved details, counters and sessions.
+      - acg_data:/var/www/html/storage/data
     environment:
       - TZ=UTC
+      # Password for the admin portal at /admin/ (first run). Required to
+      # use the admin area; after that you can change it from the panel.
+      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
+      # Set to 1 (together with ADMIN_PASSWORD) to force-reset a lost password.
+      - ADMIN_PASSWORD_RESET=${ADMIN_PASSWORD_RESET:-}
 
 volumes:
   acg_fonts:
+  acg_data:

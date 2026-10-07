@@ -16,3 +16,8 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# runtime data (SQLite DB, sessions) - never commit
+storage/data/*
+!storage/data/.gitkeep
+.env
