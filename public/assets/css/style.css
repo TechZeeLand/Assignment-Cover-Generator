@@ -619,13 +619,24 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     font-size: .95rem;
 }
 .social-links a:hover i { color: var(--accent); }
-.pathaopay-icon {
+/* Same 18px box as the Font Awesome <i> icons, so text lines up */
+.social-links .icon-box {
     width: 18px;
-    text-align: center;
-    color: var(--muted);
-    font-size: .95rem;
+    display: inline-flex;
+    justify-content: center;
+    align-items: center;
+    flex: 0 0 auto;
 }
-.pathaopay-icon a:hover { color: var(--accent); }
+.pathaopay-icon {
+    width: 15px;               /* matches the visual size of the FA glyphs */
+    height: 15px;
+    display: block;
+    color: var(--muted);       /* the disc follows the same muted colour */
+    transition: color .15s ease;
+}
+/* the "P" swoosh: shows the footer background through the disc */
+.pathaopay-icon .pp-bg { fill: var(--panel); }
+.social-links a:hover .pathaopay-icon { color: var(--accent); }
 
 .footer-bottom {
     margin-top: 26px;
