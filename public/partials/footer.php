@@ -16,7 +16,6 @@ $footerSite = \App\Settings::get('site_name') ?: 'Assignment Cover Generator';
                     <li><a href="/privacy-policy.php">Privacy Policy</a></li>
                     <li><a href="/terms-and-conditions.php">Terms &amp; Conditions</a></li>
                     <li><a href="/cookie-policy.php">Cookie Policy</a></li>
-                    <li><button type="button" class="link-button" data-cookie-settings>Cookie settings</button></li>
                 </ul>
             </nav>
             <nav class="footer-col" aria-label="Social links">
