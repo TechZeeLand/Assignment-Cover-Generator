@@ -4,6 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 http_response_code(403);
 
+$acgNoAds = true; // no ads on error pages
 $pageTitle = 'Access denied — Assignment Cover Generator';
 $pageDescription = 'You don’t have permission to access this page.';
 require __DIR__ . '/partials/head.php';

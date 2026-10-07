@@ -4,6 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 http_response_code(500);
 
+$acgNoAds = true; // no ads on error pages
 $pageTitle = 'Something went wrong — Assignment Cover Generator';
 $pageDescription = 'The server hit a problem loading this page. Please try again in a moment.';
 require __DIR__ . '/partials/head.php';

@@ -27,6 +27,7 @@ try {
     $error = 'Something went wrong while signing you in. Please try again.';
 }
 
+$acgNoAds = true; // no ads on error pages
 $pageTitle = 'Sign-in problem';
 $pageDescription = 'Sign-in problem';
 require __DIR__ . '/../partials/head.php';

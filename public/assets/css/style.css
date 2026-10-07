@@ -142,6 +142,12 @@ html[data-theme="dark"] .theme-toggle .fa-moon { display: inline-block; }
 
 .layout {
     max-width: 640px;
+    /* body is a flex column: without an explicit width an auto-margined item
+       shrink-wraps its content (e.g. the design scroller) instead of fitting
+       the screen, which blew the whole page out sideways on phones. */
+    width: 100%;
+    min-width: 0;
+    box-sizing: border-box;
     margin: 0 auto;
     padding: 20px;
 }
@@ -555,6 +561,11 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     .layout { max-width: 700px; }
 }
 
+/* Never let wide children (scrollers, long words) stretch their parents */
+.card, .field, .design-picker, .design-scroll-wrap, .profile-bar, .logo-row, .content-wrap, .content-card { min-width: 0; max-width: 100%; }
+.content-card, .card-sub, .hint, .design-desc, .profile-bar-text { overflow-wrap: anywhere; }
+img, svg, video { max-width: 100%; }
+
 /* ---- Footer ---- */
 .site-footer {
     background: var(--panel);
@@ -619,7 +630,8 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     font-size: .95rem;
 }
 .social-links a:hover i { color: var(--accent); }
-/* Same 18px box as the Font Awesome <i> icons, so text lines up */
+/* Support icon: pathaopay-mono.svg is used as a mask, so it takes the same
+   colours as the Font Awesome icons (muted, accent on hover) in light + dark. */
 .social-links .icon-box {
     width: 18px;
     display: inline-flex;
@@ -628,15 +640,15 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     flex: 0 0 auto;
 }
 .pathaopay-icon {
-    width: 15px;               /* matches the visual size of the FA glyphs */
-    height: 15px;
     display: block;
-    color: var(--muted);       /* the disc follows the same muted colour */
-    transition: color .15s ease;
+    width: 15px;
+    height: 15px;
+    background-color: var(--muted);
+    -webkit-mask: url('/assets/img/pathaopay-mono.svg') center / contain no-repeat;
+            mask: url('/assets/img/pathaopay-mono.svg') center / contain no-repeat;
+    transition: background-color .15s ease;
 }
-/* the "P" swoosh: shows the footer background through the disc */
-.pathaopay-icon .pp-bg { fill: var(--panel); }
-.social-links a:hover .pathaopay-icon { color: var(--accent); }
+.social-links a:hover .pathaopay-icon { background-color: var(--accent); }
 
 .footer-bottom {
     margin-top: 26px;
@@ -872,7 +884,7 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     background: var(--input-bg); color: var(--text); font: inherit; font-weight: 600; cursor: pointer;
 }
 .user-signout:hover { border-color: var(--accent); color: var(--accent); }
-@media (max-width: 640px) { .user-name, .google-btn span { display: none; } .google-btn { padding: 8px; } }
+@media (max-width: 640px) { .user-name, .topbar .google-btn span { display: none; } .topbar .google-btn { padding: 8px; } }
 
 .announcement { background: var(--accent); color: #fff; text-align: center; padding: 8px 16px; font-size: .88rem; font-weight: 600; }
 

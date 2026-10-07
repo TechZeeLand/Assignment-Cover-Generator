@@ -4,6 +4,7 @@ require __DIR__ . '/../vendor/autoload.php';
 
 http_response_code(404);
 
+$acgNoAds = true; // no ads on error pages
 $pageTitle = 'Page not found — Assignment Cover Generator';
 $pageDescription = 'The page you were looking for doesn’t exist. Head back to the Assignment Cover Generator homepage.';
 require __DIR__ . '/partials/head.php';
