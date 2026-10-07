@@ -619,6 +619,13 @@ html[data-theme="dark"] .upload-msg.error { color: #f87171; }
     font-size: .95rem;
 }
 .social-links a:hover i { color: var(--accent); }
+.pathaopay-icon {
+    width: 18px;
+    text-align: center;
+    color: var(--muted);
+    font-size: .95rem;
+}
+.pathaopay-icon a:hover { color: var(--accent); }
 
 .footer-bottom {
     margin-top: 26px;
