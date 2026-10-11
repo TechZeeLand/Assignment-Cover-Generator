@@ -494,6 +494,6 @@ require __DIR__ . '/partials/head.php';
 <script>window.__INITIAL_FONTS__ = <?php echo Html::json($initialFonts); ?>;
 window.__SAVED_PROFILE__ = <?php echo Html::json($savedProfile); ?>;
 window.__FONT_UPLOADS__ = <?php echo Settings::bool('font_uploads_enabled') ? 'true' : 'false'; ?>;</script>
-<script src="/assets/js/app.js"></script>
+<script src="<?php echo \App\Html::asset('/assets/js/app.js'); ?>"></script>
 </body>
 </html>

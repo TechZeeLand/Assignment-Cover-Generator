@@ -46,7 +46,7 @@ try {
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex, nofollow">
 <title>Admin login</title>
-<link rel="stylesheet" href="/assets/css/admin.css">
+<link rel="stylesheet" href="<?php echo \App\Html::asset('/assets/css/admin.css'); ?>">
 </head>
 <body class="login-body">
 <form class="login-card" method="post" action="/admin/login.php" autocomplete="off">

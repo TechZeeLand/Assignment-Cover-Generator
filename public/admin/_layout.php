@@ -43,7 +43,7 @@ function admin_head(string $title, string $active): void
 <meta name="robots" content="noindex, nofollow">
 <title><?php echo Html::e($title); ?> — Admin</title>
 <link rel="icon" href="/assets/favicon/favicon-32x32.png">
-<link rel="stylesheet" href="/assets/css/admin.css">
+<link rel="stylesheet" href="<?php echo \App\Html::asset('/assets/css/admin.css'); ?>">
 </head>
 <body>
 <div class="shell">

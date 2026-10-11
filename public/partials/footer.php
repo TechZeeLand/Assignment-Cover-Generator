@@ -45,5 +45,5 @@ $footerSite = \App\Settings::get('site_name') ?: 'Assignment Cover Generator';
     </div>
 </div>
 
-<script src="/assets/js/theme.js"></script>
-<script src="/assets/js/consent.js"></script>
+<script src="<?php echo \App\Html::asset('/assets/js/theme.js'); ?>"></script>
+<script src="<?php echo \App\Html::asset('/assets/js/consent.js'); ?>"></script>

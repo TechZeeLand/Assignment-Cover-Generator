@@ -43,12 +43,14 @@ final class Icon
         $a11y = $title !== '' ? 'role="img" aria-label="' . Html::e($title) . '"' : 'aria-hidden="true"';
 
         // Rewrite only the root <svg ...> tag: drop the fixed width/height
-        // so CSS controls the size, and add class + accessibility attributes.
+        // then give it width/height of 1em (so it can never render huge, even if the
+        // stylesheet is cached or missing; CSS overrides these) plus class and
+        // accessibility attributes.
         return (string) preg_replace_callback(
             '/^<svg\b([^>]*)>/',
             static function (array $m) use ($classes, $a11y): string {
                 $attrs = preg_replace('/\s(?:width|height|class)="[^"]*"/', '', $m[1]) ?? $m[1];
-                return '<svg class="' . $classes . '" ' . $a11y . ' focusable="false"' . $attrs . '>';
+                return '<svg class="' . $classes . '" ' . $a11y . ' focusable="false" width="1em" height="1em"' . $attrs . '>';
             },
             $svg,
             1

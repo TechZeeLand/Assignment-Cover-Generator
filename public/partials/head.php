@@ -60,7 +60,7 @@ $pageDescription = $pageDescription ?? 'Free, open-source assignment cover page 
 <meta name="theme-color" content="#0b3d91" media="(prefers-color-scheme: light)" />
 <meta name="theme-color" content="#0f1420" media="(prefers-color-scheme: dark)" />
 
-<link rel="stylesheet" href="/assets/css/style.css" />
+<link rel="stylesheet" href="<?php echo \App\Html::asset('/assets/css/style.css'); ?>" />
 <script>window.__ACG__ = <?php echo Html::json($acgConfig); ?>;</script>
 
 <!-- Blocking (render-before-paint) theme script: applies the saved/system

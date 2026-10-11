@@ -1,5 +1,7 @@
 # Assignment Cover Generator
 
+Official Website: [Assignment Cover Generator](https://assignmentcovergenerator.rayaz.org/)
+
 A free, open-source, self-hosted tool that lets students design and export a
 print-ready **assignment cover page PDF** — university name, department,
 student & course details, topic, submission date — with full control over

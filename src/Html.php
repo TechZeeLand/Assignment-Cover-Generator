@@ -11,6 +11,13 @@ final class Html
         return htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8');
     }
 
+    /** Asset URL with a ?v=<mtime> suffix so browsers never keep a stale CSS/JS file after an update. */
+    public static function asset(string $path): string
+    {
+        $file = dirname(__DIR__) . '/public' . $path;
+        return $path . (is_file($file) ? '?v=' . filemtime($file) : '');
+    }
+
     /** JSON that is safe to embed inside an inline <script>. */
     public static function json(mixed $value): string
     {
