@@ -76,9 +76,9 @@ admin_head('Users', 'users');
     </div>
     <?php if ($pages > 1): ?>
     <p class="pager">
-        <?php if ($page > 1): ?><a class="btn sm" href="?q=<?php echo rawurlencode($q); ?>&amp;page=<?php echo $page - 1; ?>">&larr; Previous</a><?php endif; ?>
+        <?php if ($page > 1): ?><a class="btn sm" href="?q=<?php echo rawurlencode($q); ?>&amp;page=<?php echo $page - 1; ?>"><?php echo \App\Icon::svg('arrow-left'); ?> Previous</a><?php endif; ?>
         Page <?php echo $page; ?> of <?php echo $pages; ?>
-        <?php if ($page < $pages): ?><a class="btn sm" href="?q=<?php echo rawurlencode($q); ?>&amp;page=<?php echo $page + 1; ?>">Next &rarr;</a><?php endif; ?>
+        <?php if ($page < $pages): ?><a class="btn sm" href="?q=<?php echo rawurlencode($q); ?>&amp;page=<?php echo $page + 1; ?>">Next <?php echo \App\Icon::svg('arrow-right'); ?></a><?php endif; ?>
     </p>
     <?php endif; ?>
 </section>

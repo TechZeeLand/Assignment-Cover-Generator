@@ -59,16 +59,16 @@ admin_head('Sign-in (Google)', 'signin');
 <section class="panel">
     <h2>How to get the keys</h2>
     <ol class="steps">
-        <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console &rarr; APIs &amp; Services &rarr; Credentials</a> (create a project if you don't have one).</li>
+        <li>Open <a href="https://console.cloud.google.com/apis/credentials" target="_blank" rel="noopener">Google Cloud Console <?php echo \App\Icon::svg('chevron-right'); ?> APIs &amp; Services <?php echo \App\Icon::svg('chevron-right'); ?> Credentials</a> (create a project if you don't have one).</li>
         <li>Configure the <strong>OAuth consent screen</strong> (External). Only the default scopes (<code>openid</code>, <code>email</code>, <code>profile</code>) are used. Publish the app to <em>In production</em> so everyone can sign in.</li>
-        <li><strong>Create credentials &rarr; OAuth client ID &rarr; Web application.</strong></li>
+        <li><strong>Create credentials <?php echo \App\Icon::svg('chevron-right'); ?> OAuth client ID <?php echo \App\Icon::svg('chevron-right'); ?> Web application.</strong></li>
         <li>Add this under <em>Authorized redirect URIs</em> <strong>exactly</strong>:
             <div class="copy"><code><?php echo Html::e($redirect); ?></code></div></li>
         <li>Add this under <em>Authorized JavaScript origins</em> (optional but recommended):
             <div class="copy"><code><?php echo Html::e($origin); ?></code></div></li>
         <li>Paste the client ID and secret above and save.</li>
     </ol>
-    <p class="hint">The address above comes from <a href="/admin/settings.php">Site settings &rarr; Site URL</a> (or from this request if that is empty). Behind HTTPS or a proxy, set the Site URL so it starts with <code>https://</code>.</p>
+    <p class="hint">The address above comes from <a href="/admin/settings.php">Site settings <?php echo \App\Icon::svg('chevron-right'); ?> Site URL</a> (or from this request if that is empty). Behind HTTPS or a proxy, set the Site URL so it starts with <code>https://</code>.</p>
     <p class="hint">Only the visitor's name and email are read from Google. The Google account ID and profile picture are not stored.</p>
 </section>
 <?php admin_foot();

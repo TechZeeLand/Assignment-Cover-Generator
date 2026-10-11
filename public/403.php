@@ -15,14 +15,14 @@ require __DIR__ . '/partials/head.php';
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <main id="main-content" class="error-page">
-    <div class="error-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></div>
+    <div class="error-icon" aria-hidden="true"><?php echo \App\Icon::svg('lock'); ?></div>
     <p class="error-code">Error 403</p>
     <h1 class="error-title">Access denied</h1>
     <p class="error-desc">You don't have permission to view this page. If you think this is a mistake, let us know.</p>
 
     <div class="error-actions">
-        <a href="/index.php" class="btn btn-primary"><i class="fa-solid fa-house"></i> Go to homepage</a>
-        <a href="/contact.php" class="btn btn-secondary"><i class="fa-solid fa-envelope"></i> Contact us</a>
+        <a href="/index.php" class="btn btn-primary"><?php echo \App\Icon::svg('home'); ?> Go to homepage</a>
+        <a href="/contact.php" class="btn btn-secondary"><?php echo \App\Icon::svg('mail'); ?> Contact us</a>
     </div>
 </main>
 

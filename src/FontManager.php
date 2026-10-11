@@ -66,8 +66,10 @@ final class FontManager
         $index = $this->readIndex();
         // Built-in keys (oldenglish, gandhiserif, alata, ...) are taken too:
         // otherwise uploading a font called e.g. "Alata" would silently
-        // override the built-in one in the mPDF font table.
-        $existingKeys = array_merge(array_column($index, 'key'), array_values(Config::builtInFonts()), ['amiri']);
+        // override the built-in one in the mPDF font table. mPDF's own
+        // families (dejavusans, freeserif, courier, ...) are protected too.
+        $mpdfKeys = array_keys((new \Mpdf\Config\FontVariables())->getDefaults()['fontdata']);
+        $existingKeys = array_merge(array_column($index, 'key'), array_values(Config::builtInFonts()), ['amiri'], $mpdfKeys);
         $baseKey = $key;
         $i = 2;
         while (in_array($key, $existingKeys, true)) {

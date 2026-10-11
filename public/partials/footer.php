@@ -21,11 +21,11 @@ $footerSite = \App\Settings::get('site_name') ?: 'Assignment Cover Generator';
             <nav class="footer-col" aria-label="Social links">
                 <h3>Connect</h3>
                 <ul class="social-links">
-                    <li><a href="https://www.youtube.com/@TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-youtube" aria-hidden="true"></i> YouTube</a></li>
-                    <li><a href="https://www.facebook.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-facebook" aria-hidden="true"></i> Facebook</a></li>
-                    <li><a href="https://www.instagram.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-instagram" aria-hidden="true"></i> Instagram</a></li>
-                    <li><a href="https://www.tiktok.com/@TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok" aria-hidden="true"></i> TikTok</a></li>
-                    <li><a href="https://github.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-github" aria-hidden="true"></i> GitHub</a></li>
+                    <li><a href="https://www.youtube.com/@TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('youtube'); ?> YouTube</a></li>
+                    <li><a href="https://www.facebook.com/TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('facebook'); ?> Facebook</a></li>
+                    <li><a href="https://www.instagram.com/TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('instagram'); ?> Instagram</a></li>
+                    <li><a href="https://www.tiktok.com/@TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('tiktok'); ?> TikTok</a></li>
+                    <li><a href="https://github.com/TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('github'); ?> GitHub</a></li>
                     <li><a href="https://pathaopay.me/@azlanaziz" target="_blank" rel="noopener"><span class="icon-box" aria-hidden="true"><span class="pathaopay-icon"></span></span> Support</a></li>
                 </ul>
             </nav>

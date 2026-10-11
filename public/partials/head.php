@@ -62,7 +62,6 @@ $pageDescription = $pageDescription ?? 'Free, open-source assignment cover page 
 
 <link rel="stylesheet" href="/assets/css/style.css" />
 <script>window.__ACG__ = <?php echo Html::json($acgConfig); ?>;</script>
-<script src="https://kit.fontawesome.com/43a3c20016.js" crossorigin="anonymous"></script>
 
 <!-- Blocking (render-before-paint) theme script: applies the saved/system
      theme to <html> before first paint so there is no flash of the wrong

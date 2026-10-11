@@ -61,47 +61,50 @@ final class Sanitize
         return self::truncateHtmlSafe($clean, $maxLength);
     }
 
+    /**
+     * Cuts already-stripped rich text (only <b>/<strong>/<i>/<em>/<br> tags
+     * remain) to $maxLength *visible* characters. Text is decoded, cut and
+     * re-escaped, so an entity such as "&amp;" is never severed half way
+     * and a bare "&" or "<" can never reach the PDF renderer as markup.
+     * Unmatched closing tags are dropped and unclosed ones are closed.
+     */
     private static function truncateHtmlSafe(string $html, int $maxLength): string
     {
-        $visibleCount = 0;
+        $parts = preg_split('#(</?(?:b|strong|i|em)>|<br>)#i', $html, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [];
+        $remaining = $maxLength;
         $result = '';
-        $openTags = [];
-        $len = function_exists('mb_strlen') ? mb_strlen($html) : strlen($html);
-        $charAt = function (int $i) use ($html) {
-            return function_exists('mb_substr') ? mb_substr($html, $i, 1) : substr($html, $i, 1);
-        };
+        $open = [];
 
-        for ($i = 0; $i < $len; $i++) {
-            $ch = $charAt($i);
-
-            if ($ch === '<') {
-                $tagEnd = function_exists('mb_strpos') ? mb_strpos($html, '>', $i) : strpos($html, '>', $i);
-                if ($tagEnd === false) {
-                    break; // malformed trailing fragment - stop here
-                }
-                $tag = function_exists('mb_substr') ? mb_substr($html, $i, $tagEnd - $i + 1) : substr($html, $i, $tagEnd - $i + 1);
-                $result .= $tag;
-                if (preg_match('#^</(\w+)>$#', $tag, $m)) {
-                    $idx = array_search(strtolower($m[1]), array_reverse($openTags, true), true);
-                    if ($idx !== false) {
-                        unset($openTags[$idx]);
+        foreach ($parts as $part) {
+            if (preg_match('#^</(b|strong|i|em)>$#i', $part, $m)) {
+                $tag = strtolower($m[1]);
+                for ($i = count($open) - 1; $i >= 0; $i--) {
+                    if ($open[$i] === $tag) {
+                        array_splice($open, $i, 1);
+                        $result .= '</' . $tag . '>';
+                        break;
                     }
-                } elseif (preg_match('#^<(\w+)>$#', $tag, $m) && strtolower($m[1]) !== 'br') {
-                    $openTags[] = strtolower($m[1]);
                 }
-                $i = $tagEnd;
-                continue;
+            } elseif (preg_match('#^<(b|strong|i|em)>$#i', $part, $m)) {
+                if ($remaining > 0) {
+                    $tag = strtolower($m[1]);
+                    $open[] = $tag;
+                    $result .= '<' . $tag . '>';
+                }
+            } elseif (strtolower($part) === '<br>') {
+                if ($remaining > 0) {
+                    $result .= '<br>';
+                }
+            } elseif ($remaining > 0) {
+                $text = html_entity_decode($part, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                $text = function_exists('mb_substr') ? mb_substr($text, 0, $remaining) : substr($text, 0, $remaining);
+                $remaining -= function_exists('mb_strlen') ? mb_strlen($text) : strlen($text);
+                $result .= htmlspecialchars($text, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
             }
-
-            if ($visibleCount >= $maxLength) {
-                break;
-            }
-            $result .= $ch;
-            $visibleCount++;
         }
 
-        foreach (array_reverse($openTags) as $tag) {
-            $result .= "</{$tag}>";
+        foreach (array_reverse($open) as $tag) {
+            $result .= '</' . $tag . '>';
         }
 
         return $result;

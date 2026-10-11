@@ -25,14 +25,14 @@ function admin_head(string $title, string $active): void
     header('Cache-Control: no-store');
     header('X-Robots-Tag: noindex, nofollow');
     $nav = [
-        'dashboard' => ['index.php', 'Dashboard', 'fa-gauge-high'],
-        'designs'   => ['designs.php', 'Designs', 'fa-palette'],
-        'signin'    => ['signin.php', 'Sign-in (Google)', 'fa-user-lock'],
-        'ads'       => ['ads.php', 'Ads &amp; ads.txt', 'fa-rectangle-ad'],
-        'settings'  => ['settings.php', 'Site settings', 'fa-sliders'],
-        'users'     => ['users.php', 'Users', 'fa-users'],
-        'fonts'     => ['fonts.php', 'Custom fonts', 'fa-font'],
-        'account'   => ['account.php', 'Admin password', 'fa-key'],
+        'dashboard' => ['index.php', 'Dashboard', 'dashboard'],
+        'designs'   => ['designs.php', 'Designs', 'palette'],
+        'signin'    => ['signin.php', 'Sign-in (Google)', 'user-lock'],
+        'ads'       => ['ads.php', 'Ads &amp; ads.txt', 'ad'],
+        'settings'  => ['settings.php', 'Site settings', 'sliders'],
+        'users'     => ['users.php', 'Users', 'users'],
+        'fonts'     => ['fonts.php', 'Custom fonts', 'font'],
+        'account'   => ['account.php', 'Admin password', 'key'],
     ];
     ?>
 <!DOCTYPE html>
@@ -44,20 +44,19 @@ function admin_head(string $title, string $active): void
 <title><?php echo Html::e($title); ?> — Admin</title>
 <link rel="icon" href="/assets/favicon/favicon-32x32.png">
 <link rel="stylesheet" href="/assets/css/admin.css">
-<script src="https://kit.fontawesome.com/43a3c20016.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <div class="shell">
     <aside class="side">
-        <a class="brand" href="/admin/"><i class="fa-solid fa-shield-halved"></i> Admin</a>
+        <a class="brand" href="/admin/"><?php echo \App\Icon::svg('shield'); ?> Admin</a>
         <nav>
             <?php foreach ($nav as $key => [$href, $label, $icon]): ?>
-            <a href="/admin/<?php echo $href; ?>" class="<?php echo $key === $active ? 'on' : ''; ?>"><i class="fa-solid <?php echo $icon; ?>"></i> <?php echo $label; ?></a>
+            <a href="/admin/<?php echo $href; ?>" class="<?php echo $key === $active ? 'on' : ''; ?>"><?php echo \App\Icon::svg($icon); ?> <?php echo $label; ?></a>
             <?php endforeach; ?>
         </nav>
         <div class="side-foot">
-            <a href="/" target="_blank" rel="noopener"><i class="fa-solid fa-arrow-up-right-from-square"></i> View site</a>
-            <form method="post" action="/admin/logout.php"><?php echo Csrf::field(); ?><button type="submit"><i class="fa-solid fa-right-from-bracket"></i> Log out</button></form>
+            <a href="/" target="_blank" rel="noopener"><?php echo \App\Icon::svg('external-link'); ?> View site</a>
+            <form method="post" action="/admin/logout.php"><?php echo Csrf::field(); ?><button type="submit"><?php echo \App\Icon::svg('logout'); ?> Log out</button></form>
         </div>
     </aside>
     <main class="main">
@@ -66,7 +65,7 @@ function admin_head(string $title, string $active): void
         $flashes = $_SESSION['flash'] ?? [];
         unset($_SESSION['flash']);
         foreach ($flashes as $f): ?>
-        <div class="flash <?php echo Html::e($f['type']); ?>"><?php echo Html::e($f['msg']); ?></div>
+        <div class="flash <?php echo Html::e($f['type']); ?>"><?php echo \App\Icon::svg($f['type'] === 'ok' ? 'check-circle' : ($f['type'] === 'warn' ? 'alert-triangle' : 'alert-circle')); ?> <span><?php echo Html::e($f['msg']); ?></span></div>
         <?php endforeach;
 }
 

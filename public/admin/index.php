@@ -88,7 +88,7 @@ admin_head('Dashboard', 'dashboard');
     <h2>Setup checklist</h2>
     <ul class="checklist">
         <?php foreach ($checks as [$label, $ok, $hint]): ?>
-        <li class="<?php echo $ok ? 'ok' : 'todo'; ?>"><i class="fa-solid <?php echo $ok ? 'fa-circle-check' : 'fa-circle-exclamation'; ?>"></i>
+        <li class="<?php echo $ok ? 'ok' : 'todo'; ?>"><?php echo \App\Icon::svg($ok ? 'check-circle' : 'alert-circle'); ?>
             <strong><?php echo Html::e($label); ?></strong> <span class="muted"><?php echo $ok ? '' : Html::e($hint); ?></span></li>
         <?php endforeach; ?>
     </ul>

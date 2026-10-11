@@ -56,7 +56,7 @@ require __DIR__ . '/partials/head.php';
         <p>Assignment Cover Generator is open-source software that anyone can run on their own server. This policy describes the behaviour of the application itself; if you're using an instance run by someone else, that operator's hosting, logs and settings are their responsibility.</p>
 
         <h2>Third-party resources</h2>
-        <p>Pages load icon fonts from Font Awesome's CDN<?php echo $signIn ? ", and signing in sends you to Google" : ''; ?><?php echo $adsOn ? ', and (with your consent) ads from Google' : ''; ?>. Loading any external resource means your browser makes a request to that provider, subject to their own privacy practices.</p>
+        <p>All icons and fonts are served from this site, not from a third-party CDN<?php echo $signIn ? ", but signing in sends you to Google" : ''; ?><?php echo $adsOn ? ', and (with your consent) ads are loaded from Google' : ''; ?>. Loading any external resource means your browser makes a request to that provider, subject to their own privacy practices.</p>
 
         <h2>Your rights</h2>
         <p>Depending on where you live (for example under the GDPR) you may have the right to access, correct, export or delete your personal data and to withdraw consent. Most of this is available directly in the app as described above; for anything else, contact us.</p>

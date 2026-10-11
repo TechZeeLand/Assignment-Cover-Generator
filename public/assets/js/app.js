@@ -39,7 +39,7 @@
         }
         const rules = fontsCache
             .filter((f) => f.custom)
-            .map((f) => `@font-face { font-family: "pv-${f.key}"; src: url("font_file.php?key=${encodeURIComponent(f.key)}&variant=regular") format("truetype"); }`)
+            .map((f) => `@font-face { font-family: "pv-${f.key}"; src: url("/font_file.php?key=${encodeURIComponent(f.key)}&variant=regular") format("truetype"); }`)
             .join('\n');
         styleEl.textContent = rules;
     }
@@ -67,7 +67,7 @@
 
     async function loadFonts() {
         try {
-            const res = await fetch('fonts.php');
+            const res = await fetch('/fonts.php');
             const data = await res.json();
             if (data.ok) {
                 fontsCache = data.fonts;
@@ -84,6 +84,7 @@
     // ---------------------------------------------------------------
     const uploadBtn = document.getElementById('upload-font-btn');
     const uploadMsg = document.getElementById('upload-font-msg');
+    const uploadBtnLabel = uploadBtn ? uploadBtn.querySelector('span') : null;
 
     if (uploadBtn) uploadBtn.addEventListener('click', async () => {
         const name = document.getElementById('font-name').value.trim();
@@ -111,9 +112,10 @@
         });
 
         uploadBtn.disabled = true;
-        uploadBtn.textContent = 'Uploading…';
+        uploadBtn.classList.add('is-busy');
+        uploadBtnLabel.textContent = 'Uploading…';
         try {
-            const res = await fetch('upload_font.php', { method: 'POST', body: fd });
+            const res = await fetch('/upload_font.php', { method: 'POST', body: fd });
             const data = await res.json();
             if (data.ok) {
                 uploadMsg.textContent = `"${data.font.name}" added! It's now available to everyone in the font lists.`;
@@ -133,7 +135,8 @@
             uploadMsg.className = 'upload-msg error';
         } finally {
             uploadBtn.disabled = false;
-            uploadBtn.textContent = 'Upload font';
+            uploadBtn.classList.remove('is-busy');
+            uploadBtnLabel.textContent = 'Upload font';
         }
     });
 
@@ -320,8 +323,8 @@
         expandBtn.addEventListener('click', () => {
             const expanded = picker.classList.toggle('expanded');
             expandBtn.setAttribute('aria-expanded', String(expanded));
-            expandBtn.querySelector('span').textContent = expanded ? 'Collapse' : 'Expand all';
-            expandBtn.querySelector('i').className = expanded ? 'fa-solid fa-compress' : 'fa-solid fa-table-cells-large';
+            expandBtn.querySelector('.expand-label').textContent = expanded ? 'Collapse' : 'Expand all';
+            expandBtn.classList.toggle('is-expanded', expanded);
             updateArrows();
             if (!expanded) scrollSelectedIntoView();
         });

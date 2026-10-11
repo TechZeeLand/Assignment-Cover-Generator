@@ -1,4 +1,4 @@
-# 📄 Assignment Cover Generator
+# Assignment Cover Generator
 
 A free, open-source, self-hosted tool that lets students design and export a
 print-ready **assignment cover page PDF** — university name, department,
@@ -9,7 +9,7 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 
 ![Example cover](docs/screenshot-cover.png)
 
-## ✨ Features
+## Features
 
 - **Twelve cover designs** — a horizontally scrollable picker (with an
   **Expand all** button) and live previews that follow your colors.
@@ -52,10 +52,10 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 - **Self-hosted & open source** — AGPL-3.0 licensed, runs entirely on your
   own server via Docker.
 
-## 🏗️ How it's built
+## How it's built
 
 - **Backend:** plain PHP (no framework) + [mPDF](https://mpdf.github.io/) for PDF rendering.
-- **Frontend:** vanilla HTML/CSS/JS — no build step, no framework, no tracking.
+- **Frontend:** vanilla HTML/CSS/JS — no build step, no framework, no tracking. Icons are inline SVGs from `public/assets/icons/` (rendered by `src/Icon.php`); there is no Font Awesome or any other icon CDN.
 - **Packaging:** a single Docker image with **nginx + PHP-FPM baked in** (via supervisord), deployable as a one-container Compose stack — no separate web server setup needed.
 
 > **Design note:** the reference design uses CSS Grid for its label/value
@@ -65,7 +65,7 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 > border is drawn as a separate, absolutely-positioned element so it never
 > constrains how the content itself flows or paginates.
 
-## 🚀 Full setup guide: GitHub → Debian server → Portainer
+## Full setup guide: GitHub → Debian server → Portainer
 
 This walks through everything from an empty GitHub account to a running app
 at `http://<your-server-ip>:1025`. It assumes:
@@ -208,7 +208,7 @@ docker compose up -d --build
 
 Then visit `http://<your-server-ip>:1025`.
 
-## 🔐 Admin portal, Google sign-in & ads
+## Admin portal, Google sign-in & ads
 
 ### 1. Set the admin password (first run)
 
@@ -249,7 +249,7 @@ A single SQLite file and the PHP sessions live in `storage/data` (the
 volume private and back it up), signed-in users (name + email), saved
 details, and anonymous daily counters. Fonts live in `acg_fonts`.
 
-## 🖥️ Local development (without Docker)
+## Local development (without Docker)
 
 Requirements: PHP 8.1+, Composer, and the `mbstring`, `gd`, `zip`, `curl`
 and `pdo_sqlite` PHP extensions.
@@ -264,7 +264,7 @@ ADMIN_PASSWORD='dev-password-123' php -S localhost:1025 -t public
 
 Then open `http://localhost:1025`.
 
-## 📁 Project structure
+## Project structure
 
 ```
 ├── composer.json          # PHP dependencies (mpdf/mpdf)
@@ -284,11 +284,13 @@ Then open `http://localhost:1025`.
 │   └── assets/
 │       ├── css/style.css        # All styling (responsive)
 │       ├── js/app.js             # Rich text, font upload, and field-toggle logic
+│       ├── icons/{ui,social,other}/*.svg  # The SVG icon collection (inlined by src/Icon.php)
 │       └── fonts/Amiri-Regular.ttf  # Bundled font for the Bismillah glyph
 ├── src/                      # PHP application code (PSR-4: App\)
 │   ├── Config.php              # Central constants (paths, built-in fonts, limits)
 │   ├── FontManager.php          # Built-in + custom font registry, mPDF font config
 │   ├── Sanitize.php              # Input sanitization (text, color, rich text)
+│   ├── Icon.php                   # Inlines SVG icons from public/assets/icons/
 │   ├── Templates/                 # One class per cover design + TemplateRegistry
 │   ├── Db.php, Settings.php       # SQLite storage and admin-editable settings
 │   ├── Auth.php, GoogleOAuth.php  # Optional Google sign-in (OAuth code flow + PKCE)
@@ -301,7 +303,7 @@ Then open `http://localhost:1025`.
 └── storage/data/              # SQLite database + sessions (Docker volume, keep private)
 ```
 
-## 🔒 Security & privacy notes
+## Security & privacy notes
 
 - Without signing in, no data from the form is written anywhere — PDFs are
   generated in memory and streamed straight to your browser. Signed-in users'
@@ -322,7 +324,7 @@ Then open `http://localhost:1025`.
   every attribute is stripped server-side, regardless of what the browser
   sends.
 
-## 🎨 Customizing further
+## Customizing further
 
 - **Add a new cover design:** create a class in `src/Templates/` extending
   `BaseTemplate` (implement `key()`, `label()`, `description()`,
@@ -342,24 +344,28 @@ Then open `http://localhost:1025`.
 - **Change a default font size:** edit both the matching `value=""` in
   `public/index.php` and the matching `DEFAULT_*_FONT_SIZE` constant in
   `src/CoverData.php` (they should stay in sync).
+- **Add or change an icon:** drop a 24×24, `stroke="currentColor"` SVG into
+  `public/assets/icons/ui/` (brand glyphs go in `social/`) and use it with
+  `<?php echo \App\Icon::svg('my-icon'); ?>`. It inherits the text color and is
+  sized from CSS (`1em` by default).
 - **Add a built-in font:** add an entry to `Config::builtInFonts()` — but
   note built-ins are expected to map to mPDF's core font aliases (`sans`,
   `serif`, `mono`); for anything else, use the in-app font uploader instead.
 - **Change the page size/margins:** see `PdfService::render()`.
 
-## 🙏 Credits
+## Credits
 
 - [mPDF](https://mpdf.github.io/) — GPL-2.0-or-later.
 - [Amiri font](https://github.com/aliftype/amiri) by Khaled Hosny — SIL Open Font License 1.1.
 
-## 📜 License
+## License
 
 Licensed under the **GNU Affero General Public License v3.0** — see
 [`LICENSE`](LICENSE). In short: you're free to use, modify, and
 self-host this, but if you run a modified version as a network service,
 you must make your modified source available to its users too.
 
-## 🤝 Contributing
+## Contributing
 
 Issues and pull requests are welcome. This project intentionally stays
 dependency-light (plain PHP, vanilla JS) — please keep contributions in that

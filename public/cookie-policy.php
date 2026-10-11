@@ -62,7 +62,7 @@ $signIn = Auth::signInAvailable();
         <?php endif; ?>
 
         <h2>Third-party resources</h2>
-        <p>Pages load the Font Awesome icon kit from its CDN. Requesting it reveals your IP address and browser details to that provider, and it may use its own cookies or caching under its own policy.</p>
+        <p>Icons and fonts are served from this site, so no icon CDN or external font provider sees your visit. Any third party that is involved (Google, if you choose to sign in or consent to ads) acts under its own policy.</p>
 
         <h2>Your choices</h2>
         <ul>

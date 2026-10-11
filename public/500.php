@@ -15,14 +15,14 @@ require __DIR__ . '/partials/head.php';
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <main id="main-content" class="error-page">
-    <div class="error-icon" aria-hidden="true"><i class="fa-solid fa-server"></i></div>
+    <div class="error-icon" aria-hidden="true"><?php echo \App\Icon::svg('server'); ?></div>
     <p class="error-code">Error 500</p>
     <h1 class="error-title">Something went wrong on our end</h1>
     <p class="error-desc">The server hit a snag loading this page. This is usually temporary — please try again in a moment.</p>
 
     <div class="error-actions">
-        <button type="button" class="btn btn-primary" onclick="location.reload()"><i class="fa-solid fa-rotate-right"></i> Try again</button>
-        <a href="/index.php" class="btn btn-secondary"><i class="fa-solid fa-house"></i> Go to homepage</a>
+        <button type="button" class="btn btn-primary" onclick="location.reload()"><?php echo \App\Icon::svg('rotate-cw'); ?> Try again</button>
+        <a href="/index.php" class="btn btn-secondary"><?php echo \App\Icon::svg('home'); ?> Go to homepage</a>
     </div>
 
     <p class="error-links">

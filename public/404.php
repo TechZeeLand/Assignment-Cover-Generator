@@ -15,14 +15,14 @@ require __DIR__ . '/partials/head.php';
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
 <main id="main-content" class="error-page">
-    <div class="error-icon" aria-hidden="true"><i class="fa-solid fa-map-signs"></i></div>
+    <div class="error-icon" aria-hidden="true"><?php echo \App\Icon::svg('signpost'); ?></div>
     <p class="error-code">Error 404</p>
     <h1 class="error-title">This page doesn't exist</h1>
     <p class="error-desc">The link might be broken, or the page may have been moved or removed. Let's get you back on track.</p>
 
     <div class="error-actions">
-        <a href="/index.php" class="btn btn-primary"><i class="fa-solid fa-house"></i> Go to homepage</a>
-        <a href="/contact.php" class="btn btn-secondary"><i class="fa-solid fa-envelope"></i> Contact us</a>
+        <a href="/index.php" class="btn btn-primary"><?php echo \App\Icon::svg('home'); ?> Go to homepage</a>
+        <a href="/contact.php" class="btn btn-secondary"><?php echo \App\Icon::svg('mail'); ?> Contact us</a>
     </div>
 
     <p class="error-links">

@@ -45,12 +45,12 @@ require __DIR__ . '/partials/head.php';
     </div>
 
     <nav class="section-nav" aria-label="Jump to section">
-        <a href="#sec-design" class="section-nav-link"><i class="fa-solid fa-palette"></i><span>Design</span></a>
-        <a href="#sec-header" class="section-nav-link"><i class="fa-solid fa-heading"></i><span>Header</span></a>
-        <a href="#sec-student" class="section-nav-link"><i class="fa-solid fa-user-graduate"></i><span>Student</span></a>
-        <a href="#sec-course" class="section-nav-link"><i class="fa-brands fa-readme"></i><span>Course</span></a>
-        <a href="#sec-group" class="section-nav-link"><i class="fa-solid fa-people-group"></i><span>Group</span></a>
-        <a href="#sec-topic" class="section-nav-link"><i class="fa-solid fa-square-pen"></i><span>Topic</span></a>
+        <a href="#sec-design" class="section-nav-link"><?php echo \App\Icon::svg('palette'); ?><span>Design</span></a>
+        <a href="#sec-header" class="section-nav-link"><?php echo \App\Icon::svg('heading'); ?><span>Header</span></a>
+        <a href="#sec-student" class="section-nav-link"><?php echo \App\Icon::svg('graduation-cap'); ?><span>Student</span></a>
+        <a href="#sec-course" class="section-nav-link"><?php echo \App\Icon::svg('book-open'); ?><span>Course</span></a>
+        <a href="#sec-group" class="section-nav-link"><?php echo \App\Icon::svg('users-group'); ?><span>Group</span></a>
+        <a href="#sec-topic" class="section-nav-link"><?php echo \App\Icon::svg('square-pen'); ?><span>Topic</span></a>
     </nav>
 
     <?php echo Ads::slot('top'); ?>
@@ -58,24 +58,24 @@ require __DIR__ . '/partials/head.php';
     <?php if ($acgUser !== null && $profilesOn): ?>
     <section class="panel profile-bar" id="profile-bar" aria-label="Saved details">
         <div class="profile-bar-text">
-            <strong><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Your saved details</strong>
+            <strong><?php echo \App\Icon::svg('save'); ?> Your saved details</strong>
             <span id="profile-note"><?php echo $savedProfile ? 'Loaded automatically below.' : 'Nothing saved yet &mdash; fill in the form, then save it for next time.'; ?></span>
         </div>
         <div class="profile-bar-actions">
-            <button type="button" class="btn btn-secondary" id="profile-save"><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Save my details</button>
-            <button type="button" class="btn btn-secondary" id="profile-clear"<?php echo $savedProfile ? '' : ' disabled'; ?>><i class="fa-solid fa-trash-can" aria-hidden="true"></i> Delete saved</button>
+            <button type="button" class="btn btn-secondary" id="profile-save"><?php echo \App\Icon::svg('save'); ?> Save my details</button>
+            <button type="button" class="btn btn-secondary" id="profile-clear"<?php echo $savedProfile ? '' : ' disabled'; ?>><?php echo \App\Icon::svg('trash'); ?> Delete saved</button>
         </div>
         <p class="profile-status" id="profile-status" role="status"></p>
     </section>
     <?php elseif ($canSignIn): ?>
     <section class="panel profile-bar profile-bar-promo" aria-label="Sign in to save your details">
         <div class="profile-bar-text">
-            <strong><i class="fa-solid fa-floppy-disk" aria-hidden="true"></i> Tired of retyping the same details?</strong>
+            <strong><?php echo \App\Icon::svg('save'); ?> Tired of retyping the same details?</strong>
             <span>Optionally sign in with Google and save your university and student details for next time. Signing in is never required.</span>
         </div>
         <div class="profile-bar-actions">
             <a class="google-btn google-btn-lg" href="/auth/google.php?return=<?php echo rawurlencode('/'); ?>">
-                <svg viewBox="0 0 48 48" width="18" height="18" aria-hidden="true"><path fill="#EA4335" d="M24 9.5c3.5 0 6.6 1.2 9.1 3.6l6.8-6.8C35.8 2.4 30.3 0 24 0 14.6 0 6.5 5.4 2.6 13.2l7.9 6.1C12.4 13.6 17.7 9.5 24 9.5z"/><path fill="#4285F4" d="M46.5 24.5c0-1.6-.1-3.1-.4-4.5H24v9h12.7c-.6 3-2.3 5.5-4.8 7.2l7.6 5.9c4.4-4.1 7-10.1 7-17.6z"/><path fill="#FBBC05" d="M10.5 28.7a14.5 14.5 0 0 1 0-9.4l-7.9-6.1a24 24 0 0 0 0 21.6l7.9-6.1z"/><path fill="#34A853" d="M24 48c6.5 0 11.9-2.1 15.9-5.8l-7.6-5.9c-2.1 1.4-4.9 2.3-8.3 2.3-6.3 0-11.6-4.1-13.5-9.8l-7.9 6.1C6.5 42.6 14.6 48 24 48z"/></svg>
+                <?php echo \App\Icon::svg('google'); ?>
                 <span>Sign in with Google</span>
             </a>
         </div>
@@ -87,7 +87,7 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ DESIGN ============ -->
         <section class="card" id="sec-design">
             <div class="card-head">
-                <h2><span class="step-badge">1</span><i class="fa-solid fa-palette"></i> Design</h2>
+                <h2><span class="step-badge">1</span><?php echo \App\Icon::svg('palette'); ?> Design</h2>
                 <p class="card-sub">Pick a layout, then set the border, colors and fonts used across your cover page.</p>
             </div>
 
@@ -98,11 +98,11 @@ require __DIR__ . '/partials/head.php';
                         <div class="design-toolbar">
                             <span class="design-count"><?php echo count($designs); ?> designs &middot; swipe or scroll sideways</span>
                             <button type="button" class="chip-btn" id="design-expand" aria-expanded="false" aria-controls="design-grid">
-                                <i class="fa-solid fa-table-cells-large" aria-hidden="true"></i> <span>Expand all</span>
+                                <span class="ico-expand"><?php echo \App\Icon::svg('grid'); ?></span><span class="ico-collapse"><?php echo \App\Icon::svg('minimize'); ?></span> <span class="expand-label">Expand all</span>
                             </button>
                         </div>
                         <div class="design-scroll-wrap">
-                            <button type="button" class="design-arrow design-arrow-prev" id="design-prev" aria-label="Show previous designs" hidden><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></button>
+                            <button type="button" class="design-arrow design-arrow-prev" id="design-prev" aria-label="Show previous designs" hidden><?php echo \App\Icon::svg('chevron-left'); ?></button>
                             <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
                                 <?php foreach ($designs as $design): ?>
                                 <label class="design-card">
@@ -114,7 +114,7 @@ require __DIR__ . '/partials/head.php';
                                 </label>
                                 <?php endforeach; ?>
                             </div>
-                            <button type="button" class="design-arrow design-arrow-next" id="design-next" aria-label="Show more designs" hidden><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></button>
+                            <button type="button" class="design-arrow design-arrow-next" id="design-next" aria-label="Show more designs" hidden><?php echo \App\Icon::svg('chevron-right'); ?></button>
                         </div>
                     </div>
                     <p class="hint">The previews follow your colors below. Every design uses the same details you fill in.</p>
@@ -168,7 +168,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-font"></i> Choose fonts <span class="font-hint">optional &mdash; good defaults are pre-selected</span><i class="fa-solid fa-caret-down"></i></summary>
+                <summary><?php echo \App\Icon::svg('font'); ?> Choose fonts <span class="font-hint">optional &mdash; good defaults are pre-selected</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
                 <div class="font-body">
                     <div class="field">
                         <label for="versity-name-font">University name font</label>
@@ -187,7 +187,7 @@ require __DIR__ . '/partials/head.php';
 
             <?php if (Settings::bool('font_uploads_enabled')): ?>
             <details class="font-block">
-                <summary><i class="fa-solid fa-circle-plus"></i> Add a custom font <span class="font-hint">shared with everyone</span><i class="fa-solid fa-caret-down"></i></summary>
+                <summary><?php echo \App\Icon::svg('plus-circle'); ?> Add a custom font <span class="font-hint">shared with everyone</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
                 <div class="font-body">
                     <p class="hint">Upload TTF/OTF font files (max 2 MB each). Only "Regular" is required; add Bold/Italic for better results with bold/italic text.</p>
                     <div class="field">
@@ -202,7 +202,7 @@ require __DIR__ . '/partials/head.php';
                         <div class="field"><label for="font-italic">Italic</label><input type="file" id="font-italic" accept=".ttf,.otf"></div>
                         <div class="field"><label for="font-bolditalic">Bold Italic</label><input type="file" id="font-bolditalic" accept=".ttf,.otf"></div>
                     </div>
-                    <button type="button" id="upload-font-btn" class="btn btn-secondary">Upload font</button>
+                    <button type="button" id="upload-font-btn" class="btn btn-secondary"><?php echo \App\Icon::svg('upload'); ?><?php echo \App\Icon::svg('loader'); ?> <span>Upload font</span></button>
                     <p id="upload-font-msg" class="upload-msg" role="status"></p>
                 </div>
             </details>
@@ -212,7 +212,7 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ HEADER ============ -->
         <section class="card" id="sec-header">
             <div class="card-head">
-                <h2><span class="step-badge">2</span><i class="fa-solid fa-heading"></i> Header</h2>
+                <h2><span class="step-badge">2</span><?php echo \App\Icon::svg('heading'); ?> Header</h2>
                 <p class="card-sub">The Bismillah, university and department name shown at the top of the page.</p>
             </div>
 
@@ -294,7 +294,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
+                <summary><?php echo \App\Icon::svg('text-size'); ?> Font sizes <span class="font-hint">optional</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
                 <div class="font-body font-grid">
                     <div class="field">
                         <label for="bismillah-font-size">Bismillah <small>(pt)</small></label>
@@ -315,7 +315,7 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ STUDENT ============ -->
         <section class="card" id="sec-student">
             <div class="card-head">
-                <h2><span class="step-badge">3</span><i class="fa-solid fa-user-graduate"></i> Student Details</h2>
+                <h2><span class="step-badge">3</span><?php echo \App\Icon::svg('graduation-cap'); ?> Student Details</h2>
                 <p class="card-sub">Your name, ID, and other academic details.</p>
             </div>
 
@@ -367,7 +367,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
+                <summary><?php echo \App\Icon::svg('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
                 <div class="font-body">
                     <div class="field field-narrow">
                         <label for="student-font-size">Font size for this section <small>(pt)</small></label>
@@ -380,7 +380,7 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ COURSE ============ -->
         <section class="card" id="sec-course">
             <div class="card-head">
-                <h2><span class="step-badge">4</span><i class="fa-brands fa-readme"></i> Course Details</h2>
+                <h2><span class="step-badge">4</span><?php echo \App\Icon::svg('book-open'); ?> Course Details</h2>
                 <p class="card-sub">Course code, title, and instructor information.</p>
             </div>
 
@@ -412,7 +412,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font size <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
+                <summary><?php echo \App\Icon::svg('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
                 <div class="font-body">
                     <div class="field field-narrow">
                         <label for="course-font-size">Font size for this section <small>(pt)</small></label>
@@ -425,7 +425,7 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ GROUP ============ -->
         <section class="card" id="sec-group">
             <div class="card-head">
-                <h2><span class="step-badge">5</span><i class="fa-solid fa-people-group"></i> Group <span class="optional-tag">optional</span></h2>
+                <h2><span class="step-badge">5</span><?php echo \App\Icon::svg('users-group'); ?> Group <span class="optional-tag">optional</span></h2>
                 <p class="card-sub">For group assignments: add a group name and list the members.</p>
             </div>
 
@@ -446,7 +446,7 @@ require __DIR__ . '/partials/head.php';
         <!-- ============ TOPIC ============ -->
         <section class="card" id="sec-topic">
             <div class="card-head">
-                <h2><span class="step-badge">6</span><i class="fa-solid fa-square-pen"></i> Topic &amp; Submission</h2>
+                <h2><span class="step-badge">6</span><?php echo \App\Icon::svg('square-pen'); ?> Topic &amp; Submission</h2>
                 <p class="card-sub">What you're submitting, and when.</p>
             </div>
 
@@ -468,7 +468,7 @@ require __DIR__ . '/partials/head.php';
             </div>
 
             <details class="font-block">
-                <summary><i class="fa-solid fa-text-height"></i> Font sizes <span class="font-hint">optional</span><i class="fa-solid fa-caret-down"></i></summary>
+                <summary><?php echo \App\Icon::svg('text-size'); ?> Font sizes <span class="font-hint">optional</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
                 <div class="font-body font-grid font-grid-2">
                     <div class="field">
                         <label for="topic-font-size">Topic <small>(pt)</small></label>
@@ -483,8 +483,8 @@ require __DIR__ . '/partials/head.php';
         </section>
 
         <div class="form-actions">
-            <button type="reset" class="btn btn-secondary btn-reset"><i class="fa-solid fa-arrow-rotate-left"></i> <span>Reset</span></button>
-            <button type="submit" class="btn btn-primary btn-generate"><i class="fa-solid fa-hammer"></i> Generate PDF</button>
+            <button type="reset" class="btn btn-secondary btn-reset"><?php echo \App\Icon::svg('rotate-ccw'); ?> <span>Reset</span></button>
+            <button type="submit" class="btn btn-primary btn-generate"><?php echo \App\Icon::svg('hammer'); ?> Generate PDF</button>
         </div>
     </form>
 </main>
@@ -494,6 +494,6 @@ require __DIR__ . '/partials/head.php';
 <script>window.__INITIAL_FONTS__ = <?php echo Html::json($initialFonts); ?>;
 window.__SAVED_PROFILE__ = <?php echo Html::json($savedProfile); ?>;
 window.__FONT_UPLOADS__ = <?php echo Settings::bool('font_uploads_enabled') ? 'true' : 'false'; ?>;</script>
-<script src="assets/js/app.js"></script>
+<script src="/assets/js/app.js"></script>
 </body>
 </html>

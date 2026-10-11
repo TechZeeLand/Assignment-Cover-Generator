@@ -59,7 +59,7 @@ try {
     <label for="password">Password</label>
     <input type="password" id="password" name="password" required autofocus autocomplete="current-password">
     <button type="submit" class="btn primary">Log in</button>
-    <p class="hint"><a href="/">&larr; Back to the site</a></p>
+    <p class="hint"><a href="/"><?php echo \App\Icon::svg('arrow-left'); ?> Back to the site</a></p>
 </form>
 </body>
 </html>

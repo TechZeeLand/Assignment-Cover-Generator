@@ -20,12 +20,12 @@ require __DIR__ . '/partials/head.php';
         <p>For bugs or feature requests, opening an issue on GitHub is the fastest way to reach us. For anything else, reach out by email or on social media below.</p>
 
         <ul class="contact-list">
-            <li><a href="mailto:<?php echo App\Html::e($contactEmail); ?>"><i class="fa-solid fa-envelope"></i> <?php echo App\Html::e($contactEmail); ?></a></li>
-            <li><a href="https://github.com/TechZeeLand/Assignment-Cover-Generator" target="_blank" rel="noopener"><i class="fa-brands fa-github"></i> Open an issue on GitHub</a></li>
-            <li><a href="https://www.youtube.com/@TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-youtube"></i> YouTube — @TechZeeLand</a></li>
-            <li><a href="https://www.facebook.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-facebook"></i> Facebook — TechZeeLand</a></li>
-            <li><a href="https://www.instagram.com/TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-instagram"></i> Instagram — @TechZeeLand</a></li>
-            <li><a href="https://www.tiktok.com/@TechZeeLand" target="_blank" rel="noopener"><i class="fa-brands fa-tiktok"></i> TikTok — @TechZeeLand</a></li>
+            <li><a href="mailto:<?php echo App\Html::e($contactEmail); ?>"><?php echo \App\Icon::svg('mail'); ?> <?php echo App\Html::e($contactEmail); ?></a></li>
+            <li><a href="https://github.com/TechZeeLand/Assignment-Cover-Generator" target="_blank" rel="noopener"><?php echo \App\Icon::svg('github'); ?> Open an issue on GitHub</a></li>
+            <li><a href="https://www.youtube.com/@TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('youtube'); ?> YouTube — @TechZeeLand</a></li>
+            <li><a href="https://www.facebook.com/TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('facebook'); ?> Facebook — TechZeeLand</a></li>
+            <li><a href="https://www.instagram.com/TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('instagram'); ?> Instagram — @TechZeeLand</a></li>
+            <li><a href="https://www.tiktok.com/@TechZeeLand" target="_blank" rel="noopener"><?php echo \App\Icon::svg('tiktok'); ?> TikTok — @TechZeeLand</a></li>
         </ul>
     </div>
 </main>
