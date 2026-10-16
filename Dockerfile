@@ -61,6 +61,14 @@ COPY --from=vendor /app/vendor ./vendor
 COPY composer.json ./
 COPY public ./public
 COPY src ./src
+COPY views ./views
+COPY content ./content
+COPY bin ./bin
+COPY docker/entrypoint.sh /usr/local/bin/acg-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/acg-entrypoint && chmod +x /usr/local/bin/acg-entrypoint
+
+# TZL Kit: keep everything it stores (site.json, admin.json, stats, SQLite, sessions) in the existing data volume
+ENV TZL_DATA_DIR=/var/www/html/storage/data
 
 # Persisted, world-writable-by-www-data font storage (mounted as a volume),
 # plus a scratch dir for mPDF's own temp/cache files (see Config::tempPath()) -
@@ -77,6 +85,7 @@ VOLUME ["/var/www/html/storage/fonts", "/var/www/html/storage/data"]
 EXPOSE 80
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
-    CMD curl -fs http://127.0.0.1/ -o /dev/null || exit 1
+    CMD curl -fs http://127.0.0.1/health -o /dev/null || exit 1
 
+ENTRYPOINT ["acg-entrypoint"]
 CMD ["/usr/bin/supervisord", "-c", "/etc/supervisor/conf.d/supervisord.conf"]

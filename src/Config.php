@@ -39,7 +39,7 @@ final class Config
      */
     public static function dataPath(): string
     {
-        $path = getenv('DATA_STORAGE_PATH') ?: (dirname(__DIR__) . '/storage/data');
+        $path = \Tzl\Kit::$data !== '' ? \Tzl\Kit::$data : (getenv('DATA_STORAGE_PATH') ?: (dirname(__DIR__) . '/storage/data'));
         if (!is_dir($path)) {
             @mkdir($path, 0770, true);
         }
