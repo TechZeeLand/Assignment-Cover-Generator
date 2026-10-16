@@ -4,95 +4,78 @@ declare(strict_types=1);
 
 namespace App;
 
+use Tzl\Site;
+
 /**
- * Key/value site settings edited from the admin portal. Reads never throw:
- * if the database is unavailable the built-in defaults are used, so the
- * public site keeps working.
+ * Compatibility layer: the generator's own code still calls Settings::get()/bool()/set(),
+ * but every value now lives in the TZL Kit site settings (data/site.json), so the shared
+ * admin (Site & domains, Appearance, Security ...) and the generator screens edit one store.
  */
 final class Settings
 {
-    public const DEFAULTS = [
-        'site_name'              => 'Assignment Cover Generator',
-        'site_url'               => '',
-        'contact_email'          => '',
-        'announcement_enabled'   => '0',
-        'announcement_text'      => '',
-        'signin_enabled'         => '1',
-        'profiles_enabled'       => '1',
-        'google_client_id'       => '',
-        'google_client_secret'   => '',
-        'active_designs'         => '',   // JSON list; empty = every design
-        'default_design'         => 'classic',
-        'font_uploads_enabled'   => '1',
-        'cookie_banner_enabled'  => '1',
-        'ads_enabled'            => '0',
-        'ads_require_consent'    => '1',
-        'adsense_publisher_id'   => '',
-        'ad_slot_top'            => '',
-        'ad_slot_middle'         => '',
-        'ad_slot_bottom'         => '',
-        'ads_txt'                => '',
-        'admin_password_hash'    => '',
+    /** Old generator key => kit key (all other keys keep their name). */
+    private const MAP = [
+        'site_url'              => 'base_url',
+        'announcement_enabled'  => 'announcement_on',
+        'cookie_banner_enabled' => 'cookie_banner_on',
     ];
 
-    /** @var array<string,string>|null */
-    private static ?array $cache = null;
+    /** Kit keys that hold true/false. */
+    private const BOOLS = [
+        'signin_enabled', 'profiles_enabled', 'font_uploads_enabled', 'ads_enabled',
+        'ads_require_consent', 'announcement_on', 'cookie_banner_on',
+    ];
 
-    /** @return array<string,string> */
-    public static function all(): array
+    /** Defaults passed to Kit::boot(['defaults' => ...]). */
+    public const DEFAULTS = [
+        'signin_enabled'       => true,
+        'profiles_enabled'     => true,
+        'google_client_id'     => '',
+        'google_client_secret' => '',
+        'active_designs'       => '',   // JSON list; empty = every design
+        'default_design'       => 'classic',
+        'font_uploads_enabled' => true,
+        'cookie_banner_on'     => true,
+        'ads_enabled'          => false,
+        'ads_require_consent'  => true,
+        'adsense_publisher_id' => '',
+        'ad_slot_top'          => '',
+        'ad_slot_middle'       => '',
+        'ad_slot_bottom'       => '',
+    ];
+
+    public static function key(string $legacy): string
     {
-        if (self::$cache !== null) {
-            return self::$cache;
-        }
-        $values = self::DEFAULTS;
-        try {
-            foreach (Db::pdo()->query('SELECT key, value FROM settings') as $row) {
-                if (array_key_exists($row['key'], $values)) {
-                    $values[$row['key']] = (string) $row['value'];
-                }
-            }
-        } catch (\Throwable $e) {
-            error_log('[assignment-cover-generator] settings unavailable: ' . $e->getMessage());
-        }
-        return self::$cache = $values;
+        return self::MAP[$legacy] ?? $legacy;
     }
 
     public static function get(string $key): string
     {
-        return self::all()[$key] ?? '';
+        $v = Site::get(self::key($key));
+        if (is_bool($v)) {
+            return $v ? '1' : '0';
+        }
+        return is_scalar($v) ? (string) $v : '';
     }
 
     public static function bool(string $key): bool
     {
-        return self::get($key) === '1';
+        return Site::on(self::key($key));
     }
 
     public static function set(string $key, string $value): void
     {
-        if (!array_key_exists($key, self::DEFAULTS)) {
-            throw new \InvalidArgumentException('Unknown setting: ' . $key);
-        }
-        $stmt = Db::pdo()->prepare(
-            'INSERT INTO settings (key, value) VALUES (:k, :v)
-             ON CONFLICT(key) DO UPDATE SET value = excluded.value'
-        );
-        $stmt->execute([':k' => $key, ':v' => $value]);
-        self::$cache = null;
+        self::setMany([$key => $value]);
     }
 
-    /** @param array<string,string> $values */
+    /** @param array<string,string|bool> $values legacy or kit keys */
     public static function setMany(array $values): void
     {
-        $pdo = Db::pdo();
-        $pdo->beginTransaction();
-        try {
-            foreach ($values as $k => $v) {
-                self::set($k, $v);
-            }
-            $pdo->commit();
-        } catch (\Throwable $e) {
-            $pdo->rollBack();
-            throw $e;
+        $new = [];
+        foreach ($values as $k => $v) {
+            $k = self::key((string) $k);
+            $new[$k] = in_array($k, self::BOOLS, true) ? ($v === true || $v === '1' || $v === 1) : (string) $v;
         }
+        Site::save($new);
     }
 }

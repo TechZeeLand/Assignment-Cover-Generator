@@ -1,0 +1,24 @@
+Icons from the TechZeeLand Icons service used by this project (check each exists at icons.<root domain>):
+book-open
+chevron-down
+chevron-left
+chevron-right
+download
+font
+graduation-cap
+grid
+hammer
+heading
+loader
+logout
+minimize
+palette
+plus-circle
+rotate-ccw
+save
+search
+square-pen
+text-size
+trash
+upload
+users-group

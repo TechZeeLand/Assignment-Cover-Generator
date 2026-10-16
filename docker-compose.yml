@@ -1,29 +1,30 @@
 services:
   assignment-cover-generator:
-    # For Portainer's "Web editor" with a Git-linked stack, `build:` works
-    # directly. If you'd rather not build on the server at all, comment out
-    # the `build:` block and use the pre-built image from GitHub Container
-    # Registry instead:
+    # For Portainer's "Web editor" with a Git-linked stack, `build:` works directly.
+    # To use the pre-built image instead, comment out `build:` and use:
     #   image: ghcr.io/techzeeland/assignment-cover-generator:latest
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: assignment-cover-generator
+    container_name: tzl-acg
     restart: unless-stopped
     ports:
       - "1025:80"
     volumes:
-      # Persists custom uploaded fonts across container recreations/updates.
+      # Same volume names as before, so users, saved details, settings and custom fonts are kept.
       - acg_fonts:/var/www/html/storage/fonts
-      # Settings, signed-in users, saved details, counters and sessions.
       - acg_data:/var/www/html/storage/data
     environment:
-      - TZ=UTC
-      # Password for the admin portal at /admin/ (first run). Required to
-      # use the admin area; after that you can change it from the panel.
-      - ADMIN_PASSWORD=${ADMIN_PASSWORD:-}
-      # Set to 1 (together with ADMIN_PASSWORD) to force-reset a lost password.
-      - ADMIN_PASSWORD_RESET=${ADMIN_PASSWORD_RESET:-}
+      TZ: UTC
+      TZL_ROOT_DOMAIN: "${TZL_ROOT_DOMAIN:-rayaz.org}"
+      TZL_BASE_URL: "${TZL_BASE_URL:-https://assignmentcovergenerator.rayaz.org}"
+      TZL_TRUST_PROXY: "${TZL_TRUST_PROXY:-1}"
+      TZL_ADMIN_USER: "${TZL_ADMIN_USER:-admin}"
+      # Only used when no admin exists yet. Existing installs keep their current admin password.
+      TZL_ADMIN_PASSWORD: "${TZL_ADMIN_PASSWORD:-}"
+      # Old variables still work: ADMIN_PASSWORD (first admin) and ADMIN_PASSWORD_RESET=1 (lost password).
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:-}"
+      ADMIN_PASSWORD_RESET: "${ADMIN_PASSWORD_RESET:-}"
 
 volumes:
   acg_fonts:

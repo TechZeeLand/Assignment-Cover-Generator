@@ -23,7 +23,7 @@ jobs:
           php-version: "8.2"
       - name: PHP lint
         run: |
-          find src public -name "*.php" -print0 | xargs -0 -n1 php -l
+          find src public bin views -name "*.php" -print0 | xargs -0 -n1 php -l
 
   build-and-push:
     needs: lint

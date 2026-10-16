@@ -56,8 +56,8 @@
             });
         });
     }
-    document.querySelectorAll('[data-cookie-settings]').forEach((el) => {
-        el.addEventListener('click', showBanner);
+    document.querySelectorAll('[data-cookie-settings], a[href="#cookie-settings"]').forEach((el) => {
+        el.addEventListener('click', (e) => { e.preventDefault(); showBanner(); });
     });
 
     if (cfg.cookieBanner && !stored()) showBanner();
