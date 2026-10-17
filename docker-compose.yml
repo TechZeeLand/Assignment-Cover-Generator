@@ -9,7 +9,7 @@ services:
     container_name: tzl-acg
     restart: unless-stopped
     ports:
-      - "1025:80"
+      - "1027:80"
     volumes:
       # Same volume names as before, so users, saved details, settings and custom fonts are kept.
       - acg_fonts:/var/www/html/storage/fonts
