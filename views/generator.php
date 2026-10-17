@@ -7,6 +7,7 @@ declare(strict_types=1);
 use App\Ads;
 use App\Html;
 use App\Icon;
+use App\Settings;
 use Tzl\Kit;
 ?>
 <main id="main-content" class="layout acg-layout">
