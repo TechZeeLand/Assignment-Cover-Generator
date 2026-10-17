@@ -10,18 +10,9 @@
     padding: 20px;
 }
 .panel { min-width: 0; }
-.page-intro { margin-bottom: 16px; }
-.page-title {
-    font-size: 1.4rem;
-    margin: 0 0 6px;
-    font-weight: 800;
-}
-.page-sub {
-    margin: 0;
-    color: var(--muted);
-    font-size: .9rem;
-    line-height: 1.55;
-}
+.page-intro { text-align: center; margin-bottom: 26px; }
+.page-title { font-size: clamp(1.7rem, 4.2vw, 2.6rem); margin: 0 0 8px; font-weight: 400; }
+.page-sub { margin: 0 auto; max-width: 620px; color: var(--muted); font-size: 1rem; line-height: 1.55; }
 .section-nav {
     display: flex;
     gap: 6px;
@@ -34,8 +25,8 @@
     margin-bottom: 18px;
 
     position: sticky;
-    top: 80px;
-    z-index: 15;
+    top: calc(var(--topbar-h, 65px) + 8px);
+    z-index: 30;
 
     box-shadow: var(--shadow);
 }
@@ -65,7 +56,7 @@
     box-shadow: var(--shadow);
     padding: 18px 18px 20px;
     margin-bottom: 16px;
-    scroll-margin-top: 125px;
+    scroll-margin-top: calc(var(--topbar-h, 65px) + 72px);
 }
 .acg-layout .card-head {
     margin: 0 0 16px;
@@ -274,8 +265,6 @@ input[type="color"]:disabled { opacity: .4; cursor: not-allowed; }
 @media (max-width: 480px) {
 .layout { padding: 12px; }
 .acg-layout .card { padding: 14px; }
-.page-title { font-size: 1.2rem; }
-.section-nav { top: 65px; }
 .section-nav-link span { display: none; }
 .section-nav-link { padding: 10px 8px; }
 .section-nav-link .zi { font-size: 1.15rem;}
