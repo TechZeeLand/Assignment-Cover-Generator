@@ -33,13 +33,13 @@ $signIn = Auth::signInAvailable();
                 <tr>
                     <td><code>acg_session</code></td>
                     <td>Essential cookie</td>
-                    <td>Keeps you signed in after "Sign in with Google" and protects forms against cross-site requests. It is <strong>not</strong> created unless you sign in<?php echo $signIn ? '' : ' (sign-in is currently turned off on this site)'; ?>.</td>
+                    <td>Keeps you signed in (Google or email &amp; password) and protects the sign-in, register and account forms against cross-site requests. It is <strong>not</strong> created unless you sign in or open one of those forms<?php echo $signIn ? '' : ' (sign-in is currently turned off on this site)'; ?>.</td>
                     <td>Up to 30 days, or until you sign out</td>
                 </tr>
                 <tr>
                     <td><code>acg-theme</code></td>
                     <td>Browser storage (localStorage)</td>
-                    <td>Remembers whether you chose light or dark mode. Never sent to the server.</td>
+                    <td>Remembers whether you chose light or dark mode. Never sent to the server by this script (if you are signed in and save your details, your theme choice is stored with them).</td>
                     <td>Until you clear your browser data</td>
                 </tr>
                 <tr>

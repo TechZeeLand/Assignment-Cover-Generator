@@ -22,6 +22,9 @@
         }
     }
 
+    // Lets app.js apply a theme saved to a signed-in user's profile.
+    window.acgSetTheme = applyTheme;
+
     // Sync the toggle button's ARIA state with whatever the blocking
     // head script already applied before paint.
     applyTheme(currentTheme(), false);

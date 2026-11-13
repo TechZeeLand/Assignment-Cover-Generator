@@ -31,11 +31,17 @@ require __DIR__ . '/partials/head.php';
         </ul>
 
         <?php if ($signIn): ?>
-        <h2>If you sign in with Google (optional)</h2>
-        <p>Signing in uses Google's OAuth. We ask Google only for your <strong>name</strong> and <strong>email address</strong> (the standard <code>openid</code>, <code>email</code> and <code>profile</code> scopes). We do not store your Google account ID, profile picture, contacts or any other Google data, and we never see your Google password.</p>
+        <h2>If you sign in (optional)</h2>
+        <?php if (\App\Auth::emailAvailable()): ?>
+        <p><strong>Email &amp; password accounts.</strong> You can create an account with a name, an email address and a password. The password is stored only as a salted hash (never in readable form). We do not verify email addresses or send any email, so there is no password reset by email. Failed sign-in attempts are counted per IP address and per email address for 15 minutes to slow down guessing, then discarded. Opening the sign-in or register form sets the session cookie described in the <a href="/cookie-policy.php">Cookie Policy</a>.</p>
+        <?php endif; ?>
+        <?php if ($signIn && \App\Auth::googleAvailable()): ?>
+        <p>Signing in with Google uses Google's OAuth. We ask Google only for your <strong>name</strong> and <strong>email address</strong> (the standard <code>openid</code>, <code>email</code> and <code>profile</code> scopes). We do not store your Google account ID, profile picture, contacts or any other Google data, and we never see your Google password. If someone created a password account with your email address before you signed in with Google, signing in with Google removes that password.</p>
+        <?php endif; ?>
         <ul>
-            <li><strong>What we store:</strong> your name, your email address, when you first and last signed in, how many times you signed in, and a session cookie that keeps you signed in (see the <a href="/cookie-policy.php">Cookie Policy</a>).</li>
-            <li><strong>Saved details (only if you press "Save my details"):</strong> the university, department, faculty, student, course, group and appearance settings from the form, and your logo if you added one. The topic and submission date are never saved.</li>
+            <li><strong>What we store:</strong> your name, your email address, your password hash (only for email &amp; password accounts), when you first and last signed in, how many times you signed in, and a session cookie that keeps you signed in (see the <a href="/cookie-policy.php">Cookie Policy</a>).</li>
+            <li><strong>Saved details (only if you press "Save my details", or switch on Auto-save):</strong> everything on the form &mdash; university, department, faculty, student, course, group, topic, submission date and appearance settings (including the Icons switch) &mdash; and your logo if you added one. Because the topic and date are included, only save them if you are comfortable with that.</li>
+            <li><strong>Preferences:</strong> your favorite designs (saved the moment you tap the heart), your chosen light/dark theme, whether the design picker is expanded, and whether Auto-save is on.</li>
             <li><strong>Why:</strong> to recognise you when you return and pre-fill the form. We do not sell your data, send marketing emails, or use it for advertising.</li>
             <li><strong>Your controls:</strong> use <em>Delete saved</em> on the form to remove your saved details, or <em>Delete my account &amp; data</em> in the account menu to remove everything we hold about you immediately. You can also ask us to do it via the <a href="/contact.php">contact page</a>.</li>
         </ul>

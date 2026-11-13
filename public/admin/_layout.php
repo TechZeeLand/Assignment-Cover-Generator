@@ -27,7 +27,7 @@ function admin_head(string $title, string $active): void
     $nav = [
         'dashboard' => ['index.php', 'Dashboard', 'dashboard'],
         'designs'   => ['designs.php', 'Designs', 'palette'],
-        'signin'    => ['signin.php', 'Sign-in (Google)', 'user-lock'],
+        'signin'    => ['signin.php', 'Sign-in', 'user-lock'],
         'ads'       => ['ads.php', 'Ads &amp; ads.txt', 'ad'],
         'settings'  => ['settings.php', 'Site settings', 'sliders'],
         'users'     => ['users.php', 'Users', 'users'],

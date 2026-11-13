@@ -33,6 +33,7 @@ $acgSiteName = $siteName ?? 'Assignment Cover Generator';
                 <div class="user-pop">
                     <p class="user-pop-name"><?php echo TopbarHtml::e($acgUser['name']); ?></p>
                     <p class="user-pop-email"><?php echo TopbarHtml::e($acgUser['email']); ?></p>
+                    <a class="user-link" href="/auth/password.php"><?php echo \App\Icon::svg('key'); ?> <?php echo !empty($acgUser['has_password']) ? 'Change password' : 'Set a password'; ?></a>
                     <form method="post" action="/auth/logout.php">
                         <?php echo TopbarCsrf::field(); ?>
                         <input type="hidden" name="return" value="<?php echo TopbarHtml::e($acgReturn); ?>">
@@ -44,7 +45,12 @@ $acgSiteName = $siteName ?? 'Assignment Cover Generator';
                     </form>
                 </div>
             </details>
-            <?php elseif (TopbarAuth::signInAvailable()): ?>
+            <?php elseif (TopbarAuth::emailAvailable()): ?>
+            <a class="google-btn" href="/auth/signin.php?return=<?php echo rawurlencode($acgReturn); ?>">
+                <?php echo \App\Icon::svg('user'); ?>
+                <span>Sign in</span>
+            </a>
+            <?php elseif (TopbarAuth::googleAvailable()): ?>
             <a class="google-btn" href="/auth/google.php?return=<?php echo rawurlencode($acgReturn); ?>">
                 <?php echo \App\Icon::svg('google'); ?>
                 <span>Sign in</span>

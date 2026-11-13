@@ -27,6 +27,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         nginx \
         supervisor \
+        poppler-utils \
         curl \
         ca-certificates \
     && apt-get clean \

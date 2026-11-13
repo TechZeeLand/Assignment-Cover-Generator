@@ -12,7 +12,7 @@ use App\Users;
 
 $error = null;
 try {
-    if (!Auth::signInAvailable()) {
+    if (!Auth::googleAvailable()) {
         throw new \RuntimeException('Sign-in is currently turned off.');
     }
     $result = GoogleOAuth::finish($_GET);

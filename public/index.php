@@ -28,6 +28,25 @@ if ($acgUser !== null && $profilesOn) {
 }
 $canSignIn = Auth::signInAvailable() && $profilesOn;
 
+// Favourite designs (signed-in users): shown first, with a filled heart.
+$favoritesOn = $acgUser !== null && $profilesOn;
+$designOrder = array_flip(array_keys($designs));   // original order, so an un-favorited card can go back
+$favorites = [];
+if ($favoritesOn && is_array($savedProfile) && !empty($savedProfile['favorite-designs'])) {
+    foreach (explode(',', (string) $savedProfile['favorite-designs']) as $favKey) {
+        if (isset($designs[$favKey])) {
+            $favorites[] = $favKey;
+        }
+    }
+    $pinned = [];
+    foreach ($favorites as $favKey) {
+        $pinned[$favKey] = $designs[$favKey];
+    }
+    $designs = $pinned + array_diff_key($designs, $pinned);
+}
+
+$previewOn = \App\PreviewService::available();
+
 $pageTitle = 'Assignment Cover Generator';
 $pageDescription = 'Free, open-source assignment cover page generator. Design your cover, then export a print-ready PDF.';
 require __DIR__ . '/partials/head.php';
@@ -37,7 +56,9 @@ require __DIR__ . '/partials/head.php';
 
 <?php require __DIR__ . '/partials/topbar.php'; ?>
 
-<main class="layout">
+<main class="layout<?php echo $previewOn ? ' layout-wide' : ''; ?>">
+<div class="workspace<?php echo $previewOn ? ' has-preview' : ''; ?>">
+<div class="workspace-main">
 
     <div class="page-intro">
         <h1 class="page-title">Create Your Assignment Cover</h1>
@@ -63,6 +84,11 @@ require __DIR__ . '/partials/head.php';
         </div>
         <div class="profile-bar-actions">
             <button type="button" class="btn btn-secondary" id="profile-save"><?php echo \App\Icon::svg('save'); ?> Save my details</button>
+            <label class="row-check profile-auto" title="Saves your form automatically a moment after every change">
+                <input type="checkbox" name="auto-save" id="auto-save" form="main-form">
+                <span class="switch" aria-hidden="true"></span>
+                <span class="row-check-label">Auto-save</span>
+            </label>
             <button type="button" class="btn btn-secondary" id="profile-clear"<?php echo $savedProfile ? '' : ' disabled'; ?>><?php echo \App\Icon::svg('trash'); ?> Delete saved</button>
         </div>
         <p class="profile-status" id="profile-status" role="status"></p>
@@ -71,13 +97,19 @@ require __DIR__ . '/partials/head.php';
     <section class="panel profile-bar profile-bar-promo" aria-label="Sign in to save your details">
         <div class="profile-bar-text">
             <strong><?php echo \App\Icon::svg('save'); ?> Tired of retyping the same details?</strong>
-            <span>Optionally sign in with Google and save your university and student details for next time. Signing in is never required.</span>
+            <span>Optionally sign in (email &amp; password<?php echo Auth::googleAvailable() ? ' or Google' : ''; ?>) and save everything &mdash; details, favorite designs and preferences &mdash; for next time. Signing in is never required.</span>
         </div>
         <div class="profile-bar-actions">
+            <?php if (Auth::emailAvailable()): ?>
+            <a class="btn btn-primary" href="/auth/signin.php?return=<?php echo rawurlencode('/'); ?>"><?php echo \App\Icon::svg('user'); ?> Sign in</a>
+            <a class="btn btn-secondary" href="/auth/register.php?return=<?php echo rawurlencode('/'); ?>">Create account</a>
+            <?php endif; ?>
+            <?php if (Auth::googleAvailable()): ?>
             <a class="google-btn google-btn-lg" href="/auth/google.php?return=<?php echo rawurlencode('/'); ?>">
                 <?php echo \App\Icon::svg('google'); ?>
                 <span>Sign in with Google</span>
             </a>
+            <?php endif; ?>
         </div>
     </section>
     <?php endif; ?>
@@ -96,7 +128,7 @@ require __DIR__ . '/partials/head.php';
                     <span class="field-label" id="design-label">Cover design</span>
                     <div class="design-picker" id="design-picker">
                         <div class="design-toolbar">
-                            <span class="design-count"><?php echo count($designs); ?> designs &middot; swipe or scroll sideways</span>
+                            <span class="design-count"><?php echo count($designs); ?> designs &middot; swipe or scroll sideways<?php echo $favoritesOn ? ' &middot; tap the heart to pin favorites first' : ''; ?></span>
                             <button type="button" class="chip-btn" id="design-expand" aria-expanded="false" aria-controls="design-grid">
                                 <span class="ico-expand"><?php echo \App\Icon::svg('grid'); ?></span><span class="ico-collapse"><?php echo \App\Icon::svg('minimize'); ?></span> <span class="expand-label">Expand all</span>
                             </button>
@@ -105,8 +137,12 @@ require __DIR__ . '/partials/head.php';
                             <button type="button" class="design-arrow design-arrow-prev" id="design-prev" aria-label="Show previous designs" hidden><?php echo \App\Icon::svg('chevron-left'); ?></button>
                             <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
                                 <?php foreach ($designs as $design): ?>
-                                <label class="design-card">
+                                <?php $isFav = in_array($design->key(), $favorites, true); ?>
+                                <label class="design-card<?php echo $isFav ? ' is-fav' : ''; ?>" data-design="<?php echo Html::e($design->key()); ?>" data-order="<?php echo (int) ($designOrder[$design->key()] ?? 0); ?>">
                                     <input type="radio" name="design" value="<?php echo Html::e($design->key()); ?>"<?php echo $design->key() === $defaultDesign ? ' checked' : ''; ?>>
+                                    <?php if ($favoritesOn): ?>
+                                    <button type="button" class="fav-btn" data-design="<?php echo Html::e($design->key()); ?>" data-label="<?php echo Html::e($design->label()); ?>" aria-pressed="<?php echo $isFav ? 'true' : 'false'; ?>" aria-label="<?php echo $isFav ? 'Remove' : 'Add'; ?> <?php echo Html::e($design->label()); ?> <?php echo $isFav ? 'from' : 'to'; ?> favorites" title="<?php echo $isFav ? 'Remove from favorites' : 'Add to favorites'; ?>"><span class="fav-off"><?php echo \App\Icon::svg('heart'); ?></span><span class="fav-on"><?php echo \App\Icon::svg('heart-filled'); ?></span></button>
+                                    <?php endif; ?>
                                     <span class="design-thumb"><?php echo $design->thumbnailSvg(); ?></span>
                                     <span class="design-name"><?php echo Html::e($design->label()); ?></span>
                                     <span class="design-badge"><?php echo Html::e($design->category()); ?></span>
@@ -128,6 +164,15 @@ require __DIR__ . '/partials/head.php';
                     <span class="row-check-label">Show decorative border</span>
                 </label>
                 <p class="hint">Frame, bands, panel or rules &mdash; whichever the chosen design uses.</p>
+            </div>
+
+            <div class="field-group">
+                <label class="row-check">
+                    <input type="checkbox" name="icons" id="icons">
+                    <span class="switch" aria-hidden="true"></span>
+                    <span class="row-check-label">Icons</span>
+                </label>
+                <p class="hint">Adds small icons before the section headings &mdash; a student, teacher, book, group, topic and clock &mdash; in your primary color.</p>
             </div>
 
             <div class="field-group">
@@ -308,6 +353,19 @@ require __DIR__ . '/partials/head.php';
                         <label for="dept-font-size">Department name <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="dept-font-size" id="dept-font-size" value="22" min="8" max="60" step="1">
                     </div>
+                    <div class="field">
+                        <label for="faculty-font-size">Faculty / School <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="faculty-font-size" id="faculty-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field">
+                        <label for="cover-title-font-size">Cover title <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="cover-title-font-size" id="cover-title-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field">
+                        <label for="program-font-size">Program line <small>(pt &middot; Formal designs)</small></label>
+                        <input type="number" class="text-input input-narrow" name="program-font-size" id="program-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <p class="hint font-grid-note">Leave a box empty to use the chosen design's own size.</p>
                 </div>
             </details>
         </section>
@@ -373,6 +431,10 @@ require __DIR__ . '/partials/head.php';
                         <label for="student-font-size">Font size for this section <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="student-font-size" id="student-font-size" value="28" min="8" max="60" step="1">
                     </div>
+                    <div class="field field-narrow">
+                        <label for="student-heading-size">Heading size <small>(pt &mdash; &ldquo;Student Details&rdquo; / &ldquo;Submitted by&rdquo;; empty = design default)</small></label>
+                        <input type="number" class="text-input input-narrow" name="student-heading-size" id="student-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
                 </div>
             </details>
         </section>
@@ -418,6 +480,18 @@ require __DIR__ . '/partials/head.php';
                         <label for="course-font-size">Font size for this section <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="course-font-size" id="course-font-size" value="28" min="8" max="60" step="1">
                     </div>
+                    <div class="field field-narrow">
+                        <label for="course-heading-size">Heading size <small>(pt &mdash; &ldquo;Course Details&rdquo;; empty = design default)</small></label>
+                        <input type="number" class="text-input input-narrow" name="course-heading-size" id="course-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field field-narrow">
+                        <label for="teacher-heading-size">&ldquo;Submitted to&rdquo; heading size <small>(pt &mdash; Formal designs)</small></label>
+                        <input type="number" class="text-input input-narrow" name="teacher-heading-size" id="teacher-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field field-narrow">
+                        <label for="designation-font-size">Teacher designation <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="designation-font-size" id="designation-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
                 </div>
             </details>
         </section>
@@ -439,6 +513,16 @@ require __DIR__ . '/partials/head.php';
                     <textarea class="text-input" name="group-members" id="group-members" rows="5" maxlength="900" placeholder="Azlan Aziz, ME601001&#10;Another Member, ME601002"></textarea>
                 </div>
             </div>
+            <details class="font-block">
+                <summary><?php echo \App\Icon::svg('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?></summary>
+                <div class="font-body">
+                    <div class="field field-narrow">
+                        <label for="group-heading-size">&ldquo;Group Details&rdquo; heading size <small>(pt &mdash; empty = design default)</small></label>
+                        <input type="number" class="text-input input-narrow" name="group-heading-size" id="group-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <p class="hint">The members themselves use the Student Details font size.</p>
+                </div>
+            </details>
         </section>
 
         <?php echo Ads::slot('middle'); ?>
@@ -487,13 +571,39 @@ require __DIR__ . '/partials/head.php';
             <button type="submit" class="btn btn-primary btn-generate"><?php echo \App\Icon::svg('hammer'); ?> Generate PDF</button>
         </div>
     </form>
+</div>
+
+<?php if ($previewOn): ?>
+<aside class="preview-pane" id="preview-pane" aria-label="Live preview">
+    <div class="preview-head"><strong><?php echo \App\Icon::svg('eye'); ?> Live preview</strong><span class="preview-status" role="status" aria-live="polite"></span></div>
+    <div class="preview-frame"><img class="preview-img" alt="Live preview of your cover page" hidden><div class="preview-msg">Preparing preview&hellip;</div></div>
+    <p class="hint">Page 1 of your PDF, exactly as it will print. It refreshes a moment after you stop typing.</p>
+</aside>
+<?php endif; ?>
+</div>
 </main>
+
+<?php if ($previewOn): ?>
+<button type="button" class="preview-fab" id="preview-fab" aria-haspopup="dialog"><?php echo \App\Icon::svg('eye'); ?><span>Preview</span></button>
+<dialog class="preview-modal" id="preview-modal" aria-label="Live preview">
+    <div class="preview-modal-head">
+        <strong>Live preview</strong><span class="preview-status" role="status" aria-live="polite"></span>
+        <button type="button" class="chip-btn" id="preview-close"><?php echo \App\Icon::svg('close'); ?> Close</button>
+    </div>
+    <div class="preview-frame"><img class="preview-img" alt="Live preview of your cover page" hidden><div class="preview-msg">Preparing preview&hellip;</div></div>
+    <div class="preview-modal-actions">
+        <button type="submit" form="main-form" class="btn btn-primary"><?php echo \App\Icon::svg('hammer'); ?> Generate PDF</button>
+    </div>
+</dialog>
+<?php endif; ?>
 
 <?php require __DIR__ . '/partials/footer.php'; ?>
 
 <script>window.__INITIAL_FONTS__ = <?php echo Html::json($initialFonts); ?>;
 window.__SAVED_PROFILE__ = <?php echo Html::json($savedProfile); ?>;
+window.__DESIGN_FAVORITES__ = <?php echo Html::json($favorites); ?>;
 window.__FONT_UPLOADS__ = <?php echo Settings::bool('font_uploads_enabled') ? 'true' : 'false'; ?>;</script>
 <script src="<?php echo \App\Html::asset('/assets/js/app.js'); ?>"></script>
+<?php if ($previewOn): ?><script src="<?php echo \App\Html::asset('/assets/js/preview.js'); ?>"></script><?php endif; ?>
 </body>
 </html>

@@ -17,7 +17,8 @@ final class Settings
         'contact_email'          => '',
         'announcement_enabled'   => '0',
         'announcement_text'      => '',
-        'signin_enabled'         => '1',
+        'signin_enabled'         => '1',   // Google sign-in (also needs the keys)
+        'email_signin_enabled'   => '1',   // email + password accounts
         'profiles_enabled'       => '1',
         'google_client_id'       => '',
         'google_client_secret'   => '',

@@ -196,7 +196,7 @@ CSS;
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $topicGap . 'pt;">'
                 . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="topic-cell">'
-                . '<p class="topic-label">TOPIC</p>'
+                . '<p class="topic-label">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p>'
                 . '<p class="topic-text">' . $d->topicHtml . '</p>'
                 . '</td></tr></table></div>';
         }

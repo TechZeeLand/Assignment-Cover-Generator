@@ -30,6 +30,9 @@ final class CoverData
 
     public bool $showBorder;
 
+    /** Print small line icons before the section headings, teacher, topic and date. */
+    public bool $showIcons;
+
     public string $versityFont;
     public string $primaryFont;
     public string $secondaryFont;
@@ -118,6 +121,29 @@ final class CoverData
     public float $topicFontSize;
     public float $submissionFontSize;
 
+    // Optional overrides: null = "use the design's own size". Set from the
+    // extra size fields (headings, faculty, program, cover title, designation).
+    public ?float $facultyFontSize;
+    public ?float $programFontSize;
+    public ?float $coverTitleFontSize;
+    public ?float $designationFontSize;
+    public ?float $studentHeadingSize;
+    public ?float $courseHeadingSize;
+    public ?float $groupHeadingSize;
+    public ?float $teacherHeadingSize;
+
+    /** Heading size override for 'student' | 'course' | 'group' | 'teacher', or null. */
+    public function headingSize(string $key): ?float
+    {
+        return match ($key) {
+            'student' => $this->studentHeadingSize,
+            'course'  => $this->courseHeadingSize,
+            'group'   => $this->groupHeadingSize,
+            'teacher' => $this->teacherHeadingSize,
+            default   => null,
+        };
+    }
+
     public static function fromRequest(array $data, FontManager $fonts): self
     {
         $c = new self();
@@ -125,6 +151,7 @@ final class CoverData
         $c->design = TemplateRegistry::resolveKey((string) ($data['design'] ?? ''));
 
         $c->showBorder = Sanitize::bool($data['border'] ?? null);
+        $c->showIcons  = Sanitize::bool($data['icons'] ?? null);
 
         $c->versityFont   = $fonts->resolveFontKey((string) ($data['versity-name-font'] ?? 'oldenglish'));
         $c->primaryFont   = $fonts->resolveFontKey((string) ($data['primary-font'] ?? 'alata'));
@@ -225,7 +252,30 @@ final class CoverData
         $c->topicFontSize      = Sanitize::fontSize($data['topic-font-size'] ?? null, self::DEFAULT_TOPIC_FONT_SIZE, $min, $max);
         $c->submissionFontSize = Sanitize::fontSize($data['submission-font-size'] ?? null, self::DEFAULT_SUBMISSION_FONT_SIZE, $min, $max);
 
+        $opt = static fn (string $name): ?float => self::optionalSize($data[$name] ?? null);
+        $c->facultyFontSize        = $opt('faculty-font-size');
+        $c->programFontSize        = $opt('program-font-size');
+        $c->coverTitleFontSize     = $opt('cover-title-font-size');
+        $c->designationFontSize    = $opt('designation-font-size');
+        $c->studentHeadingSize     = $opt('student-heading-size');
+        $c->courseHeadingSize      = $opt('course-heading-size');
+        $c->groupHeadingSize       = $opt('group-heading-size');
+        $c->teacherHeadingSize     = $opt('teacher-heading-size');
+
         return $c;
+    }
+
+    /** A size in points within the allowed range, or null (blank / invalid = keep the design's default). */
+    private static function optionalSize(mixed $value): ?float
+    {
+        if ($value === null || $value === '' || !is_numeric($value)) {
+            return null;
+        }
+        $num = (float) $value;
+        if (!is_finite($num) || $num < self::MIN_FONT_SIZE_PT || $num > self::MAX_FONT_SIZE_PT) {
+            return null;
+        }
+        return round($num, 1);
     }
 
     /**

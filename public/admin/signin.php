@@ -21,6 +21,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     $values = [
         'signin_enabled'   => isset($_POST['signin_enabled']) ? '1' : '0',
+        'email_signin_enabled' => isset($_POST['email_signin_enabled']) ? '1' : '0',
         'profiles_enabled' => isset($_POST['profiles_enabled']) ? '1' : '0',
         'google_client_id' => $clientId,
     ];
@@ -38,13 +39,14 @@ $hasSecret = Settings::get('google_client_secret') !== '';
 $redirect = GoogleOAuth::redirectUri();
 $origin = Http::baseUrl();
 
-admin_head('Sign-in (Google)', 'signin');
+admin_head('Sign-in', 'signin');
 ?>
 <form method="post" class="panel">
     <?php echo Csrf::field(); ?>
     <h2>Settings</h2>
     <?php echo admin_check('signin_enabled', 'Offer &ldquo;Sign in with Google&rdquo; to visitors', Settings::bool('signin_enabled'), 'Signing in is always optional. The button only appears once both keys below are filled in.'); ?>
-    <?php echo admin_check('profiles_enabled', 'Let signed-in users save their details', Settings::bool('profiles_enabled'), 'Stores their form details (not the topic or date) on this server.'); ?>
+    <?php echo admin_check('email_signin_enabled', 'Allow email &amp; password accounts', Settings::bool('email_signin_enabled'), 'Visitors can register with just a name, email and password. Emails are not verified and there is no password reset by email (no SMTP).'); ?>
+    <?php echo admin_check('profiles_enabled', 'Let signed-in users save their details', Settings::bool('profiles_enabled'), 'Stores their form details, favorite designs and preferences (including the topic and date) on this server.'); ?>
 
     <label for="cid">Google OAuth client ID</label>
     <input type="text" id="cid" name="google_client_id" value="<?php echo Html::e(Settings::get('google_client_id')); ?>" placeholder="1234567890-abc123.apps.googleusercontent.com" autocomplete="off" spellcheck="false">

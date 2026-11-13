@@ -13,18 +13,53 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 
 ## Features
 
-- **Twelve cover designs** — a horizontally scrollable picker (with an
+- **Sixteen cover designs** — a horizontally scrollable picker (with an
   **Expand all** button) and live previews that follow your colors.
-  *Classic* (the original) · *Professional:* Double Frame, Corner Brackets,
-  Official Form, Heritage, Executive · *Modern:* Modern Bands, Side Panel,
-  Minimal Lines, Hero Block, Mosaic, Duo Tone. All use the same form data,
-  fonts, colors and toggles. Text on a design's own colored areas is always
-  given a readable color derived from that background.
+  *Classic* (the original) · *Formal:* Formal Frame, Formal Double Line,
+  Formal Header Band, Formal Side Rule · *Professional:* Double Frame, Corner
+  Brackets, Official Form, Heritage, Executive · *Modern:* Modern Bands, Side
+  Panel, Minimal Lines, Hero Block, Mosaic, Duo Tone. All use the same form
+  data, fonts, colors and toggles. Text on a design's own colored areas is
+  always given a readable color derived from that background.
+- **Formal designs (the "Submitted to / Submitted by" format)** — a family of
+  four designs that follow the common university submission layout:
+  university, department and *Program: …* in the header, then *Submitted to*
+  (teacher, with the designation in brackets), *Submitted by* (Name, Id,
+  Batch…), *Course Details* (Course Title, Course Code), the *Submission date*
+  and the *Assignment Topic*. The date flows in the page instead of being
+  pinned to the bottom, and stays as a blank line to write by hand if you
+  leave it empty. The student's Program is shown in the header, not under
+  *Submitted by*.
+- **Icons switch** — below the border switch. Adds small line icons (student,
+  teacher, book, group, topic, clock) before the section headings, the
+  teacher row, the topic and the submission date, in your primary color.
+- **Live preview** — a real picture of page 1 of the PDF, refreshed a moment
+  after you stop typing. On wide screens it sits in a sticky pane beside the
+  form; on phones and tablets a floating **Preview** button opens it in a
+  modal (with a *Generate PDF* button). It is rendered from the very same PDF
+  as the download, so it can't disagree with it. It needs `poppler-utils`
+  (`pdftoppm`), which the Docker image installs; without it the preview is
+  simply not offered.
+- **Resizable everything** — besides the existing font sizes, every heading
+  (*Student Details* / *Submitted by*, *Course Details*, *Group Details*,
+  *Submitted to*), the faculty, the program line, the cover title and the
+  teacher designation have their own size box. Leave a box empty to keep the
+  chosen design's own size.
+- **Department before faculty** — the header now reads university →
+  department → faculty in every design, and both are sized independently.
+- **Favorite designs** — signed-in users can tap the heart on a design to pin
+  it to the front of the picker; favorites are saved immediately.
 - **More cover fields** — university logo upload, faculty/school line, cover
   title (e.g. "Lab Report No. 3"), session, student email, and group
   assignments (group name + up to 12 members).
-- **Optional Google sign-in** — signed-in users can save their details and
-  have them pre-filled next time. Only a **name and email** are taken from
+- **Optional sign-in: email & password or Google** — email accounts need only
+  a name, email and password (no email verification and no email-based
+  password reset, because there is no SMTP; signed-in users can change their
+  password, and a Google sign-in with the same address takes over an
+  unverified password account and removes its password). Signed-in users can save **everything** on the
+  form (including the topic, submission date and the Icons switch) plus their
+  favorite designs, theme, picker state and an **Auto-save** option, and have
+  it all pre-filled next time. Only a **name and email** are taken from
   Google; no passwords, no email verification, no SMTP.
 - **Admin portal** at `/admin/` — turn designs on/off, see user and PDF
   statistics, configure Google OAuth and AdSense (publisher ID, ad units,
@@ -254,7 +289,8 @@ details, and anonymous daily counters. Fonts live in `acg_fonts`.
 ## Local development (without Docker)
 
 Requirements: PHP 8.1+, Composer, and the `mbstring`, `gd`, `zip`, `curl`
-and `pdo_sqlite` PHP extensions.
+and `pdo_sqlite` PHP extensions. Install `poppler-utils` too
+(`sudo apt install poppler-utils`) if you want the live preview.
 
 ```bash
 composer install
@@ -276,7 +312,9 @@ Then open `http://localhost:1025`.
 │   ├── index.php             # The form page
 │   ├── generate.php          # Handles POST -> builds & streams the PDF
 │   ├── auth/                  # Google sign-in start / callback / sign-out / delete account
-│   ├── api/profile.php        # Save / load / delete a signed-in user's saved details
+│   ├── preview.php            # Live preview: POST the form, get a PNG of page 1
+│   ├── auth/{signin,register,password}.php   # Email + password accounts
+│   ├── api/profile.php        # Save / load / delete a signed-in user's saved details and favorite designs
 │   ├── admin/                 # Admin portal (dashboard, designs, sign-in, ads, users, ...)
 │   ├── cookie-policy.php      # Cookie policy (plus privacy-policy.php, terms-and-conditions.php)
 │   ├── ads-txt.php            # Serves /ads.txt from the admin settings
@@ -287,12 +325,16 @@ Then open `http://localhost:1025`.
 │       ├── css/style.css        # All styling (responsive)
 │       ├── js/app.js             # Rich text, font upload, and field-toggle logic
 │       ├── icons/{ui,social,other}/*.svg  # The SVG icon collection (inlined by src/Icon.php)
+│       ├── icons/pdf/*.svg      # Line icons printed on the cover (see src/PdfIcons.php)
 │       └── fonts/Amiri-Regular.ttf  # Bundled font for the Bismillah glyph
 ├── src/                      # PHP application code (PSR-4: App\)
 │   ├── Config.php              # Central constants (paths, built-in fonts, limits)
 │   ├── FontManager.php          # Built-in + custom font registry, mPDF font config
 │   ├── Sanitize.php              # Input sanitization (text, color, rich text)
 │   ├── Icon.php                   # Inlines SVG icons from public/assets/icons/
+│   ├── PdfIcons.php               # Recolours and embeds the cover's icons for mPDF
+│   ├── EmailAuth.php              # Email + password register / sign-in, throttling
+│   ├── PreviewService.php         # PDF -> PNG (pdftoppm) for the live preview
 │   ├── Templates/                 # One class per cover design + TemplateRegistry
 │   ├── Db.php, Settings.php       # SQLite storage and admin-editable settings
 │   ├── Auth.php, GoogleOAuth.php  # Optional Google sign-in (OAuth code flow + PKCE)
@@ -307,6 +349,9 @@ Then open `http://localhost:1025`.
 
 ## Security & privacy notes
 
+- If you hide some designs in the admin panel, new designs added by an update
+  stay hidden until you switch them on under *Admin → Designs* (when every
+  design is active, new ones appear automatically).
 - Without signing in, no data from the form is written anywhere — PDFs are
   generated in memory and streamed straight to your browser. Signed-in users'
   saved details are whitelisted and sanitised before they are stored.
@@ -335,6 +380,17 @@ Then open `http://localhost:1025`.
   automatically. Follow the mPDF rules documented at the top of
   `BaseTemplate.php` (no Grid/Flex, one details table, fixed boxes for
   decoration).
+
+- **Add a design in the "Submitted to / by" format:** extend
+  `SubmissionFormatTemplate` (see `FormalFrameTemplate.php` for the smallest
+  example): implement `key()`, `label()`, `description()`, `decor()` and
+  `thumbDecor()`, and override the layout hooks (`sidePt()`, `headerAlign()`,
+  `ruledHeadings()`, ...) if needed. Register it in `TemplateRegistry::all()`.
+
+- **Add a cover icon:** drop a 24×24 SVG that uses `currentColor` and only
+  simple shapes (circles, rects, lines, polylines, paths without arcs) into
+  `public/assets/icons/pdf/`, add its name to `PdfIcons::NAMES`, and print it
+  with `self::icon($d, 'name')` inside a template.
 
 - **Colors on coloured areas:** designs that draw their own fills (bands,
   panels, tinted rows) must derive text colors from that fill with

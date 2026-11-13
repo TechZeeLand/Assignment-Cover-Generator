@@ -4,21 +4,33 @@ declare(strict_types=1);
 
 namespace App;
 
-/** Who (if anyone) is signed in with Google on this request. */
+/** Who (if anyone) is signed in on this request (Google or email + password). */
 final class Auth
 {
-    /** @var array{id:int,name:string,email:string}|null|false false = not looked up yet */
+    /** @var array{id:int,name:string,email:string,has_password:bool}|null|false false = not looked up yet */
     private static $user = false;
 
-    /** Sign-in is offered only when enabled in the admin panel AND Google keys are present. */
-    public static function signInAvailable(): bool
+    /** Google sign-in is offered only when enabled in the admin panel AND the keys are present. */
+    public static function googleAvailable(): bool
     {
         return Settings::bool('signin_enabled')
             && Settings::get('google_client_id') !== ''
             && Settings::get('google_client_secret') !== '';
     }
 
-    /** @return array{id:int,name:string,email:string}|null */
+    /** Email + password accounts, switched on/off in the admin panel. */
+    public static function emailAvailable(): bool
+    {
+        return Settings::bool('email_signin_enabled');
+    }
+
+    /** Is ANY way of signing in offered? */
+    public static function signInAvailable(): bool
+    {
+        return self::googleAvailable() || self::emailAvailable();
+    }
+
+    /** @return array{id:int,name:string,email:string,has_password:bool}|null */
     public static function user(): ?array
     {
         if (self::$user !== false) {

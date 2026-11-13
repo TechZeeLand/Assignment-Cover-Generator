@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Templates;
 
 use App\CoverData;
+use App\PdfIcons;
 
 /**
  * Shared building blocks for the non-classic designs.
@@ -48,6 +49,71 @@ abstract class BaseTemplate implements Template
         return htmlspecialchars_decode($value, ENT_QUOTES);
     }
 
+    /**
+     * Font sizes (pt) of the current render, recorded by commonCss() so icon
+     * helpers can size themselves relative to the text they sit next to.
+     *
+     * @var array<string, float>
+     */
+    protected static array $metrics = ['section' => 20.0, 'student' => 16.0, 'course' => 16.0, 'topic' => 16.0, 'submission' => 16.0, 'deptGap' => 14.0, 'scale' => 1.0];
+
+    /**
+     * Point size of one section heading ('student' | 'course' | 'group' |
+     * 'teacher'): the user's override (scaled with the rest of the page) or
+     * the design's own heading size.
+     */
+    protected static function headingPt(CoverData $d, string $key): float
+    {
+        $own = $d->headingSize($key);
+        return $own !== null ? self::fs($own, self::$metrics['scale']) : self::$metrics['section'];
+    }
+
+    /** CSS rules that apply the heading-size overrides to cells/paragraphs carrying the classes h-student, h-course, h-group, h-teacher. */
+    protected static function headingOverrideCss(CoverData $d, string $selectorPrefix = ''): string
+    {
+        $css = '';
+        foreach (['student', 'course', 'group', 'teacher'] as $key) {
+            if ($d->headingSize($key) !== null) {
+                $css .= $selectorPrefix . '.h-' . $key . ' { font-size: ' . self::headingPt($d, $key) . 'pt !important; }' . "\n";
+            }
+        }
+        return $css;
+    }
+
+    /** Wraps heading HTML in a sized <span> when the user set a size for it (for headings styled inline). */
+    protected static function headingHtml(CoverData $d, string $key, string $html): string
+    {
+        $style = self::headingStyle($d, $key);
+        return $style === '' ? $html : '<span style="' . trim($style) . '">' . $html . '</span>';
+    }
+
+    /** ' font-size:Xpt;' for a heading override, or '' (for headings styled inline). */
+    protected static function headingStyle(CoverData $d, string $key): string
+    {
+        return $d->headingSize($key) !== null ? ' font-size:' . self::headingPt($d, $key) . 'pt;' : '';
+    }
+
+    /**
+     * One of the PDF line icons (see PdfIcons), or '' when the "Icons"
+     * switch is off. $ratio scales it against $basePt (default: the section
+     * heading size). $color defaults to the primary colour; pass a readable
+     * colour yourself when the icon sits on a coloured fill.
+     */
+    protected static function icon(CoverData $d, string $name, ?string $color = null, string $metric = 'section', float $ratio = 0.8): string
+    {
+        if (!$d->showIcons) {
+            return '';
+        }
+        $base = self::$metrics[$metric] ?? 16.0;
+        return PdfIcons::img($name, $color ?? $d->primaryColor, $base * $ratio);
+    }
+
+    /** Like icon(), with an explicit size in points. */
+    protected static function iconPt(CoverData $d, string $name, string $color, float $pt): string
+    {
+        return $d->showIcons ? PdfIcons::img($name, $color, $pt) : '';
+    }
+
     protected static function fs(float $pt, float $scale): float
     {
         return max(self::MIN_FONT_PT, round($pt * $scale, 2));
@@ -65,11 +131,11 @@ abstract class BaseTemplate implements Template
             'bismillah'   => self::fs($d->bismillahFontSize, $fontScale),
             'versity'     => self::fs($d->versityFontSize, $fontScale),
             'dept'        => self::fs($d->deptFontSize, $fontScale),
-            'faculty'     => self::fs(max(10.0, $d->deptFontSize * 0.78), $fontScale),
+            'faculty'     => self::fs($d->facultyFontSize ?? max(10.0, $d->deptFontSize * 0.78), $fontScale),
             'student'     => self::fs($d->studentFontSize, $fontScale),
             'course'      => self::fs($d->courseFontSize, $fontScale),
             'topic'       => self::fs($d->topicFontSize, $fontScale),
-            'designation' => self::fs(16.0, $fontScale),
+            'designation' => self::fs($d->designationFontSize ?? 16.0, $fontScale),
             // Like the classic design, the submission line is never shrunk.
             'submission'  => $d->submissionFontSize,
         ];
@@ -243,7 +309,17 @@ abstract class BaseTemplate implements Template
     {
         $align  = ($o['align'] ?? 'center') === 'left' ? 'left' : 'center';
         $colors = is_array($o['colors'] ?? null) ? $o['colors'] : [];
-        $color  = static fn (string $k): string => isset($colors[$k]) ? ' style="color:' . self::e((string) $colors[$k]) . ';"' : '';
+        $color  = static function (string $k, string $extra = '') use ($colors): string {
+            $parts = [];
+            if (isset($colors[$k])) {
+                $parts[] = 'color:' . self::e((string) $colors[$k]) . ';';
+            }
+            if ($extra !== '') {
+                $parts[] = $extra;
+            }
+            return $parts === [] ? '' : ' style="' . implode(' ', $parts) . '"';
+        };
+        $hasFaculty = $d->showFaculty && $d->faculty !== '';
 
         $html = '';
         if ($d->showBismillah) {
@@ -255,11 +331,15 @@ abstract class BaseTemplate implements Template
         if ($d->showVersityName) {
             $html .= '<h1 class="versity-name"' . $color('versity') . '>' . $d->versityName . '</h1>';
         }
-        if ($d->showFaculty && $d->faculty !== '') {
-            $html .= '<p class="faculty-name"' . $color('faculty') . '>' . $d->faculty . '</p>';
-        }
+        // Department first, then faculty. The space that normally follows the
+        // department moves down to the faculty line when both are shown (the
+        // dept-tight / faculty-last classes are defined last, in document()).
+
         if ($d->showDeptName) {
-            $html .= '<p class="dept-name"' . $color('dept') . '>' . $d->deptName . '</p>';
+            $html .= '<p class="dept-name' . ($hasFaculty ? ' dept-tight' : '') . '"' . $color('dept') . '>' . $d->deptName . '</p>';
+        }
+        if ($hasFaculty) {
+            $html .= '<p class="faculty-name' . ($d->showDeptName ? ' faculty-last' : '') . '"' . $color('faculty') . '>' . $d->faculty . '</p>';
         }
         return '<div class="header-block" style="text-align:' . $align . ';">' . $html . '</div>';
     }
@@ -277,7 +357,7 @@ abstract class BaseTemplate implements Template
         if ($text === '') {
             return '';
         }
-        $size   = self::fs((float) ($o['size'] ?? 20.0), (float) ($o['scale'] ?? 1.0));
+        $size   = self::fs($d->coverTitleFontSize ?? (float) ($o['size'] ?? 20.0), (float) ($o['scale'] ?? 1.0));
         $color  = self::e((string) ($o['color'] ?? $d->primaryColor));
         $align  = (string) ($o['align'] ?? 'center');
         $align  = in_array($align, ['left', 'right', 'center'], true) ? $align : 'center';
@@ -314,7 +394,9 @@ abstract class BaseTemplate implements Template
         $out = '';
         foreach ($rows as [$label, $valueHtml]) {
             $out .= '<p style="margin:0; text-align:' . $align . '; font-family:' . $fPri . '; font-size:' . $ls . 'pt; color:' . $lc
-                . '; letter-spacing:1pt;' . ($upper ? ' text-transform:uppercase;' : '') . '">' . self::e($label) . '</p>'
+                . '; letter-spacing:1pt;' . ($upper ? ' text-transform:uppercase;' : '') . '">'
+                . ($label === 'Teacher' ? self::iconPt($d, 'teacher', (string) ($o['labelColor'] ?? $d->primaryColor), $ls * 1.3) : '')
+                . self::e($label) . '</p>'
                 . '<p style="margin:0 0 ' . $gap . 'pt 0; text-align:' . $align . '; font-family:' . $fSec . '; font-size:' . $vs . 'pt; color:' . $vc . ';">'
                 . $valueHtml . '</p>';
         }
@@ -337,6 +419,8 @@ abstract class BaseTemplate implements Template
      *                here, not in the stylesheet: inline styles always win.
      *   titles       array  custom (HTML) section headings by key:
      *                       student / course / group
+     *   iconColor    string hex colour for the heading icons (use when the
+     *                       heading sits on a coloured fill)
      *   alt          array  ['l' => css, 'c' => css, 'v' => css] added to the
      *                       cells of every second row when 'zebra' is on
      *
@@ -376,6 +460,8 @@ abstract class BaseTemplate implements Template
             ['course',  'Course Details',  'course'],
             ['group',   'Group Details',   'student'],
         ];
+        $sectionIcon = ['student' => 'student', 'course' => 'book', 'group' => 'group'];
+        $iconColor = isset($o['iconColor']) ? (string) $o['iconColor'] : null;
 
         $body = '';
         $emitted = false;
@@ -393,15 +479,19 @@ abstract class BaseTemplate implements Template
                     $padStyle = 'padding-top:' . $pad . 'pt;';
                 }
             }
-            $body .= '<tr><td colspan="' . $cols . '" class="section-h"'
-                . $style($padStyle, (string) ($o['hStyle'] ?? '')) . '>' . ($titles[$key] ?? $title . $suffix) . '</td></tr>';
+            $body .= '<tr><td colspan="' . $cols . '" class="section-h h-' . $key . '"'
+                . $style($padStyle, (string) ($o['hStyle'] ?? '')) . '>'
+                . self::iconPt($d, $sectionIcon[$key], $iconColor ?? $d->primaryColor, self::headingPt($d, $key) * 0.8)
+                . ($titles[$key] ?? $title . $suffix) . '</td></tr>';
 
             $i = 0;
             foreach ($rows[$key] as [$label, $valueHtml]) {
                 $isAlt = $zebra && $i % 2 === 1;
                 $cls = 'grp-' . $grp . ' lab-' . $grp;
                 $body .= '<tr><td class="label ' . $cls . '"'
-                    . $style((string) ($o['lStyle'] ?? ''), $isAlt ? (string) ($alt['l'] ?? '') : '') . '>' . self::e($label) . '</td>';
+                    . $style((string) ($o['lStyle'] ?? ''), $isAlt ? (string) ($alt['l'] ?? '') : '') . '>'
+                    . ($key === 'course' && $label === 'Teacher' ? self::icon($d, 'teacher', $iconColor, $grp, 0.85) : '')
+                    . self::e($label) . '</td>';
                 if ($colon) {
                     $body .= '<td class="colon grp-' . $grp . '"'
                         . $style((string) ($o['cStyle'] ?? ''), $isAlt ? (string) ($alt['c'] ?? '') : '') . '>:</td>';
@@ -436,6 +526,16 @@ abstract class BaseTemplate implements Template
         $fSec = self::e($d->secondaryFont);
 
         $sectionSize = self::fs($sectionPt, $fontScale);
+        self::$metrics = [
+            'section'    => $sectionSize,
+            'student'    => $z['student'],
+            'course'     => $z['course'],
+            'topic'      => $z['topic'],
+            'submission' => $z['submission'],
+            'deptGap'    => self::sp(14.0, $spacingScale),
+            'scale'      => $fontScale,
+        ];
+        $headingOverrides = self::headingOverrideCss($d, 'table.grid td');
         $bisGap      = self::sp(4.0, $spacingScale);
         $deptGap     = self::sp(14.0, $spacingScale);
         $desGap      = self::sp(2.0, $spacingScale);
@@ -508,6 +608,7 @@ table.grid td.designation {
     font-family: {$fSec};
     color: {$sec};
 }
+{$headingOverrides}
 
 CSS;
     }
@@ -515,6 +616,16 @@ CSS;
     /** Wraps CSS + body markup into a complete HTML document for mPDF. */
     protected static function document(string $css, string $body): string
     {
+        // The gap that follows the department name is each design's own
+        // (".dept-name { margin-bottom: Xpt !important; }"); when a faculty line
+        // follows the department, that gap moves to the faculty line. These two
+        // rules come last so they beat every design's own .dept-name rule.
+        $gap = self::$metrics['deptGap'];
+        if (preg_match_all('/\.dept-name\s*\{\s*margin-bottom:\s*([0-9.]+)pt\s*!important;\s*\}/', $css, $m) > 0) {
+            $gap = (float) end($m[1]);
+        }
+        $css .= "\n.dept-tight { margin-bottom: 2pt !important; }\n.faculty-last { margin-bottom: {$gap}pt !important; }\n";
+
         return "<!DOCTYPE html>\n<html>\n<head>\n<meta charset=\"UTF-8\" />\n<style>\n"
             . $css
             . "\n</style>\n</head>\n<body>\n"

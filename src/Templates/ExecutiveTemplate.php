@@ -129,12 +129,12 @@ CSS;
 
         $left = '';
         if (!empty($rows['student'])) {
-            $left .= $card('Student Details' . $suffix, self::stackedRows($d, $rows['student'], [
+            $left .= $card(self::headingHtml($d, 'student', self::iconPt($d, 'student', $headColor, 14.0) . 'Student Details' . $suffix), self::stackedRows($d, $rows['student'], [
                 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $itemGap,
             ]), $headColor);
         }
         if (!empty($rows['group'])) {
-            $left .= '<div style="margin-top:' . $itemGap . 'pt;">' . $card('Group Details' . $suffix, self::stackedRows($d, $rows['group'], [
+            $left .= '<div style="margin-top:' . $itemGap . 'pt;">' . $card(self::headingHtml($d, 'group', self::iconPt($d, 'group', $headColor, 14.0) . 'Group Details' . $suffix), self::stackedRows($d, $rows['group'], [
                 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $itemGap,
             ]), $headColor) . '</div>';
         }
@@ -145,7 +145,7 @@ CSS;
                 $inner .= '<p style="margin:0 0 ' . $itemGap . 'pt 0; font-size:' . $z['designation']
                     . 'pt; font-family:' . self::e($d->secondaryFont) . '; color:' . self::e($d->secondaryColor) . ';">' . $rows['designation'] . '</p>';
             }
-            $right = $card('Course Details' . $suffix, $inner, $headColor);
+            $right = $card(self::headingHtml($d, 'course', self::iconPt($d, 'book', $headColor, 14.0) . 'Course Details' . $suffix), $inner, $headColor);
         }
 
         $columns = '';
@@ -162,7 +162,7 @@ CSS;
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $gap . 'pt;"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
                 . '<td style="background-color:' . self::e($calloutBg) . '; border-left:5pt solid ' . $acc . '; padding:10pt 14pt 12pt 14pt;">'
-                . '<p class="topic-label" style="color:' . self::e($calloutLab) . ';">TOPIC</p>'
+                . '<p class="topic-label" style="color:' . self::e($calloutLab) . ';">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p>'
                 . '<p class="topic-text" style="color:' . self::e($calloutTxt) . '; font-size:' . $sTopic . 'pt;">' . $d->topicHtml . '</p>'
                 . '</td></tr></table></div>';
         }
@@ -180,7 +180,7 @@ CSS;
             $deco .= self::box($top - 12.0, $side, self::PAGE_W - 2 * $side, 0.8, $rule);
             $deco .= '<div style="position:fixed; left:' . $side . 'pt; top:' . round($top, 2) . 'pt; width:'
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;">'
-                . '<p class="foot-label" style="font-family:' . self::e($d->primaryFont) . '; color:' . $pri . ';">Submission Date</p>'
+                . '<p class="foot-label" style="font-family:' . self::e($d->primaryFont) . '; color:' . $pri . ';">' . self::iconPt($d, 'clock', $d->primaryColor, 10.0) . 'Submission Date</p>'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . self::e($d->secondaryFont) . '; color:' . $acc . ';">'
                 . self::e($d->submissionDateDisplay) . '</p></div>';
         }

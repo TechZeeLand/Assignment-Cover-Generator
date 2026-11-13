@@ -8,7 +8,7 @@ use App\Auth;
 use App\GoogleOAuth;
 use App\Http;
 
-if (!Auth::signInAvailable()) {
+if (!Auth::googleAvailable()) {
     Http::redirect('/');
 }
 Http::redirect(GoogleOAuth::startUrl((string) ($_GET['return'] ?? '/')));

@@ -37,7 +37,9 @@ $active = TemplateRegistry::active();
 $checks = [
     ['Admin password', true, 'Set.'],
     ['Site URL', Settings::get('site_url') !== '', 'Set it in Site settings so the Google redirect URI is exact.'],
-    ['Google sign-in', Auth::signInAvailable(), 'Add the client ID and secret under Sign-in (Google).'],
+    ['Email & password accounts', Auth::emailAvailable(), 'Switch them on under Sign-in.'],
+    ['Google sign-in', Auth::googleAvailable(), 'Add the client ID and secret under Sign-in (Google).'],
+    ['Live preview (poppler-utils)', \App\PreviewService::available(), 'Install poppler-utils (pdftoppm) on the server; the Docker image includes it.'],
     ['Ads', Ads::enabled(), 'Optional: add your AdSense publisher ID and turn ads on.'],
     ['ads.txt', Ads::adsTxt() !== '', 'Add a publisher ID (or paste your own lines).'],
     ['Cookie banner', !Ads::enabled() || !Ads::requiresConsent() || Settings::bool('cookie_banner_enabled'), 'Ads need the banner when consent is required.'],

@@ -400,8 +400,12 @@
     // ---------------------------------------------------------------
     // Saved details (signed-in users)
     // ---------------------------------------------------------------
-    const NOT_SAVED = new Set(['topic-html', 'submission-date']);
+    // Everything the form holds is saved - including the topic and the
+    // submission date - plus a few interface preferences (favorite designs,
+    // theme, expanded design picker, auto-save).
     const acg = window.__ACG__ || {};
+    let favorites = Array.isArray(window.__DESIGN_FAVORITES__) ? window.__DESIGN_FAVORITES__.slice() : [];
+    const hasLocalTheme = (() => { try { return !!localStorage.getItem('acg-theme'); } catch (e) { return false; } })();
 
     function syncRichTexts() {
         document.querySelectorAll('.richtext').forEach((wrap) => {
@@ -412,16 +416,19 @@
         syncRichTexts();
         const state = {};
         Array.from(form.elements).forEach((el) => {
-            if (!el.name || NOT_SAVED.has(el.name) || ['file', 'submit', 'button', 'reset'].includes(el.type)) return;
+            if (!el.name || ['file', 'submit', 'button', 'reset'].includes(el.type)) return;
             if (el.type === 'radio') { if (el.checked) state[el.name] = el.value; }
             else if (el.type === 'checkbox') state[el.name] = el.checked;
             else state[el.name] = el.value;
         });
+        state['favorite-designs'] = favorites.join(',');
+        state['ui-theme'] = document.documentElement.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
+        state['ui-design-expanded'] = !!(picker && picker.classList.contains('expanded'));
         return state;
     }
     function applyState(state) {
         Object.keys(state).forEach((name) => {
-            if (NOT_SAVED.has(name)) return;
+            if (name === 'favorite-designs' || name === 'ui-theme' || name === 'ui-design-expanded') return;
             const el = form.elements[name];
             const val = state[name];
             if (!el) return;
@@ -433,15 +440,24 @@
                 if (Array.from(el.options).some((o) => o.value === val)) el.value = val;
             } else if (name === 'logo-data') {
                 setLogo(typeof val === 'string' ? val : '');
-            } else if (name === 'course-title-html') {
+            } else if (name === 'course-title-html' || name === 'topic-html') {
                 el.value = String(val);
-                document.getElementById('course-title').innerHTML = String(val);
+                // 'course-title-html' -> #course-title, 'topic-html' -> #topic
+                const editable = document.getElementById(name.replace(/-html$/, ''));
+                if (editable) editable.innerHTML = String(val);
             } else if (typeof val === 'string') {
                 el.value = val;
             }
         });
         form.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.dispatchEvent(new Event('change', { bubbles: true })));
         form.querySelectorAll('input[type="color"]').forEach((c) => c.dispatchEvent(new Event('input', { bubbles: true })));
+        // Interface preferences. A theme picked on this device wins over the saved one.
+        if ((state['ui-theme'] === 'light' || state['ui-theme'] === 'dark') && !hasLocalTheme && window.acgSetTheme) {
+            window.acgSetTheme(state['ui-theme'], false);
+        }
+        if (state['ui-design-expanded'] === true && picker && expandBtn && !picker.classList.contains('expanded')) {
+            expandBtn.click();
+        }
         syncAccentColorState();
         syncDesignColors();
         scrollSelectedIntoView();
@@ -451,6 +467,56 @@
     if (window.__SAVED_PROFILE__ && typeof window.__SAVED_PROFILE__ === 'object') {
         applyState(window.__SAVED_PROFILE__);
     }
+
+    // ---------------------------------------------------------------
+    // Favorite designs: pinned to the front of the picker and saved
+    // straight away (no need to press "Save my details").
+    // ---------------------------------------------------------------
+    function placeDesignCard(card, isFav) {
+        if (!designGrid) return;
+        const cards = Array.from(designGrid.querySelectorAll('.design-card')).filter((c) => c !== card);
+        let before = null;
+        if (isFav) {
+            before = cards[0] || null;
+        } else {
+            const order = Number(card.dataset.order || 0);
+            before = cards.find((c) => !c.classList.contains('is-fav') && Number(c.dataset.order || 0) > order) || null;
+        }
+        designGrid.insertBefore(card, before);
+    }
+    function setFavoriteUi(btn, isFav) {
+        const card = btn.closest('.design-card');
+        const name = btn.dataset.label || 'design';
+        btn.setAttribute('aria-pressed', String(isFav));
+        btn.setAttribute('aria-label', (isFav ? 'Remove ' : 'Add ') + name + (isFav ? ' from' : ' to') + ' favorites');
+        btn.title = isFav ? 'Remove from favorites' : 'Add to favorites';
+        if (card) {
+            card.classList.toggle('is-fav', isFav);
+            placeDesignCard(card, isFav);
+        }
+    }
+    document.querySelectorAll('.fav-btn').forEach((btn) => {
+        btn.addEventListener('click', async (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const key = btn.dataset.design;
+            const wasFav = favorites.includes(key);
+            const before = favorites.slice();
+            favorites = wasFav ? favorites.filter((k) => k !== key) : [key].concat(favorites);
+            setFavoriteUi(btn, !wasFav);
+            scrollSelectedIntoView();
+            updateArrows();
+            try {
+                await profileCall({ action: 'favorites', designs: favorites });
+                say(wasFav ? 'Removed from favorites.' : 'Added to favorites \u2014 it now appears first.', true);
+                if (clearBtn) clearBtn.disabled = false;
+            } catch (err) {
+                favorites = before;
+                setFavoriteUi(btn, wasFav);
+                say(err.message, false);
+            }
+        });
+    });
 
     const saveBtn = document.getElementById('profile-save');
     const clearBtn = document.getElementById('profile-clear');
@@ -502,11 +568,49 @@
     }
 
     // ---------------------------------------------------------------
+    // Auto-save (signed-in users who switched it on): saves the whole form
+    // shortly after the last change, so nothing is lost if the tab closes.
+    // ---------------------------------------------------------------
+    const autoSave = document.getElementById('auto-save');
+    let autoTimer = null;
+    let autoBusy = false;
+    async function runAutoSave() {
+        if (autoBusy) { autoTimer = setTimeout(runAutoSave, 800); return; }
+        autoBusy = true;
+        try {
+            await profileCall({ action: 'save', data: collectState() });
+            say('Saved automatically.', true);
+            if (noteEl) noteEl.textContent = 'Loaded automatically below.';
+            if (clearBtn) clearBtn.disabled = false;
+        } catch (e) {
+            say('Auto-save failed: ' + e.message, false);
+        } finally {
+            autoBusy = false;
+        }
+    }
+    function scheduleAutoSave() {
+        if (!autoSave || !autoSave.checked || !saveBtn) return;
+        clearTimeout(autoTimer);
+        autoTimer = setTimeout(runAutoSave, 1500);
+    }
+    if (autoSave && saveBtn) {
+        form.addEventListener('input', scheduleAutoSave);
+        form.addEventListener('change', scheduleAutoSave);
+        ['theme-toggle', 'design-expand'].forEach((id) => {
+            const el = document.getElementById(id);
+            if (el) el.addEventListener('click', scheduleAutoSave);
+        });
+    }
+
+    // ---------------------------------------------------------------
     // Reset button: also clear the rich-text fields and disabled state,
     // since the browser's native "reset" only restores form controls.
     // ---------------------------------------------------------------
     form.addEventListener('reset', () => {
+        // Auto-save is a saved preference, not part of the cover: keep it through Reset.
+        const keepAutoSave = autoSave ? autoSave.checked : false;
         setTimeout(() => {
+            if (autoSave) autoSave.checked = keepAutoSave;
             document.querySelectorAll('.richtext').forEach((wrap) => {
                 const editable = wrap.querySelector('.richtext-input');
                 const hidden = document.getElementById(wrap.dataset.target);
