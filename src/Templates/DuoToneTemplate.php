@@ -100,13 +100,13 @@ CSS;
         // ---- left column ----
         $left = '';
         if (!empty($rows['student'])) {
-            $left .= '<p class="card-title" style="color:' . self::e($leftAccent) . ';">Student Details' . $suffix . '</p>'
+            $left .= '<p class="card-title" style="color:' . self::e($leftAccent) . ';">' . self::iconPt($d, 'student', $leftAccent, 14.0) . 'Student Details' . $suffix . '</p>'
                 . self::stackedRows($d, $rows['student'], [
                     'labelColor' => $leftLabel, 'valueColor' => $leftValue, 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $item,
                 ]);
         }
         if (!empty($rows['group'])) {
-            $left .= '<div style="margin-top:' . $gap . 'pt;"><p class="card-title" style="color:' . self::e($leftAccent) . ';">Group Details' . $suffix . '</p>'
+            $left .= '<div style="margin-top:' . $gap . 'pt;"><p class="card-title" style="color:' . self::e($leftAccent) . ';">' . self::iconPt($d, 'group', $leftAccent, 14.0) . 'Group Details' . $suffix . '</p>'
                 . self::stackedRows($d, $rows['group'], [
                     'labelColor' => $leftLabel, 'valueColor' => $leftValue, 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $item,
                 ]) . '</div>';
@@ -125,7 +125,7 @@ CSS;
             ]);
         $right .= '<div style="height:' . $gap . 'pt; font-size:1pt; line-height:1pt;">&nbsp;</div>';
         if (!empty($rows['course']) || $rows['designation'] !== '') {
-            $right .= '<p class="card-title" style="color:' . self::e($headColor) . ';">Course Details' . $suffix . '</p>'
+            $right .= '<p class="card-title" style="color:' . self::e($headColor) . ';">' . self::iconPt($d, 'book', $headColor, 14.0) . 'Course Details' . $suffix . '</p>'
                 . self::stackedRows($d, $rows['course'], ['labelSize' => 9.5, 'valueSize' => $sCour, 'gap' => $item]);
             if ($rows['designation'] !== '') {
                 $right .= '<p style="margin:0 0 ' . $item . 'pt 0; font-size:' . $z['designation'] . 'pt; font-family:'
@@ -134,7 +134,7 @@ CSS;
         }
         if ($d->showTopic) {
             $right .= '<div style="margin-top:' . $gap . 'pt; border-top:1pt solid ' . $rule . ';"><p class="topic-label" style="color:'
-                . self::e($headColor) . '; margin-top:10pt;">TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></div>';
+                . self::e($headColor) . '; margin-top:10pt;">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></div>';
         }
 
         $leftCell = '<td style="width:' . $leftW . 'pt; height:' . $cellH . 'pt; vertical-align:top; background-color:' . self::e($leftBg)

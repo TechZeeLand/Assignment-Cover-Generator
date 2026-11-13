@@ -206,7 +206,7 @@ CSS;
             $topic = '<div style="margin-top:' . $topicGap . 'pt;">'
                 . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="topic-cell"'
                 . ' style="background-color:' . $callout . '; border-left:7pt solid ' . $acc . ';">'
-                . '<p class="topic-label" style="color:' . self::e($calloutLabel) . ';">TOPIC</p>'
+                . '<p class="topic-label" style="color:' . self::e($calloutLabel) . ';">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p>'
                 . '<p class="topic-text" style="color:' . self::e($calloutText) . ';">' . $d->topicHtml . '</p>'
                 . '</td></tr></table></div>';
         }

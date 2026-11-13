@@ -183,7 +183,7 @@ CSS;
         $topic = '';
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $gap . 'pt;"><p class="topic-label" style="color:' . self::e(Color::ensureContrast($d->accentColor, '#ffffff', 3.0))
-                . ';">TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></div>';
+                . ';">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></div>';
         }
 
         $body = $deco . "\n" . $date . "\n" . '<div class="pad">' . $head . $details . $topic . '</div>';

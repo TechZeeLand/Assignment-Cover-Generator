@@ -24,6 +24,10 @@ final class TemplateRegistry
             $all = [];
             foreach ([
                 new ClassicTemplate(),
+                new FormalFrameTemplate(),
+                new FormalDoubleTemplate(),
+                new FormalBandTemplate(),
+                new FormalRuleTemplate(),
                 new ModernBandsTemplate(),
                 new DoubleFrameTemplate(),
                 new CornersTemplate(),

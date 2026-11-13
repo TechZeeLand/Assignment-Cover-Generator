@@ -30,6 +30,9 @@ final class CoverData
 
     public bool $showBorder;
 
+    /** Print small line icons before the section headings, teacher, topic and date. */
+    public bool $showIcons;
+
     public string $versityFont;
     public string $primaryFont;
     public string $secondaryFont;
@@ -125,6 +128,7 @@ final class CoverData
         $c->design = TemplateRegistry::resolveKey((string) ($data['design'] ?? ''));
 
         $c->showBorder = Sanitize::bool($data['border'] ?? null);
+        $c->showIcons  = Sanitize::bool($data['icons'] ?? null);
 
         $c->versityFont   = $fonts->resolveFontKey((string) ($data['versity-name-font'] ?? 'oldenglish'));
         $c->primaryFont   = $fonts->resolveFontKey((string) ($data['primary-font'] ?? 'alata'));

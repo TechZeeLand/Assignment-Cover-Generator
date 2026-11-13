@@ -39,7 +39,7 @@ $signIn = Auth::signInAvailable();
                 <tr>
                     <td><code>acg-theme</code></td>
                     <td>Browser storage (localStorage)</td>
-                    <td>Remembers whether you chose light or dark mode. Never sent to the server.</td>
+                    <td>Remembers whether you chose light or dark mode. Never sent to the server by this script (if you are signed in and save your details, your theme choice is stored with them).</td>
                     <td>Until you clear your browser data</td>
                 </tr>
                 <tr>

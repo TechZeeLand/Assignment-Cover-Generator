@@ -31,6 +31,10 @@ try {
         ProfileStore::delete($user['id']);
         Http::json(['ok' => true]);
     }
+    if (($body['action'] ?? '') === 'favorites') {
+        ProfileStore::saveFavorites($user['id'], $body['designs'] ?? []);
+        Http::json(['ok' => true]);
+    }
     if (($body['action'] ?? '') === 'save' && is_array($body['data'] ?? null)) {
         ProfileStore::save($user['id'], $body['data']);
         Http::json(['ok' => true]);

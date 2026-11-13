@@ -139,7 +139,7 @@ CSS;
             $date = '<div style="position:fixed; left:' . $side . 'pt; top:' . round($dateTop, 2) . 'pt; width:'
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt; text-align:center;">'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . $fSec . '; color:' . $acc . ';">'
-                . '<b>Submission Date:</b> ' . self::e($d->submissionDateDisplay) . '</p></div>';
+                . self::iconPt($d, 'clock', $d->accentColor, $d->submissionFontSize * 0.9) . '<b>Submission Date:</b> ' . self::e($d->submissionDateDisplay) . '</p></div>';
         }
 
         // ---- Header + divider ----
@@ -158,7 +158,7 @@ CSS;
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $topicGap . 'pt;">'
                 . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="topic-cell">'
-                . '<p class="topic-label">TOPIC</p>'
+                . '<p class="topic-label">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p>'
                 . '<p class="topic-text">' . $d->topicHtml . '</p>'
                 . '</td></tr></table></div>';
         }

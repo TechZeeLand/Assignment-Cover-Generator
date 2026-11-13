@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Templates;
 
 use App\CoverData;
+use App\PdfIcons;
 
 /**
  * Shared building blocks for the non-classic designs.
@@ -46,6 +47,35 @@ abstract class BaseTemplate implements Template
     protected static function unescape(string $value): string
     {
         return htmlspecialchars_decode($value, ENT_QUOTES);
+    }
+
+    /**
+     * Font sizes (pt) of the current render, recorded by commonCss() so icon
+     * helpers can size themselves relative to the text they sit next to.
+     *
+     * @var array<string, float>
+     */
+    protected static array $metrics = ['section' => 20.0, 'student' => 16.0, 'course' => 16.0, 'topic' => 16.0, 'submission' => 16.0];
+
+    /**
+     * One of the PDF line icons (see PdfIcons), or '' when the "Icons"
+     * switch is off. $ratio scales it against $basePt (default: the section
+     * heading size). $color defaults to the primary colour; pass a readable
+     * colour yourself when the icon sits on a coloured fill.
+     */
+    protected static function icon(CoverData $d, string $name, ?string $color = null, string $metric = 'section', float $ratio = 0.8): string
+    {
+        if (!$d->showIcons) {
+            return '';
+        }
+        $base = self::$metrics[$metric] ?? 16.0;
+        return PdfIcons::img($name, $color ?? $d->primaryColor, $base * $ratio);
+    }
+
+    /** Like icon(), with an explicit size in points. */
+    protected static function iconPt(CoverData $d, string $name, string $color, float $pt): string
+    {
+        return $d->showIcons ? PdfIcons::img($name, $color, $pt) : '';
     }
 
     protected static function fs(float $pt, float $scale): float
@@ -314,7 +344,9 @@ abstract class BaseTemplate implements Template
         $out = '';
         foreach ($rows as [$label, $valueHtml]) {
             $out .= '<p style="margin:0; text-align:' . $align . '; font-family:' . $fPri . '; font-size:' . $ls . 'pt; color:' . $lc
-                . '; letter-spacing:1pt;' . ($upper ? ' text-transform:uppercase;' : '') . '">' . self::e($label) . '</p>'
+                . '; letter-spacing:1pt;' . ($upper ? ' text-transform:uppercase;' : '') . '">'
+                . ($label === 'Teacher' ? self::iconPt($d, 'teacher', (string) ($o['labelColor'] ?? $d->primaryColor), $ls * 1.3) : '')
+                . self::e($label) . '</p>'
                 . '<p style="margin:0 0 ' . $gap . 'pt 0; text-align:' . $align . '; font-family:' . $fSec . '; font-size:' . $vs . 'pt; color:' . $vc . ';">'
                 . $valueHtml . '</p>';
         }
@@ -337,6 +369,8 @@ abstract class BaseTemplate implements Template
      *                here, not in the stylesheet: inline styles always win.
      *   titles       array  custom (HTML) section headings by key:
      *                       student / course / group
+     *   iconColor    string hex colour for the heading icons (use when the
+     *                       heading sits on a coloured fill)
      *   alt          array  ['l' => css, 'c' => css, 'v' => css] added to the
      *                       cells of every second row when 'zebra' is on
      *
@@ -376,6 +410,8 @@ abstract class BaseTemplate implements Template
             ['course',  'Course Details',  'course'],
             ['group',   'Group Details',   'student'],
         ];
+        $sectionIcon = ['student' => 'student', 'course' => 'book', 'group' => 'group'];
+        $iconColor = isset($o['iconColor']) ? (string) $o['iconColor'] : null;
 
         $body = '';
         $emitted = false;
@@ -394,14 +430,17 @@ abstract class BaseTemplate implements Template
                 }
             }
             $body .= '<tr><td colspan="' . $cols . '" class="section-h"'
-                . $style($padStyle, (string) ($o['hStyle'] ?? '')) . '>' . ($titles[$key] ?? $title . $suffix) . '</td></tr>';
+                . $style($padStyle, (string) ($o['hStyle'] ?? '')) . '>' . self::icon($d, $sectionIcon[$key], $iconColor)
+                . ($titles[$key] ?? $title . $suffix) . '</td></tr>';
 
             $i = 0;
             foreach ($rows[$key] as [$label, $valueHtml]) {
                 $isAlt = $zebra && $i % 2 === 1;
                 $cls = 'grp-' . $grp . ' lab-' . $grp;
                 $body .= '<tr><td class="label ' . $cls . '"'
-                    . $style((string) ($o['lStyle'] ?? ''), $isAlt ? (string) ($alt['l'] ?? '') : '') . '>' . self::e($label) . '</td>';
+                    . $style((string) ($o['lStyle'] ?? ''), $isAlt ? (string) ($alt['l'] ?? '') : '') . '>'
+                    . ($key === 'course' && $label === 'Teacher' ? self::icon($d, 'teacher', $iconColor, $grp, 0.85) : '')
+                    . self::e($label) . '</td>';
                 if ($colon) {
                     $body .= '<td class="colon grp-' . $grp . '"'
                         . $style((string) ($o['cStyle'] ?? ''), $isAlt ? (string) ($alt['c'] ?? '') : '') . '>:</td>';
@@ -436,6 +475,13 @@ abstract class BaseTemplate implements Template
         $fSec = self::e($d->secondaryFont);
 
         $sectionSize = self::fs($sectionPt, $fontScale);
+        self::$metrics = [
+            'section'    => $sectionSize,
+            'student'    => $z['student'],
+            'course'     => $z['course'],
+            'topic'      => $z['topic'],
+            'submission' => $z['submission'],
+        ];
         $bisGap      = self::sp(4.0, $spacingScale);
         $deptGap     = self::sp(14.0, $spacingScale);
         $desGap      = self::sp(2.0, $spacingScale);
