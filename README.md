@@ -33,30 +33,12 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 - **Icons switch** — below the border switch. Adds small line icons (student,
   teacher, book, group, topic, clock) before the section headings, the
   teacher row, the topic and the submission date, in your primary color.
-- **Live preview** — a real picture of page 1 of the PDF, refreshed a moment
-  after you stop typing. On wide screens it sits in a sticky pane beside the
-  form; on phones and tablets a floating **Preview** button opens it in a
-  modal (with a *Generate PDF* button). It is rendered from the very same PDF
-  as the download, so it can't disagree with it. It needs `poppler-utils`
-  (`pdftoppm`), which the Docker image installs; without it the preview is
-  simply not offered.
-- **Resizable everything** — besides the existing font sizes, every heading
-  (*Student Details* / *Submitted by*, *Course Details*, *Group Details*,
-  *Submitted to*), the faculty, the program line, the cover title and the
-  teacher designation have their own size box. Leave a box empty to keep the
-  chosen design's own size.
-- **Department before faculty** — the header now reads university →
-  department → faculty in every design, and both are sized independently.
 - **Favorite designs** — signed-in users can tap the heart on a design to pin
   it to the front of the picker; favorites are saved immediately.
 - **More cover fields** — university logo upload, faculty/school line, cover
   title (e.g. "Lab Report No. 3"), session, student email, and group
   assignments (group name + up to 12 members).
-- **Optional sign-in: email & password or Google** — email accounts need only
-  a name, email and password (no email verification and no email-based
-  password reset, because there is no SMTP; signed-in users can change their
-  password, and a Google sign-in with the same address takes over an
-  unverified password account and removes its password). Signed-in users can save **everything** on the
+- **Optional Google sign-in** — signed-in users can save **everything** on the
   form (including the topic, submission date and the Icons switch) plus their
   favorite designs, theme, picker state and an **Auto-save** option, and have
   it all pre-filled next time. Only a **name and email** are taken from
@@ -247,54 +229,32 @@ Then visit `http://<your-server-ip>:1025`.
 
 ## Admin portal, Google sign-in & ads
 
-### 1. Set the admin password (first run)
+Version 2 runs on the shared **TZL Kit** (same look, header, footer and admin as the other TechZeeLand services).
 
-Set the `ADMIN_PASSWORD` environment variable (Portainer: *Environment
-variables*; Compose: put `ADMIN_PASSWORD=...` in a `.env` file next to
-`docker-compose.yml`, see `.env.example`). Then open
-**`https://your-site/admin/`** and log in with it. The password is stored
-hashed on first login and can be changed under *Admin password*. If you lose
-it, set `ADMIN_PASSWORD` plus `ADMIN_PASSWORD_RESET=1`, restart, log in, then
-remove the reset flag. After 5 wrong attempts an IP is locked out for 15
-minutes. Put the site behind HTTPS (e.g. a reverse proxy) before using it on
-the internet.
+### 1. Admin sign-in (first run)
 
-### 2. Google sign-in
+The admin lives at `/admin`. On a fresh install a random password is printed once in `docker compose logs` (or set `TZL_ADMIN_PASSWORD` / `TZL_ADMIN_USER` first). An install upgraded from version 1 keeps its old admin password; the user name is `admin`. Lost it? Set `ADMIN_PASSWORD=<new>` and `ADMIN_PASSWORD_RESET=1`, restart, then remove both.
 
-Admin → **Sign-in (Google)** shows the exact *redirect URI* to register. In
-the [Google Cloud Console](https://console.cloud.google.com/apis/credentials)
-create an *OAuth client ID → Web application*, add that URI, paste the client
-ID and secret into the admin panel and save. Set **Site URL** (Site settings)
-to your public `https://…` address so the redirect URI is exact.
-Sign-in is optional for visitors and uses the default `openid email profile`
-scopes; only name and email are kept.
+### 2. Google sign-in (kept, optional for visitors)
+
+Admin > **Sign-in (Google)** shows the exact redirect URI to register in Google Cloud Console: `<public URL>/auth/google-callback.php`. That address is unchanged from version 1, so existing keys keep working. Set the public URL under Admin > Site & domains (or `TZL_BASE_URL`). After a domain move, add the new redirect URI in Google Cloud Console as well.
 
 ### 3. Ads
 
-Admin → **Ads & ads.txt**: enter your AdSense publisher ID
-(`ca-pub-…`), the numeric ad unit IDs for the top / middle / bottom
-placements and switch ads on. `ads.txt` is served at `/ads.txt` (generated
-from the publisher ID, or paste your own lines). By default ads load only
-after the visitor accepts the cookie banner. If you serve the EEA, UK or
-Switzerland, Google additionally requires a certified consent platform for
-personalised ads — enable Google's own consent message in AdSense.
+Admin > **Ads & ads.txt**: AdSense publisher ID, three placements, consent requirement and `ads.txt`. With consent required, ads load only after the visitor taps "Accept all". The Content-Security-Policy allows Google's ad hosts only while ads are switched on; extra hosts can be added under Admin > Security.
 
 ### Where data lives
 
-A single SQLite file and the PHP sessions live in `storage/data` (the
-`acg_data` volume): settings (including the Google client secret — keep this
-volume private and back it up), signed-in users (name + email), saved
-details, and anonymous daily counters. Fonts live in `acg_fonts`.
+Everything is in the `acg_data` volume (`/var/www/html/storage/data`): `app.sqlite` (users, saved details, counters), `site.json` (all settings), `admin.json`, statistics, uploads and logs. Custom fonts are in the `acg_fonts` volume. Use Admin > System & backup for a ZIP (it contains the Google client secret, keep it private).
 
 ## Local development (without Docker)
 
 Requirements: PHP 8.1+, Composer, and the `mbstring`, `gd`, `zip`, `curl`
-and `pdo_sqlite` PHP extensions. Install `poppler-utils` too
-(`sudo apt install poppler-utils`) if you want the live preview.
+and `pdo_sqlite` PHP extensions.
 
 ```bash
 composer install
-ADMIN_PASSWORD='dev-password-123' php -S localhost:1025 -t public
+TZL_ADMIN_PASSWORD='dev-password-123' TZL_DATA_DIR="$PWD/storage/data" php -S localhost:1025 -t public public/index.php
 ```
 
 (`/ads.txt` is routed by nginx in Docker; with the built-in server open
@@ -312,8 +272,6 @@ Then open `http://localhost:1025`.
 │   ├── index.php             # The form page
 │   ├── generate.php          # Handles POST -> builds & streams the PDF
 │   ├── auth/                  # Google sign-in start / callback / sign-out / delete account
-│   ├── preview.php            # Live preview: POST the form, get a PNG of page 1
-│   ├── auth/{signin,register,password}.php   # Email + password accounts
 │   ├── api/profile.php        # Save / load / delete a signed-in user's saved details and favorite designs
 │   ├── admin/                 # Admin portal (dashboard, designs, sign-in, ads, users, ...)
 │   ├── cookie-policy.php      # Cookie policy (plus privacy-policy.php, terms-and-conditions.php)
@@ -333,8 +291,6 @@ Then open `http://localhost:1025`.
 │   ├── Sanitize.php              # Input sanitization (text, color, rich text)
 │   ├── Icon.php                   # Inlines SVG icons from public/assets/icons/
 │   ├── PdfIcons.php               # Recolours and embeds the cover's icons for mPDF
-│   ├── EmailAuth.php              # Email + password register / sign-in, throttling
-│   ├── PreviewService.php         # PDF -> PNG (pdftoppm) for the live preview
 │   ├── Templates/                 # One class per cover design + TemplateRegistry
 │   ├── Db.php, Settings.php       # SQLite storage and admin-editable settings
 │   ├── Auth.php, GoogleOAuth.php  # Optional Google sign-in (OAuth code flow + PKCE)
@@ -398,7 +354,7 @@ Then open `http://localhost:1025`.
   **inline** styles — never rely on a stylesheet rule that might not match.
 
 - **Change the default colors/fonts:** edit the `value=""` attributes in the
-  Design section of `public/index.php`.
+  form markup in `views/generator.php`.
 - **Change a default font size:** edit both the matching `value=""` in
   `public/index.php` and the matching `DEFAULT_*_FONT_SIZE` constant in
   `src/CoverData.php` (they should stay in sync).

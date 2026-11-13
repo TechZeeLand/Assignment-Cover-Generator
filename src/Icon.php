@@ -5,71 +5,30 @@ declare(strict_types=1);
 namespace App;
 
 /**
- * Inline SVG icons from public/assets/icons/{ui,social,other}/NAME.svg.
- *
- * Icons are inlined (no extra requests) so they inherit the surrounding text
- * colour through `currentColor` and are sized from CSS (1em by default, see
- * the .icon rule in style.css / admin.css). Usage:
- *
- *     <?php echo \App\Icon::svg('palette'); ?>
- *     <?php echo \App\Icon::svg('chevron-down', ['class' => 'caret']); ?>
+ * Only the Google brand mark is inlined from this project (public/assets/icons/social/google.svg),
+ * because Google's sign-in guidelines require the exact multi-colour logo. Every other icon
+ * comes from the TechZeeLand Icons service via Tzl\Kit::icon().
  */
 final class Icon
 {
-    private const GROUPS = ['ui', 'social', 'other'];
-
-    /** @var array<string,string|null> raw file contents by icon name */
-    private static array $raw = [];
-
-    /**
-     * @param array{class?:string,title?:string} $options
-     */
-    public static function svg(string $name, array $options = []): string
+    public static function svg(string $name): string
     {
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $name)) {
+        if ($name !== 'google') {
+            return \Tzl\Kit::icon($name);
+        }
+        $path = dirname(__DIR__) . '/public/assets/icons/social/google.svg';
+        $svg = is_file($path) ? trim((string) file_get_contents($path)) : '';
+        if ($svg === '' || !str_starts_with($svg, '<svg')) {
             return '';
         }
-        $svg = self::load($name);
-        if ($svg === null) {
-            error_log('[assignment-cover-generator] missing icon: ' . $name);
-            return '';
-        }
-
-        $classes = 'icon icon-' . $name;
-        if (!empty($options['class']) && preg_match('/^[A-Za-z0-9_\- ]+$/', $options['class'])) {
-            $classes .= ' ' . $options['class'];
-        }
-        $title = isset($options['title']) ? trim($options['title']) : '';
-        $a11y = $title !== '' ? 'role="img" aria-label="' . Html::e($title) . '"' : 'aria-hidden="true"';
-
-        // Rewrite only the root <svg ...> tag: drop the fixed width/height
-        // then give it width/height of 1em (so it can never render huge, even if the
-        // stylesheet is cached or missing; CSS overrides these) plus class and
-        // accessibility attributes.
         return (string) preg_replace_callback(
             '/^<svg\b([^>]*)>/',
-            static function (array $m) use ($classes, $a11y): string {
+            static function (array $m): string {
                 $attrs = preg_replace('/\s(?:width|height|class)="[^"]*"/', '', $m[1]) ?? $m[1];
-                return '<svg class="' . $classes . '" ' . $a11y . ' focusable="false" width="1em" height="1em"' . $attrs . '>';
+                return '<svg class="icon icon-google" aria-hidden="true" focusable="false" width="18" height="18"' . $attrs . '>';
             },
             $svg,
             1
         );
-    }
-
-    private static function load(string $name): ?string
-    {
-        if (array_key_exists($name, self::$raw)) {
-            return self::$raw[$name];
-        }
-        $base = dirname(__DIR__) . '/public/assets/icons/';
-        foreach (self::GROUPS as $group) {
-            $path = $base . $group . '/' . $name . '.svg';
-            if (is_file($path)) {
-                $content = trim((string) file_get_contents($path));
-                return self::$raw[$name] = (str_starts_with($content, '<svg') ? $content : null);
-            }
-        }
-        return self::$raw[$name] = null;
     }
 }

@@ -1,31 +1,51 @@
 <?php
 declare(strict_types=1);
+
 require __DIR__ . '/../vendor/autoload.php';
+require __DIR__ . '/../src/Tzl/Kit.php';
 
-use App\Ads;
-use App\Auth;
-use App\FontManager;
-use App\Html;
-use App\ProfileStore;
 use App\Settings;
-use App\Templates\TemplateRegistry;
+use App\Web;
+use Tzl\Kit;
 
-$fontManager = new FontManager();
-$initialFonts = $fontManager->listFonts();
-$designs = TemplateRegistry::active();
-$defaultDesign = TemplateRegistry::defaultKey();
+Kit::boot([
+    'root'        => dirname(__DIR__),
+    'service'     => 'cover',
+    'version'     => '2.0.0',
+    'name'        => 'Assignment Cover Generator',
+    'short'       => 'Cover Generator',
+    'tagline'     => 'Print-ready assignment cover pages as PDF.',
+    'description' => 'Free, open-source assignment cover page generator. Design your cover, then export a print-ready PDF.',
+    'github'      => 'https://github.com/TechZeeLand/Assignment-Cover-Generator',
+    'css'         => ['assets/css/acg-global.css'],
+    'js'          => ['assets/js/acg-data.js', 'assets/js/consent.js'],
+    'nav'         => [['Create cover', '/', 'file-pdf'], ['About', '/about', 'info']],
+    'sitemap'     => ['/'],
+    'robots_disallow' => ['/generate', '/auth/', '/api/'],
+    'defaults'    => Settings::DEFAULTS,
+    'secret_keys' => ['google_client_secret'],
+    'admin_menu'  => [
+        'designs' => ['/admin/designs', 'Designs', 'palette'],
+        'signin'  => ['/admin/signin', 'Sign-in (Google)', 'key'],
+        'users'   => ['/admin/users', 'Users', 'users'],
+        'fonts'   => ['/admin/fonts', 'Custom fonts', 'font'],
+        'ads'     => ['/admin/ads', 'Ads & ads.txt', 'ad'],
+    ],
+    'dashboard'   => [Web::class, 'dashboard'],
+    'checks'      => [[Web::class, 'checks']],
+    'pages'       => App\Content::pages(),
+    'page_extra'  => App\Content::extra(),
+    'consent_banner' => 'We use a few essential cookies to keep you signed in and, only if you agree, Google AdSense cookies to show ads that help keep this free.',
+    'csp_extra'     => [Web::class, 'cspExtra'],
+    'header_extra'  => [Web::class, 'headerExtra'],
+    'before_footer' => [Web::class, 'beforeFooter'],
+    'foot_extra'    => [Web::class, 'footExtra'],
+]);
 
-// Signed-in visitors get their saved details pre-filled (see app.js).
-$acgUser = Auth::user();
-$profilesOn = Settings::bool('profiles_enabled');
-$savedProfile = null;
-if ($acgUser !== null && $profilesOn) {
-    try {
-        $savedProfile = ProfileStore::load($acgUser['id']);
-    } catch (\Throwable $e) {
-        error_log('[assignment-cover-generator] load profile: ' . $e->getMessage());
-    }
+if (Tzl\Core::run([Web::class, 'routes']) === false) {
+    return false;   // php -S: serve the static file
 }
+<<<<<<< ours
 $canSignIn = Auth::signInAvailable() && $profilesOn;
 
 // Favourite designs (signed-in users): shown first, with a filled heart.
@@ -607,3 +627,5 @@ window.__FONT_UPLOADS__ = <?php echo Settings::bool('font_uploads_enabled') ? 't
 <?php if ($previewOn): ?><script src="<?php echo \App\Html::asset('/assets/js/preview.js'); ?>"></script><?php endif; ?>
 </body>
 </html>
+=======
+>>>>>>> theirs

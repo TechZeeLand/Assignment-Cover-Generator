@@ -89,14 +89,6 @@ final class ProfileStore
         'course-font-size'            => 'num',
         'topic-font-size'             => 'num',
         'submission-font-size'        => 'num',
-        'faculty-font-size'           => 'num',
-        'program-font-size'           => 'num',
-        'cover-title-font-size'       => 'num',
-        'designation-font-size'       => 'num',
-        'student-heading-size'        => 'num',
-        'course-heading-size'         => 'num',
-        'group-heading-size'          => 'num',
-        'teacher-heading-size'        => 'num',
 
         // Interface preferences (not part of the cover itself).
         'favorite-designs'            => 'designs',

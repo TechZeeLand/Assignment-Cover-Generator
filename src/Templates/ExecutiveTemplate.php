@@ -129,12 +129,12 @@ CSS;
 
         $left = '';
         if (!empty($rows['student'])) {
-            $left .= $card(self::headingHtml($d, 'student', self::iconPt($d, 'student', $headColor, 14.0) . 'Student Details' . $suffix), self::stackedRows($d, $rows['student'], [
+            $left .= $card(self::iconPt($d, 'student', $headColor, 14.0) . 'Student Details' . $suffix, self::stackedRows($d, $rows['student'], [
                 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $itemGap,
             ]), $headColor);
         }
         if (!empty($rows['group'])) {
-            $left .= '<div style="margin-top:' . $itemGap . 'pt;">' . $card(self::headingHtml($d, 'group', self::iconPt($d, 'group', $headColor, 14.0) . 'Group Details' . $suffix), self::stackedRows($d, $rows['group'], [
+            $left .= '<div style="margin-top:' . $itemGap . 'pt;">' . $card(self::iconPt($d, 'group', $headColor, 14.0) . 'Group Details' . $suffix, self::stackedRows($d, $rows['group'], [
                 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $itemGap,
             ]), $headColor) . '</div>';
         }
@@ -145,7 +145,7 @@ CSS;
                 $inner .= '<p style="margin:0 0 ' . $itemGap . 'pt 0; font-size:' . $z['designation']
                     . 'pt; font-family:' . self::e($d->secondaryFont) . '; color:' . self::e($d->secondaryColor) . ';">' . $rows['designation'] . '</p>';
             }
-            $right = $card(self::headingHtml($d, 'course', self::iconPt($d, 'book', $headColor, 14.0) . 'Course Details' . $suffix), $inner, $headColor);
+            $right = $card(self::iconPt($d, 'book', $headColor, 14.0) . 'Course Details' . $suffix, $inner, $headColor);
         }
 
         $columns = '';

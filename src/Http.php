@@ -8,24 +8,13 @@ final class Http
 {
     public static function isHttps(): bool
     {
-        if (!empty($_SERVER['HTTPS']) && strtolower((string) $_SERVER['HTTPS']) !== 'off') {
-            return true;
-        }
-        return strtolower((string) ($_SERVER['HTTP_X_FORWARDED_PROTO'] ?? '')) === 'https';
+        return \Tzl\Kit::isHttps();
     }
 
-    /** Public base URL without a trailing slash (the admin "Site URL" wins). */
+    /** Public base URL without a trailing slash (Admin > Site & domains, then TZL_BASE_URL, then the request). */
     public static function baseUrl(): string
     {
-        $configured = rtrim(trim(Settings::get('site_url')), '/');
-        if ($configured !== '' && preg_match('#^https?://[^\s/]+$#i', $configured)) {
-            return $configured;
-        }
-        $host = (string) ($_SERVER['HTTP_HOST'] ?? 'localhost');
-        if (!preg_match('/^[A-Za-z0-9.\-]+(:\d{1,5})?$/', $host)) {
-            $host = 'localhost';
-        }
-        return (self::isHttps() ? 'https' : 'http') . '://' . $host;
+        return \Tzl\Kit::baseUrl();
     }
 
     /** Only same-site relative paths are allowed as a post-login destination. */
@@ -40,7 +29,7 @@ final class Http
 
     public static function clientIp(): string
     {
-        return (string) ($_SERVER['REMOTE_ADDR'] ?? '0.0.0.0');
+        return \Tzl\Kit::clientIp();
     }
 
     public static function redirect(string $location): never

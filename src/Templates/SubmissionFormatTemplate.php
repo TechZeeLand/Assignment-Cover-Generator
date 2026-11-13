@@ -157,15 +157,14 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
             . $this->programLine($d, $align);
     }
 
-    /** $key is the heading-size group: teacher | student | group | course. */
-    private function heading(CoverData $d, string $key, string $icon, string $text, string $suffix, float $gapTop): string
+    private function heading(CoverData $d, string $icon, string $text, string $suffix, float $gapTop): string
     {
-        $html = self::iconPt($d, $icon, $d->primaryColor, self::headingPt($d, $key) * 0.8) . $text . $suffix;
+        $html = self::icon($d, $icon) . $text . $suffix;
         if ($this->ruledHeadings()) {
             return '<div style="margin-top:' . $gapTop . 'pt;"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
-                . '<td class="sub-h-cell h-' . $key . '">' . $html . '</td></tr></table></div>';
+                . '<td class="sub-h-cell">' . $html . '</td></tr></table></div>';
         }
-        return '<div style="margin-top:' . $gapTop . 'pt;"><p class="sub-h h-' . $key . '">' . $html . '</p></div>';
+        return '<div style="margin-top:' . $gapTop . 'pt;"><p class="sub-h">' . $html . '</p></div>';
     }
 
     /**
@@ -207,16 +206,13 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
         $headGap  = self::sp(4.0, $spacingScale);
         $rowPad   = self::sp(2.0, $spacingScale);
         $indent   = self::sp(18.0, $spacingScale);
-        $program  = $d->programFontSize !== null
-            ? self::fs($d->programFontSize, $fontScale)
-            : max(10.0, round($z['dept'] * 0.85, 2));
+        $program  = max(10.0, round($z['dept'] * 0.85, 2));
         $dateSize = $z['submission'];
         $topicSize = $z['topic'];
         $section  = self::fs(self::SECTION_SIZE, $fontScale);
 
         // commonCss() first: it records the font sizes the icon helpers use.
         $css = self::commonCss($d, $fontScale, $spacingScale, self::SECTION_SIZE);
-        $headingOverrides = self::headingOverrideCss($d);
         $ruleBorder = $this->ruledHeadings() ? "border-bottom: 1.5pt solid {$acc}; padding-bottom: 4pt;" : '';
         $css .= <<<CSS
 div.pad { padding: {$top}pt {$side}pt 0 {$side}pt; }
@@ -252,7 +248,6 @@ table.grid td.label { white-space: nowrap; padding-right: 2pt; }
 .sub-line { margin: 0; font-size: {$dateSize}pt; font-family: {$fSec}; color: {$sec}; }
 .topic-line { margin: 0; font-size: {$topicSize}pt; font-family: {$fSec}; color: {$sec}; }
 .lab { font-family: {$fPri} !important; font-weight: bold; color: {$pri}; }
-{$headingOverrides}
 
 CSS;
 
@@ -274,23 +269,23 @@ CSS;
             $toLines .= '<p class="t-des">' . $this->bracketed($d->courseTeacherDesignation) . '</p>';
         }
         if ($toLines !== '') {
-            $parts[] = $this->heading($d, 'teacher', 'teacher', 'Submitted to', $suffix, $gap()) . '<div class="blk">' . $toLines . '</div>';
+            $parts[] = $this->heading($d, 'teacher', 'Submitted to', $suffix, $gap()) . '<div class="blk">' . $toLines . '</div>';
         }
 
         // ---- Submitted by (+ group) ----
         $byRows = $this->studentRows($d);
         if ($byRows !== []) {
-            $parts[] = $this->heading($d, 'student', 'student', 'Submitted by', $suffix, $gap()) . $this->rowsTable($byRows, 'student');
+            $parts[] = $this->heading($d, 'student', 'Submitted by', $suffix, $gap()) . $this->rowsTable($byRows, 'student');
         }
         $groupRows = self::collectRows($d)['group'];
         if ($groupRows !== []) {
-            $parts[] = $this->heading($d, 'group', 'group', 'Group Details', $suffix, $gap()) . $this->rowsTable($groupRows, 'student');
+            $parts[] = $this->heading($d, 'group', 'Group Details', $suffix, $gap()) . $this->rowsTable($groupRows, 'student');
         }
 
         // ---- Course details ----
         $courseRows = $this->courseRows($d);
         if ($courseRows !== []) {
-            $parts[] = $this->heading($d, 'course', 'book', 'Course Details', $suffix, $gap()) . $this->rowsTable($courseRows, 'course');
+            $parts[] = $this->heading($d, 'book', 'Course Details', $suffix, $gap()) . $this->rowsTable($courseRows, 'course');
         }
 
         // ---- Submission date (in the flow; may be left blank to write by hand) ----
