@@ -433,7 +433,10 @@ textarea.text-input { resize: vertical; min-height: 90px; font-family: inherit; 
     .layout.acg-layout:has(.has-preview) { max-width: 1240px; }
     .acg-split.has-preview { display: grid; grid-template-columns: minmax(0, 700px) minmax(360px, 1fr); gap: 22px; align-items: start; }
     .acg-split.has-preview .preview-pane {
-        position: sticky; top: 76px; max-height: calc(100vh - 96px); display: flex; flex-direction: column;
+        position: sticky; z-index: 20;
+        top: calc(var(--topbar-h, 65px) + 8px + var(--ribbon-h, 56px) + 12px);
+        max-height: calc(100vh - var(--topbar-h, 65px) - var(--ribbon-h, 56px) - 36px);
+        display: flex; flex-direction: column;
     }
     .preview-close, .preview-fab, .preview-backdrop { display: none !important; }
 }

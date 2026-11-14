@@ -117,7 +117,7 @@ final class MinimalTemplate extends BaseTemplate
         $css .= <<<CSS
 div.pad { padding: {$padTop}pt {$side}pt 0 {$side}pt; }
 .header-block { text-align: left; }
-.bismillah { text-align: right; margin-bottom: 8pt !important; }
+.bismillah { text-align: right; }
 .dept-name, .faculty-last { margin-bottom: {$deptGap}pt !important; }
 table.grid td.section-h {
     letter-spacing: 2pt;

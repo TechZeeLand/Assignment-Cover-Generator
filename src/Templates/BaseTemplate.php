@@ -26,6 +26,12 @@ use App\PdfIcons;
  */
 abstract class BaseTemplate implements Template
 {
+    /**
+     * Space under the Bismillah line, in pt, in every design (scaled with the
+     * spacing scale). Raise it for more room, lower it for less.
+     */
+    public const BISMILLAH_GAP_PT = 12.0;
+
     protected const PAGE_W = 595.2756;
     protected const PAGE_H = 841.8898;
     protected const MIN_FONT_PT = 6.0;
@@ -518,7 +524,7 @@ abstract class BaseTemplate implements Template
         // Written last by document(): .dept-tight must beat every design's own
         // `.dept-name, .faculty-last { margin-bottom: ... !important }` rule.
         self::$tailCss = ".dept-tight { margin-bottom: 1pt !important; }\n";
-        $bisGap      = self::sp(4.0, $spacingScale);
+        $bisGap      = self::sp(self::BISMILLAH_GAP_PT, $spacingScale);
         $deptGap     = self::sp(14.0, $spacingScale);
         $desGap      = self::sp(2.0, $spacingScale);
 

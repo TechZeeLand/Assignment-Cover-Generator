@@ -171,7 +171,7 @@ final class CoverBuilder
         $labelIndentPt    = max(4.0, $sscale(25.0));
         $topicIndentPt    = max(4.0, $sscale(25.0));
         $topicLabelColPt  = 10.0;
-        $bismillahGapPt   = $sscale(4.0);
+        $bismillahGapPt   = $sscale(\App\Templates\BaseTemplate::BISMILLAH_GAP_PT);   // same gap as every other design
         $designationGapPt = $sscale(2.0);
 
         $rows = [];

@@ -16,6 +16,15 @@
     var closeBtn = document.getElementById('preview-close');
     var wide = window.matchMedia('(min-width: 1100px)');
 
+    // Keep the sticky pane just below the sticky section ribbon, whatever its height.
+    var ribbon = document.querySelector('.section-nav');
+    function syncRibbon() {
+        if (ribbon) document.documentElement.style.setProperty('--ribbon-h', ribbon.offsetHeight + 'px');
+    }
+    syncRibbon();
+    window.addEventListener('resize', syncRibbon);
+    window.addEventListener('load', syncRibbon);
+
     var timer = null;
     var inflight = null;
     var seq = 0;
