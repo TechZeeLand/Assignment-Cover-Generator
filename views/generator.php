@@ -94,10 +94,11 @@ use Tzl\Kit;
                             <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
                                 <?php foreach ($designs as $design): ?>
  <label class="design-card" data-key="<?php echo Html::e($design->key()); ?>">
+                                    <input type="radio" name="design" value="<?php echo Html::e($design->key()); ?>"<?php echo $design->key() === $defaultDesign ? ' checked' : ''; ?>>
+
                                     <?php if ($acgUser !== null && $profilesOn): ?>
                                     <button type="button" class="fav-btn" data-fav="<?php echo Html::e($design->key()); ?>" aria-pressed="false" aria-label="Favorite <?php echo Html::e($design->label()); ?>" title="Favorite"><?php echo Kit::icon('heart', 'ico-off'); ?><?php echo Kit::icon('heart-filled', 'ico-on'); ?></button>
                                     <?php endif; ?>
-                                    <input type="radio" name="design" value="<?php echo Html::e($design->key()); ?>"<?php echo $design->key() === $defaultDesign ? ' checked' : ''; ?>>
                                     <span class="design-thumb"><?php echo $design->thumbnailSvg(); ?></span>
                                     <span class="design-name"><?php echo Html::e($design->label()); ?></span>
                                     <span class="design-badge"><?php echo Html::e($design->category()); ?></span>

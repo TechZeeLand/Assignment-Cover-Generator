@@ -141,7 +141,7 @@ CSS;
         $topic = '';
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $gap . 'pt;"><table class="grid" cellpadding="0" cellspacing="0"><tr>'
-                . '<td class="topic-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'topic', $d->primaryColor, $sTopic) . 'Topic</td>'
+                . '<td class="topic-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'topic', $labelTxt, $sTopic) . 'Topic</td>'
                 . '<td class="topic-v" style="' . $valueCss . ' color:' . self::e($d->secondaryColor) . '; font-family:' . self::e($d->secondaryFont) . ';">'
                 . $d->topicHtml . '</td></tr></table></div>';
         }
@@ -172,7 +172,7 @@ CSS;
             $top = self::PAGE_H - self::DATE_BOTTOM - $this->dateHeight($d);
             $date = '<div style="position:fixed; left:' . $side . 'pt; top:' . round($top, 2) . 'pt; width:'
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;"><table class="grid" cellpadding="0" cellspacing="0"><tr>'
-                . '<td class="date-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'clock', $d->primaryColor, $sTopic) . 'Submission Date</td>'
+                . '<td class="date-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'clock', $labelTxt, $sTopic) . 'Submission Date</td>'
                 . '<td class="date-v" style="' . $valueCss . ' color:' . $acc . '; font-family:' . self::e($d->secondaryFont) . ';">'
                 . self::e($d->submissionDateDisplay) . '</td></tr></table></div>';
         }

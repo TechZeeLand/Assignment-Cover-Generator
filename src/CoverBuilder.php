@@ -245,7 +245,7 @@ final class CoverBuilder
                     $d->courseHeadingSize
                 );
                 foreach ($rows['course'] as [$label, $valueHtml]) {
-                    $body .= self::row($label, $valueHtml, 'grp-course', $label === 'Teacher' ? self::icon($d, 'teacher', $courseFontSize * 0.85) : '');
+                    $body .= self::row($label, $valueHtml, 'grp-course', '');
                 }
                 if ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '') {
                     $body .= '<tr><td colspan="3" class="designation-cell">'
@@ -330,7 +330,7 @@ final class CoverBuilder
 
                 <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
                     <p style="font-size:' . $submissionFontSize . 'pt;">
-                        ' . self::icon($d, 'clock', $submissionFontSize * 0.85) . '<b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false) . '
+                        ' . ($d->showIcons ? PdfIcons::img('clock', $d->accentColor, $submissionFontSize * 0.85) : '') . '<b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false) . '
                     </p>
                 </div>';
             }

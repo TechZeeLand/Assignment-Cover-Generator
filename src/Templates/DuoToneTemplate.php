@@ -134,7 +134,7 @@ CSS;
         }
         if ($d->showTopic) {
             $right .= '<div style="margin-top:' . $gap . 'pt; border-top:1pt solid ' . $rule . ';"><p class="topic-label" style="color:'
-                . self::e($headColor) . '; margin-top:10pt;">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></div>';
+                . self::e($headColor) . '; margin-top:10pt;">' . self::iconPt($d, 'topic', $headColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></div>';
         }
 
         $leftCell = '<td style="width:' . $leftW . 'pt; height:' . $cellH . 'pt; vertical-align:top; background-color:' . self::e($leftBg)

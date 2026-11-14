@@ -6,7 +6,7 @@ namespace App;
 
 /**
  * The small line icons that can be printed on the cover ("Icons" switch):
- * student, teacher, clock, book, group and topic.
+ * student (a user), clock, book, group and topic.
  *
  * They are plain SVG files in public/assets/icons/pdf/ that use only the
  * primitives mPDF's SVG renderer is reliable with (circles, rects, lines,
@@ -22,7 +22,7 @@ namespace App;
  */
 final class PdfIcons
 {
-    public const NAMES = ['student', 'teacher', 'clock', 'book', 'group', 'topic'];
+    public const NAMES = ['student', 'clock', 'book', 'group', 'topic'];
 
     /** @var array<string,string> rendered <img> tags by cache key */
     private static array $cache = [];
@@ -40,6 +40,7 @@ final class PdfIcons
         $hex = Sanitize::color($hex, '#000000');
         $size = max(6.0, round($sizePt, 1));
         $key = $name . '|' . $hex . '|' . $size;
+        $base = $key;
         if (isset(self::$cache[$key])) {
             return self::$cache[$key];
         }
@@ -60,7 +61,7 @@ final class PdfIcons
             $src = 'data:image/svg+xml;base64,' . base64_encode($svg);
         }
 
-        return self::$cache[$key] = '<img src="' . htmlspecialchars($src, ENT_QUOTES, 'UTF-8') . '" style="width:' . $size
+        return self::$cache[$base] = self::$cache[$key] = '<img src="' . htmlspecialchars($src, ENT_QUOTES, 'UTF-8') . '" style="width:' . $size
             . 'pt; height:' . $size . 'pt; vertical-align:middle;" />&nbsp;';
     }
 

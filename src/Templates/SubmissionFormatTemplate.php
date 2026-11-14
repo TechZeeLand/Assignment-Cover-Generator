@@ -163,7 +163,8 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
         $key  = ['teacher' => 'teacher', 'student' => 'student', 'group' => 'group', 'book' => 'course'][$icon] ?? 'student';
         $size = self::headCss($d, $key);
         $pt   = $d->headingSize($key);
-        $html = ($pt !== null ? self::iconPt($d, $icon, $d->primaryColor, $pt * 0.8) : self::icon($d, $icon)) . $text . $suffix;
+        // "Submitted to" has no icon; the others match the heading colour.
+        $html = ($icon === 'teacher' ? '' : ($pt !== null ? self::iconPt($d, $icon, $d->primaryColor, $pt * 0.8) : self::icon($d, $icon))) . $text . $suffix;
         $inline = $size !== '' ? ' style="' . trim($size) . '"' : '';
         if ($this->ruledHeadings()) {
             return '<div style="margin-top:' . $gapTop . 'pt;"><table width="100%" cellpadding="0" cellspacing="0"><tr>'

@@ -69,14 +69,15 @@ final class Web
     /** Extra Content-Security-Policy hosts, only while ads are switched on. */
     public static function cspExtra(): array
     {
+        // blob: lets the live preview show the PNG it just fetched.
         if (!Ads::enabled()) {
-            return [];
+            return ['img-src' => 'blob:'];
         }
         return [
             'script-src'  => 'https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.googleadservices.com https://*.google.com https://*.gstatic.com https://*.doubleclick.net https://adservice.google.com',
             'frame-src'   => 'https://googleads.g.doubleclick.net https://tpc.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net',
             'connect-src' => 'https://pagead2.googlesyndication.com https://*.googlesyndication.com https://*.google.com https://*.doubleclick.net https://*.googleadservices.com',
-            'img-src'     => 'https:',
+            'img-src'     => 'blob: https:',
         ];
     }
 

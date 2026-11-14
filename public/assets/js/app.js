@@ -357,19 +357,27 @@
         logoRemove.hidden = !uri;
     }
     function encodeLogo(img) {
-        for (const max of [600, 450, 300]) {
+        // Keep PNG (and its transparency) at ever smaller sizes first.
+        const draw = (max) => {
             const scale = Math.min(1, max / Math.max(img.width, img.height));
             const canvas = document.createElement('canvas');
             canvas.width = Math.max(1, Math.round(img.width * scale));
             canvas.height = Math.max(1, Math.round(img.height * scale));
-            const ctx = canvas.getContext('2d');
-            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-            let uri = canvas.toDataURL('image/png');
+            canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+            return canvas;
+        };
+        for (const max of [600, 450, 300, 220, 160]) {
+            const uri = draw(max).toDataURL('image/png');
             if (uri.length <= 600000) return uri;
+        }
+        // Last resort only: JPEG has no transparency, so it gets a white background.
+        for (const max of [450, 300]) {
+            const canvas = draw(max);
+            const ctx = canvas.getContext('2d');
             ctx.globalCompositeOperation = 'destination-over';
             ctx.fillStyle = '#ffffff';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-            uri = canvas.toDataURL('image/jpeg', 0.85);
+            const uri = canvas.toDataURL('image/jpeg', 0.85);
             if (uri.length <= 600000) return uri;
         }
         return '';

@@ -161,7 +161,7 @@ CSS;
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $gap . 'pt;"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
                 . '<td style="border-left:4pt solid ' . self::e($d->secondaryColor) . '; padding:2pt 0 2pt 14pt;">'
-                . '<p class="topic-label">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></td></tr></table></div>';
+                . '<p class="topic-label">' . self::iconPt($d, 'topic', $d->primaryColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></td></tr></table></div>';
         }
 
         // ---- date chip ----

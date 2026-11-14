@@ -273,7 +273,9 @@ abstract class BaseTemplate implements Template
         }
         $img = '<img src="' . $d->logo['uri'] . '" style="width:' . $w . 'pt; height:' . $h . 'pt;" />';
 
-        if ($plate !== null) {
+        // $plate is accepted for compatibility but no longer drawn: transparent PNG
+        // logos must stay transparent instead of getting a white box.
+        if (false && $plate !== null) {
             $img = '<table align="' . $align . '" cellpadding="0" cellspacing="0"><tr>'
                 . '<td style="background-color:' . self::e($plate) . '; padding:6pt;">' . $img . '</td></tr></table>';
             return '<div style="margin-bottom:8pt;">' . $img . '</div>';
@@ -374,7 +376,6 @@ abstract class BaseTemplate implements Template
         foreach ($rows as [$label, $valueHtml]) {
             $out .= '<p style="margin:0; text-align:' . $align . '; font-family:' . $fPri . '; font-size:' . $ls . 'pt; color:' . $lc
                 . '; letter-spacing:1pt;' . ($upper ? ' text-transform:uppercase;' : '') . '">'
-                . ($label === 'Teacher' ? self::iconPt($d, 'teacher', (string) ($o['labelColor'] ?? $d->primaryColor), $ls * 1.3) : '')
                 . self::e($label) . '</p>'
                 . '<p style="margin:0 0 ' . $gap . 'pt 0; text-align:' . $align . '; font-family:' . $fSec . '; font-size:' . $vs . 'pt; color:' . $vc . ';">'
                 . $valueHtml . '</p>';
@@ -472,7 +473,6 @@ abstract class BaseTemplate implements Template
                 $cls = 'grp-' . $grp . ' lab-' . $grp;
                 $body .= '<tr><td class="label ' . $cls . '"'
                     . $style((string) ($o['lStyle'] ?? ''), $isAlt ? (string) ($alt['l'] ?? '') : '') . '>'
-                    . ($key === 'course' && $label === 'Teacher' ? self::icon($d, 'teacher', $iconColor, $grp, 0.85) : '')
                     . self::e($label) . '</td>';
                 if ($colon) {
                     $body .= '<td class="colon grp-' . $grp . '"'
