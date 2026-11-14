@@ -1,6 +1,6 @@
 ## Short version
 
-You can use the generator without an account. Nothing you type is stored unless you choose to sign in with Google and press **Save my details**. If you do, we keep your name, your email address and the details you saved, and nothing else from your Google account. You can delete all of it yourself at any time.
+You can use the generator without an account. Nothing you type is stored unless you choose to sign in (with Google, or with an email address and password) and save your details. If you do, we keep your name, your email address and the details you saved, and nothing else. You can delete all of it yourself at any time.
 
 ## If you do not sign in
 
@@ -8,12 +8,21 @@ You can use the generator without an account. Nothing you type is stored unless 
 - We keep anonymous daily totals (for example "42 PDFs were generated today, 5 with a given design"). They contain no IP addresses, names or other identifiers.
 - No cookies are set for visitors who do not sign in, and no analytics or tracking scripts of our own are used.
 
+## If you create an email account (optional)
+
+You can also register with a name, an email address and a password. No email is ever sent and the address is not verified, so use an address you control. We store the name and address you typed and a **salted hash** of your password (never the password itself), plus the same sign-in counters as below. To limit password guessing, failed attempts are counted per IP address and per email for 15 minutes and then forgotten. There is no email password reset: signing in with Google using the same address takes the account over and removes the old password, or you can ask the site owner for help.
+
 ## If you sign in with Google (optional)
 
 Signing in uses Google's OAuth. We ask Google only for your name and email address (the standard `openid`, `email` and `profile` scopes). We do not store your Google account ID, profile picture, contacts or any other Google data, and we never see your Google password.
 
 - **What we store:** your name, your email address, when you first and last signed in, how many times you signed in, and a session cookie that keeps you signed in (see the [Cookie Policy](/cookie-policy)).
-- **Saved details** (only if you press "Save my details"): the university, department, faculty, student, course, group and appearance settings from the form, and your logo if you added one. The topic and submission date are never saved.
+- **Saved details** (only if you press "Save my details" or switch on Auto-save): everything on the form, including university, department, faculty, student, course, group, topic, submission date, sizes and appearance settings (such as the Icons switch), and your logo if you added one. Because the topic and date are included, save them only if you are comfortable with that.
+- **Preferences:** your favorite designs (saved the moment you tap the heart), your light/dark theme, whether the design picker is expanded, and whether Auto-save is on.
+
+## Live preview
+
+The preview draws your cover on our server from the details currently in the form and sends back a picture. Nothing is stored or logged, and previews are not counted. To limit abuse we count preview requests per IP address for a few minutes and then forget them.
 - **Why:** to recognise you when you return and pre-fill the form. We do not sell your data, send marketing emails or use it for advertising.
 - **Your controls:** use "Delete saved" on the form to remove your saved details, or "Delete my account & data" in the account menu to remove everything we hold about you immediately. You can also ask us via the [contact page](/contact).
 

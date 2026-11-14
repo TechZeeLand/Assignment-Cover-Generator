@@ -400,7 +400,8 @@
     // ---------------------------------------------------------------
     // Saved details (signed-in users)
     // ---------------------------------------------------------------
-    const NOT_SAVED = new Set(['topic-html', 'submission-date']);
+    // Everything on the form is saved now, including the topic and the submission date.
+    const NOT_SAVED = new Set();
     const acg = window.__ACG__ || {};
 
     function syncRichTexts() {
@@ -433,9 +434,9 @@
                 if (Array.from(el.options).some((o) => o.value === val)) el.value = val;
             } else if (name === 'logo-data') {
                 setLogo(typeof val === 'string' ? val : '');
-            } else if (name === 'course-title-html') {
+            } else if (name === 'course-title-html' || name === 'topic-html') {
                 el.value = String(val);
-                document.getElementById('course-title').innerHTML = String(val);
+                document.getElementById(name === 'topic-html' ? 'topic' : 'course-title').innerHTML = String(val);
             } else if (typeof val === 'string') {
                 el.value = val;
             }
@@ -452,13 +453,132 @@
         applyState(window.__SAVED_PROFILE__);
     }
 
+    // ---------------------------------------------------------------
+    // Interface preferences saved with the profile: favourite designs
+    // (pinned first), theme, expanded picker, auto-save
+    // ---------------------------------------------------------------
+    const favInput = document.getElementById('favorite-designs');
+    const themeInput = document.getElementById('ui-theme');
+    const expandedInput = document.getElementById('ui-design-expanded');
+    const root = document.documentElement;
+    let favorites = favInput && favInput.value ? favInput.value.split(',').filter(Boolean) : [];
+
+    function setHidden(el, v) { if (el) el.value = v; }
+    function orderDesigns() {
+        if (!designGrid) return;
+        const cards = Array.from(designGrid.querySelectorAll('.design-card'));
+        if (!cards.length) return;
+        cards.forEach((c, i) => { if (!c.dataset.idx) c.dataset.idx = String(i); });
+        cards.sort((a, b) => {
+            const fa = favorites.indexOf(a.dataset.key), fb = favorites.indexOf(b.dataset.key);
+            if ((fa >= 0) !== (fb >= 0)) return fa >= 0 ? -1 : 1;
+            if (fa >= 0 && fb >= 0) return fa - fb;
+            return Number(a.dataset.idx) - Number(b.dataset.idx);
+        });
+        cards.forEach((c) => designGrid.appendChild(c));
+        cards.forEach((c) => {
+            const on = favorites.includes(c.dataset.key);
+            c.classList.toggle('is-fav', on);
+            const b = c.querySelector('.fav-btn');
+            if (b) {
+                b.setAttribute('aria-pressed', String(on));
+                b.title = on ? 'Remove from favorites' : 'Favorite';
+            }
+        });
+        setHidden(favInput, favorites.join(','));
+    }
+    function loadFavoritesFromState(state) {
+        const raw = state && typeof state['favorite-designs'] === 'string' ? state['favorite-designs'] : '';
+        favorites = raw.split(',').map((x) => x.trim()).filter(Boolean);
+    }
+    loadFavoritesFromState(window.__SAVED_PROFILE__);
+    orderDesigns();
+    scrollSelectedIntoView();
+
+    if (designGrid) {
+        designGrid.addEventListener('click', async (e) => {
+            const btn = e.target.closest('.fav-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            const key = btn.dataset.fav;
+            favorites = favorites.includes(key) ? favorites.filter((k) => k !== key) : [key].concat(favorites);
+            orderDesigns();
+            updateArrows();
+            try {
+                await profileCall({ action: 'favorites', designs: favorites.join(',') });
+                say(favorites.includes(key) ? 'Added to your favorites.' : 'Removed from your favorites.', true);
+            } catch (err) {
+                say(err.message, false);
+            }
+        });
+    }
+
+    // Theme: follow the kit's toggle, remember the choice in the profile.
+    function currentTheme() { return root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light'; }
+    const savedTheme = window.__SAVED_PROFILE__ && window.__SAVED_PROFILE__['ui-theme'];
+    if ((savedTheme === 'light' || savedTheme === 'dark') && savedTheme !== currentTheme()) {
+        root.setAttribute('data-theme', savedTheme);
+        try { localStorage.setItem('tzl-theme', savedTheme); } catch (e) { /* private mode */ }
+    }
+    setHidden(themeInput, acg.signedIn ? currentTheme() : '');
+    document.addEventListener('tzl:theme', (e) => {
+        setHidden(themeInput, acg.signedIn ? ((e.detail === 'dark') ? 'dark' : 'light') : '');
+        scheduleAutoSave();
+    });
+
+    // Expanded picker is remembered too.
+    if (picker && expandBtn) {
+        if (window.__SAVED_PROFILE__ && window.__SAVED_PROFILE__['ui-design-expanded'] && !picker.classList.contains('expanded')) {
+            expandBtn.click();
+        }
+        expandBtn.addEventListener('click', () => {
+            setHidden(expandedInput, picker.classList.contains('expanded') ? '1' : '');
+            scheduleAutoSave();
+        });
+    }
+
+    // Auto-save: everything, a moment after the last change.
+    const autoBox = document.getElementById('auto-save');
+    let autoTimer = null;
+    let autoBusy = false;
+    function scheduleAutoSave() {
+        if (!autoBox || !autoBox.checked || !acg.signedIn) return;
+        clearTimeout(autoTimer);
+        autoTimer = setTimeout(async () => {
+            if (autoBusy) { scheduleAutoSave(); return; }
+            autoBusy = true;
+            try {
+                await profileCall({ action: 'save', data: collectState() });
+                say('Auto-saved.', true);
+                if (clearBtn) clearBtn.disabled = false;
+            } catch (err) {
+                say(err.message, false);
+            } finally {
+                autoBusy = false;
+            }
+        }, 1800);
+    }
+    if (autoBox) {
+        autoBox.addEventListener('change', () => {
+            if (autoBox.checked) { scheduleAutoSave(); } else { clearTimeout(autoTimer); }
+            // Remember the switch itself, right away.
+            if (acg.signedIn) { profileCall({ action: 'save', data: collectState() }).catch(() => {}); }
+        });
+    }
+    form.addEventListener('input', scheduleAutoSave);
+    form.addEventListener('change', scheduleAutoSave);
+
+    // Hooks for preview.js
+    window.ACG = { form: form, syncRichTexts: syncRichTexts, collectState: collectState };
+
     const saveBtn = document.getElementById('profile-save');
     const clearBtn = document.getElementById('profile-clear');
     const statusEl = document.getElementById('profile-status');
     const noteEl = document.getElementById('profile-note');
 
     async function profileCall(payload) {
-        const res = await fetch('/api/profile.php', {
+        const res = await fetch('/api/profile', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': acg.csrf || '' },
             body: JSON.stringify(payload),
@@ -506,7 +626,15 @@
     // since the browser's native "reset" only restores form controls.
     // ---------------------------------------------------------------
     form.addEventListener('reset', () => {
+        // Interface preferences survive a reset of the cover itself.
+        const keepAuto = autoBox ? autoBox.checked : false;
+        const keepTheme = currentTheme();
+        const keepExpanded = picker ? picker.classList.contains('expanded') : false;
         setTimeout(() => {
+            if (autoBox) autoBox.checked = keepAuto;
+            setHidden(themeInput, acg.signedIn ? keepTheme : '');
+            setHidden(expandedInput, keepExpanded ? '1' : '');
+            orderDesigns();
             document.querySelectorAll('.richtext').forEach((wrap) => {
                 const editable = wrap.querySelector('.richtext-input');
                 const hidden = document.getElementById(wrap.dataset.target);

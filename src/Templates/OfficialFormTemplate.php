@@ -113,7 +113,7 @@ final class OfficialFormTemplate extends BaseTemplate
 
         $css = self::commonCss($d, $fontScale, $spacingScale, 13.0);
         $css .= <<<CSS
-.dept-name { margin-bottom: 0 !important; }
+.dept-name, .faculty-last { margin-bottom: 0 !important; }
 div.pad { padding: {$padTop}pt {$side}pt 0 {$side}pt; }
 table.grid td.section-h { font-size: {$sHead}pt; letter-spacing: 1pt; text-transform: uppercase; }
 table.grid td.grp-student { font-size: {$sStud}pt; }
@@ -132,6 +132,7 @@ CSS;
             'gapPt'      => $gap,
             'firstGapPt' => 0.0,
             'spacer'     => true,
+            'iconColor'  => $onAcc,
             'hStyle'     => 'background-color:' . $acc . '; color:' . $onAcc . '; border:1pt solid ' . $acc . '; padding:' . $cellV . 'pt 10pt;',
             'lStyle'     => $labelCss,
             'vStyle'     => $valueCss,
@@ -140,7 +141,7 @@ CSS;
         $topic = '';
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $gap . 'pt;"><table class="grid" cellpadding="0" cellspacing="0"><tr>'
-                . '<td class="topic-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">Topic</td>'
+                . '<td class="topic-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'topic', $d->primaryColor, $sTopic) . 'Topic</td>'
                 . '<td class="topic-v" style="' . $valueCss . ' color:' . self::e($d->secondaryColor) . '; font-family:' . self::e($d->secondaryFont) . ';">'
                 . $d->topicHtml . '</td></tr></table></div>';
         }
@@ -171,7 +172,7 @@ CSS;
             $top = self::PAGE_H - self::DATE_BOTTOM - $this->dateHeight($d);
             $date = '<div style="position:fixed; left:' . $side . 'pt; top:' . round($top, 2) . 'pt; width:'
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;"><table class="grid" cellpadding="0" cellspacing="0"><tr>'
-                . '<td class="date-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">Submission Date</td>'
+                . '<td class="date-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'clock', $d->primaryColor, $sTopic) . 'Submission Date</td>'
                 . '<td class="date-v" style="' . $valueCss . ' color:' . $acc . '; font-family:' . self::e($d->secondaryFont) . ';">'
                 . self::e($d->submissionDateDisplay) . '</td></tr></table></div>';
         }

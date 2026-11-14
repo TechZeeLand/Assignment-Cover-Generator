@@ -118,7 +118,7 @@ final class MinimalTemplate extends BaseTemplate
 div.pad { padding: {$padTop}pt {$side}pt 0 {$side}pt; }
 .header-block { text-align: left; }
 .bismillah { text-align: right; margin-bottom: 8pt !important; }
-.dept-name { margin-bottom: {$deptGap}pt !important; }
+.dept-name, .faculty-last { margin-bottom: {$deptGap}pt !important; }
 table.grid td.section-h {
     letter-spacing: 2pt;
     text-transform: uppercase;
@@ -169,7 +169,7 @@ CSS;
             $deco .= self::box($top - 12.0, $side, self::PAGE_W - 2 * $side, 0.8, Color::tint($d->primaryColor, 0.6));
             $deco .= '<div style="position:fixed; left:' . $side . 'pt; top:' . round($top, 2) . 'pt; width:'
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;">'
-                . '<p class="foot-label">Submission Date</p>'
+                . '<p class="foot-label">' . self::iconPt($d, 'clock', $d->primaryColor, 10.0) . 'Submission Date</p>'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . $fSec . '; color:' . $acc . ';">'
                 . self::e($d->submissionDateDisplay) . '</p></div>';
         }
@@ -184,7 +184,7 @@ CSS;
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $topicGap . 'pt;">'
                 . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td class="topic-cell">'
-                . '<p class="topic-label">Topic</p>'
+                . '<p class="topic-label">' . self::iconPt($d, 'topic', $d->primaryColor, 10.0) . 'Topic</p>'
                 . '<p class="topic-text">' . $d->topicHtml . '</p>'
                 . '</td></tr></table></div>';
         }

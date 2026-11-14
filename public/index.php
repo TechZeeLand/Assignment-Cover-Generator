@@ -26,7 +26,7 @@ Kit::boot([
     'secret_keys' => ['google_client_secret'],
     'admin_menu'  => [
         'designs' => ['/admin/designs', 'Designs', 'palette'],
-        'signin'  => ['/admin/signin', 'Sign-in (Google)', 'key'],
+        'signin'  => ['/admin/signin', 'Sign-in', 'key'],
         'users'   => ['/admin/users', 'Users', 'users'],
         'fonts'   => ['/admin/fonts', 'Custom fonts', 'font'],
         'ads'     => ['/admin/ads', 'Ads & ads.txt', 'ad'],

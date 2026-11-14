@@ -22,13 +22,14 @@ final class Settings
 
     /** Kit keys that hold true/false. */
     private const BOOLS = [
-        'signin_enabled', 'profiles_enabled', 'font_uploads_enabled', 'ads_enabled',
+        'signin_enabled', 'email_signin_enabled', 'profiles_enabled', 'font_uploads_enabled', 'ads_enabled',
         'ads_require_consent', 'announcement_on', 'cookie_banner_on',
     ];
 
     /** Defaults passed to Kit::boot(['defaults' => ...]). */
     public const DEFAULTS = [
         'signin_enabled'       => true,
+        'email_signin_enabled' => true,
         'profiles_enabled'     => true,
         'google_client_id'     => '',
         'google_client_secret' => '',

@@ -2,9 +2,10 @@
 declare(strict_types=1);
 /**
  * The generator form. Included by App\Web::home() inside the kit layout.
- * Expects: $designs, $defaultDesign, $acgUser, $profilesOn, $savedProfile, $canSignIn.
+ * Expects: $designs, $defaultDesign, $acgUser, $profilesOn, $savedProfile, $canSignIn, $previewOn.
  */
 use App\Ads;
+use App\Auth;
 use App\Html;
 use App\Icon;
 use App\Settings;
@@ -38,24 +39,38 @@ use Tzl\Kit;
             <button type="button" class="btn btn-secondary" id="profile-save"><?php echo Kit::icon('save'); ?> Save my details</button>
             <button type="button" class="btn btn-secondary" id="profile-clear"<?php echo $savedProfile ? '' : ' disabled'; ?>><?php echo Kit::icon('trash'); ?> Delete saved</button>
         </div>
+        <label class="row-check profile-auto">
+            <input type="checkbox" name="auto-save" id="auto-save" form="main-form">
+            <span class="switch" aria-hidden="true"></span>
+            <span class="row-check-label">Auto-save changes <small>(everything is saved a moment after you stop typing)</small></span>
+        </label>
         <p class="profile-status" id="profile-status" role="status"></p>
     </section>
     <?php elseif ($canSignIn): ?>
     <section class="panel profile-bar profile-bar-promo" aria-label="Sign in to save your details">
         <div class="profile-bar-text">
             <strong><?php echo Kit::icon('save'); ?> Tired of retyping the same details?</strong>
-            <span>Optionally sign in with Google and save your university and student details for next time. Signing in is never required.</span>
+            <span>Optionally sign in and save everything &mdash; details, topic, favorite designs and preferences &mdash; for next time. Signing in is never required.</span>
         </div>
         <div class="profile-bar-actions">
+            <?php if (Auth::emailAvailable()): ?>
+            <a class="btn btn-primary" href="/auth/signin?return=<?php echo rawurlencode('/'); ?>">Sign in with email</a>
+            <?php endif; ?>
+            <?php if (Auth::googleAvailable()): ?>
             <a class="google-btn google-btn-lg" href="/auth/google?return=<?php echo rawurlencode('/'); ?>">
                 <?php echo Icon::svg('google'); ?>
                 <span>Sign in with Google</span>
             </a>
+            <?php endif; ?>
         </div>
     </section>
     <?php endif; ?>
 
+    <div class="acg-split<?php echo $previewOn ? ' has-preview' : ''; ?>">
     <form id="main-form" class="panel form-panel" action="/generate" method="post" target="_blank" novalidate>
+        <input type="hidden" name="favorite-designs" id="favorite-designs" value="">
+        <input type="hidden" name="ui-theme" id="ui-theme" value="">
+        <input type="hidden" name="ui-design-expanded" id="ui-design-expanded" value="">
 
         <!-- ============ DESIGN ============ -->
         <section class="card" id="sec-design">
@@ -78,7 +93,10 @@ use Tzl\Kit;
                             <button type="button" class="design-arrow design-arrow-prev" id="design-prev" aria-label="Show previous designs" hidden><?php echo Kit::icon('chevron-left'); ?></button>
                             <div class="design-grid" id="design-grid" role="radiogroup" aria-labelledby="design-label">
                                 <?php foreach ($designs as $design): ?>
-                                <label class="design-card">
+ <label class="design-card" data-key="<?php echo Html::e($design->key()); ?>">
+                                    <?php if ($acgUser !== null && $profilesOn): ?>
+                                    <button type="button" class="fav-btn" data-fav="<?php echo Html::e($design->key()); ?>" aria-pressed="false" aria-label="Favorite <?php echo Html::e($design->label()); ?>" title="Favorite"><?php echo Kit::icon('heart', 'ico-off'); ?><?php echo Kit::icon('heart-filled', 'ico-on'); ?></button>
+                                    <?php endif; ?>
                                     <input type="radio" name="design" value="<?php echo Html::e($design->key()); ?>"<?php echo $design->key() === $defaultDesign ? ' checked' : ''; ?>>
                                     <span class="design-thumb"><?php echo $design->thumbnailSvg(); ?></span>
                                     <span class="design-name"><?php echo Html::e($design->label()); ?></span>
@@ -90,7 +108,7 @@ use Tzl\Kit;
                             <button type="button" class="design-arrow design-arrow-next" id="design-next" aria-label="Show more designs" hidden><?php echo Kit::icon('chevron-right'); ?></button>
                         </div>
                     </div>
-                    <p class="hint">The previews follow your colors below. Every design uses the same details you fill in.</p>
+                    <p class="hint">The previews follow your colors below. Every design uses the same details you fill in.<?php echo ($acgUser !== null && $profilesOn) ? ' Tap the heart on a design to pin it to the front for you.' : ''; ?></p>
                 </div>
             </div>
 
@@ -101,6 +119,15 @@ use Tzl\Kit;
                     <span class="row-check-label">Show decorative border</span>
                 </label>
                 <p class="hint">Frame, bands, panel or rules &mdash; whichever the chosen design uses.</p>
+            </div>
+
+            <div class="field-group">
+                <label class="row-check">
+                    <input type="checkbox" name="icons" id="icons">
+                    <span class="switch" aria-hidden="true"></span>
+                    <span class="row-check-label">Show icons</span>
+                </label>
+                <p class="hint">Small line icons before the headings, the teacher, the topic and the submission date.</p>
             </div>
 
             <div class="field-group">
@@ -281,6 +308,18 @@ use Tzl\Kit;
                         <label for="dept-font-size">Department name <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="dept-font-size" id="dept-font-size" value="22" min="8" max="60" step="1">
                     </div>
+                    <div class="field">
+                        <label for="faculty-font-size">Faculty / School <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="faculty-font-size" id="faculty-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field">
+                        <label for="program-font-size">Program line <small>(formal designs)</small> <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="program-font-size" id="program-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field">
+                        <label for="cover-title-font-size">Cover title <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="cover-title-font-size" id="cover-title-font-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
                 </div>
             </details>
         </section>
@@ -341,10 +380,14 @@ use Tzl\Kit;
 
             <details class="font-block">
                 <summary><?php echo Kit::icon('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
-                <div class="font-body">
+                <div class="font-body font-grid">
                     <div class="field field-narrow">
                         <label for="student-font-size">Font size for this section <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="student-font-size" id="student-font-size" value="28" min="8" max="60" step="1">
+                    </div>
+                    <div class="field">
+                        <label for="student-heading-size">Heading &ldquo;Student Details&rdquo; / &ldquo;Submitted by&rdquo; <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="student-heading-size" id="student-heading-size" min="8" max="60" step="1" placeholder="auto">
                     </div>
                 </div>
             </details>
@@ -386,10 +429,22 @@ use Tzl\Kit;
 
             <details class="font-block">
                 <summary><?php echo Kit::icon('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
-                <div class="font-body">
+                <div class="font-body font-grid">
                     <div class="field field-narrow">
                         <label for="course-font-size">Font size for this section <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="course-font-size" id="course-font-size" value="28" min="8" max="60" step="1">
+                    </div>
+                    <div class="field">
+                        <label for="course-heading-size">Heading &ldquo;Course Details&rdquo; <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="course-heading-size" id="course-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field">
+                        <label for="teacher-heading-size">Heading &ldquo;Submitted to&rdquo; <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="teacher-heading-size" id="teacher-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                    <div class="field">
+                        <label for="designation-font-size">Teacher designation <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="designation-font-size" id="designation-font-size" min="8" max="60" step="1" placeholder="auto">
                     </div>
                 </div>
             </details>
@@ -412,6 +467,16 @@ use Tzl\Kit;
                     <textarea class="text-input" name="group-members" id="group-members" rows="5" maxlength="900" placeholder="Azlan Aziz, ME601001&#10;Another Member, ME601002"></textarea>
                 </div>
             </div>
+
+            <details class="font-block">
+                <summary><?php echo Kit::icon('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
+                <div class="font-body font-grid">
+                    <div class="field">
+                        <label for="group-heading-size">Heading &ldquo;Group Details&rdquo; <small>(pt)</small></label>
+                        <input type="number" class="text-input input-narrow" name="group-heading-size" id="group-heading-size" min="8" max="60" step="1" placeholder="auto">
+                    </div>
+                </div>
+            </details>
         </section>
 
         <?php echo Ads::slot('middle'); ?>
@@ -460,4 +525,25 @@ use Tzl\Kit;
             <button type="submit" class="btn btn-primary btn-generate"><?php echo Kit::icon('hammer'); ?> Generate PDF</button>
         </div>
     </form>
+
+    <?php if ($previewOn): ?>
+    <aside class="preview-pane" id="preview-pane" aria-label="Live preview">
+        <div class="preview-head">
+            <strong><?php echo Kit::icon('eye'); ?> Live preview</strong>
+            <span class="preview-state" id="preview-state" role="status" aria-live="polite"></span>
+            <button type="button" class="chip-btn preview-close" id="preview-close" aria-label="Close preview"><?php echo Kit::icon('close'); ?> Close</button>
+        </div>
+        <div class="preview-frame" id="preview-frame">
+            <img id="preview-img" alt="Preview of page 1 of your cover" hidden>
+            <p class="preview-empty" id="preview-empty">The preview appears here as you edit.</p>
+        </div>
+        <p class="hint">Drawn from the same PDF you download, so what you see is what you get.</p>
+    </aside>
+    <?php endif; ?>
+    </div>
+
+    <?php if ($previewOn): ?>
+    <button type="button" class="preview-fab" id="preview-fab" aria-controls="preview-pane" aria-expanded="false"><?php echo Kit::icon('eye'); ?><span>Preview</span></button>
+    <div class="preview-backdrop" id="preview-backdrop"></div>
+    <?php endif; ?>
 </main>

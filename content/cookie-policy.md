@@ -4,7 +4,7 @@ Visitors who do not sign in receive no cookies from {site}. Cookies are used onl
 
 ## Essential cookies
 
-- **`acg_session`** keeps you signed in after "Sign in with Google" and protects forms against forgery. Created only when you sign in, lasts up to 30 days, removed when you sign out.
+- **`acg_session`** keeps you signed in (Google or email and password) and protects the sign-in, register and password forms against forgery. Created only when you sign in or open one of those forms, lasts up to 30 days, removed when you sign out.
 - **Administrator session** on the `/admin` area, for the site owner only.
 
 ## Local storage (stays in your browser)

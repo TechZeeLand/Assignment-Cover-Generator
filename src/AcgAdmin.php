@@ -87,7 +87,8 @@ final class AcgAdmin
         $h .= Ui::card('Settings', 'key',
             '<div class="switch-list">'
             . Ui::check('signin_enabled', 'Offer "Sign in with Google" to visitors', Settings::bool('signin_enabled'), 'optional for visitors; the button appears once both keys are filled in')
-            . Ui::check('profiles_enabled', 'Let signed-in users save their details', Settings::bool('profiles_enabled'), 'stores their form details (not the topic or date) on this server')
+            . Ui::check('email_signin_enabled', 'Offer email + password accounts', Settings::bool('email_signin_enabled'), 'no email is ever sent: addresses are not verified and there is no email password reset')
+            . Ui::check('profiles_enabled', 'Let signed-in users save their details', Settings::bool('profiles_enabled'), 'stores their whole form (including topic and date), favorite designs and preferences on this server')
             . '</div>'
             . Ui::text('Google OAuth client ID', 'google_client_id', Settings::get('google_client_id'), ['placeholder' => '1234567890-abc123.apps.googleusercontent.com', 'autocomplete' => 'off'])
             . Ui::text('Google OAuth client secret', 'google_client_secret', '', ['type' => 'password', 'autocomplete' => 'new-password',
@@ -108,7 +109,7 @@ final class AcgAdmin
             . '<p class="hint"><strong>After a domain move</strong> (for example to <code>techzeeland.com</code>), add the new redirect URI in Google Cloud Console too. Keep the old one until the move is finished.</p>'
             . '<p class="hint">Only the visitor\'s name and email are read from Google. The Google account ID and profile picture are not stored.</p>';
         $h .= Ui::card('How to get the keys', 'info', $steps);
-        Admin::page('Sign-in (Google)', 'signin', $h);
+        Admin::page('Sign-in', 'signin', $h);
     }
 
     public static function signinSave(): void
@@ -122,6 +123,7 @@ final class AcgAdmin
         }
         $values = [
             'signin_enabled'   => Admin::bool('signin_enabled'),
+            'email_signin_enabled' => Admin::bool('email_signin_enabled'),
             'profiles_enabled' => Admin::bool('profiles_enabled'),
             'google_client_id' => $clientId,
         ];

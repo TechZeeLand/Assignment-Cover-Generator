@@ -9,17 +9,20 @@ use App\Templates\TemplateRegistry;
 /**
  * "Save my details" for signed-in users. Every form field is whitelisted
  * and sanitised on the way in, so what is stored (and later pushed back
- * into the form) is always plain, bounded data. The topic and submission
- * date are deliberately not saved: they change with every assignment.
+ * into the form) is always plain, bounded data. Everything the form holds
+ * can be saved - including the topic and submission date - plus a few
+ * interface preferences: favourite designs, theme, whether the design
+ * picker is expanded, and auto-save.
  */
 final class ProfileStore
 {
     private const MAX_JSON_BYTES = 800000;
 
-    /** field name => type (bool | text:<max> | area:<max> | color | key | num | rich | logo) */
+    /** field name => type (bool | text:<max> | area:<max> | color | key | num | rich:<max> | logo | design | designs | date | theme) */
     private const FIELDS = [
         'design'                      => 'design',
         'border'                      => 'bool',
+        'icons'                       => 'bool',
         'use-title-border-color'      => 'bool',
         'primary-color'               => 'color',
         'secondary-color'             => 'color',
@@ -64,7 +67,7 @@ final class ProfileStore
         'show-course-code'            => 'bool',
         'course-code'                 => 'text:40',
         'show-course-title'           => 'bool',
-        'course-title-html'           => 'rich',
+        'course-title-html'           => 'rich:300',
         'show-course-teacher-name'    => 'bool',
         'course-teacher-name'         => 'text:80',
         'show-course-teacher-designation' => 'bool',
@@ -75,7 +78,9 @@ final class ProfileStore
         'group-members'               => 'area:900',
 
         'show-topic'                  => 'bool',
+        'topic-html'                  => 'rich:400',
         'show-submission-date'        => 'bool',
+        'submission-date'             => 'date',
 
         'bismillah-font-size'         => 'num',
         'versity-font-size'           => 'num',
@@ -84,6 +89,21 @@ final class ProfileStore
         'course-font-size'            => 'num',
         'topic-font-size'             => 'num',
         'submission-font-size'        => 'num',
+        // Optional size overrides (blank = the design's own size).
+        'faculty-font-size'           => 'num',
+        'program-font-size'           => 'num',
+        'cover-title-font-size'       => 'num',
+        'designation-font-size'       => 'num',
+        'student-heading-size'        => 'num',
+        'course-heading-size'         => 'num',
+        'group-heading-size'          => 'num',
+        'teacher-heading-size'        => 'num',
+
+        // Interface preferences (not part of the cover itself).
+        'favorite-designs'            => 'designs',
+        'ui-theme'                    => 'theme',
+        'ui-design-expanded'          => 'bool',
+        'auto-save'                   => 'bool',
     ];
 
     /**
@@ -124,7 +144,16 @@ final class ProfileStore
                     $out[$name] = is_numeric($v) ? (string) max(0, min(600, (float) $v)) : '';
                     break;
                 case 'rich':
-                    $out[$name] = Sanitize::richText($v, 300);
+                    $out[$name] = Sanitize::richText($v, $arg !== '' ? (int) $arg : 300);
+                    break;
+                case 'date':
+                    $out[$name] = self::isoDate($v);
+                    break;
+                case 'designs':
+                    $out[$name] = self::designList($v);
+                    break;
+                case 'theme':
+                    $out[$name] = ($v === 'light' || $v === 'dark') ? $v : '';
                     break;
                 case 'logo':
                     $logo = $v === '' ? null : Logo::fromDataUri($v);
@@ -149,6 +178,13 @@ final class ProfileStore
     public static function save(int $userId, array $input): void
     {
         $clean = self::sanitize($input);
+        if (!array_key_exists('favorite-designs', $input)) {
+            // An older page that doesn't know about favourites must not wipe them.
+            $existing = self::load($userId);
+            if ($existing !== null && isset($existing['favorite-designs'])) {
+                $clean['favorite-designs'] = $existing['favorite-designs'];
+            }
+        }
         $json = (string) json_encode($clean, JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
         if (strlen($json) > self::MAX_JSON_BYTES) {
             throw new \RuntimeException('Your saved details are too large.');
@@ -160,10 +196,50 @@ final class ProfileStore
         $stmt->execute([':u' => $userId, ':d' => $json, ':t' => time()]);
     }
 
+    /** Updates only the favourite designs (a comma-separated key list), keeping everything else saved. */
+    public static function saveFavorites(int $userId, mixed $designs): void
+    {
+        $profile = self::load($userId) ?? [];
+        $profile['favorite-designs'] = self::designList($designs);
+        self::save($userId, $profile);
+    }
+
     public static function delete(int $userId): void
     {
         $stmt = Db::pdo()->prepare('DELETE FROM profiles WHERE user_id = :u');
         $stmt->execute([':u' => $userId]);
+    }
+
+    /** YYYY-MM-DD for a real calendar date, otherwise ''. */
+    private static function isoDate(mixed $v): string
+    {
+        if (!is_string($v) || !preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', trim($v), $m)) {
+            return '';
+        }
+        return checkdate((int) $m[2], (int) $m[3], (int) $m[1]) ? trim($v) : '';
+    }
+
+    /**
+     * A list of design keys (array or comma-separated string) reduced to known
+     * designs, de-duplicated, order kept, returned as a comma-separated string.
+     */
+    private static function designList(mixed $v): string
+    {
+        if (is_string($v)) {
+            $v = explode(',', $v);
+        }
+        if (!is_array($v)) {
+            return '';
+        }
+        $known = TemplateRegistry::all();
+        $out = [];
+        foreach ($v as $key) {
+            $key = is_string($key) ? strtolower(trim($key)) : '';
+            if ($key !== '' && isset($known[$key]) && !in_array($key, $out, true)) {
+                $out[] = $key;
+            }
+        }
+        return implode(',', $out);
     }
 
     private static function plain(mixed $v, int $max, bool $multiline): string

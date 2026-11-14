@@ -160,6 +160,11 @@ final class CoverBuilder
         $submissionFontSize = $d->submissionFontSize;
         $sectionHeaderSize  = $fscale(self::SECTION_HEADER_FONT_SIZE);
 
+        // Optional size overrides (blank in the form = the design's own size).
+        $facultyPt     = $d->facultyFontSize ?? $fscale($d->deptFontSize * 0.78);
+        $coverTitlePt  = $d->coverTitleFontSize ?? $fscale(22.0);
+        $designationPt = $d->designationFontSize ?? $fscale(16.0);
+
         $deptGapPt        = $sscale(20.0);
         $sectionGapPt     = $sscale(40.0);
         $topicGapPt       = $sscale(20.0);
@@ -224,8 +229,9 @@ final class CoverBuilder
 
             if ($hasStudent) {
                 $body .= self::headerRow(
-                    'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
-                    $hasStudent ? $sectionGapPt : 0.0
+                    self::icon($d, 'student', ($d->studentHeadingSize ?? $sectionHeaderSize) * 0.8) . 'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    $hasStudent ? $sectionGapPt : 0.0,
+                    $d->studentHeadingSize
                 );
                 foreach ($rows['student'] as [$label, $valueHtml]) {
                     $body .= self::row($label, $valueHtml, 'grp-student');
@@ -234,11 +240,12 @@ final class CoverBuilder
 
             if ($hasCourse) {
                 $body .= self::headerRow(
-                    'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
-                    $hasStudent ? $sectionGapPt : 0.0
+                    self::icon($d, 'book', ($d->courseHeadingSize ?? $sectionHeaderSize) * 0.8) . 'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    $hasStudent ? $sectionGapPt : 0.0,
+                    $d->courseHeadingSize
                 );
                 foreach ($rows['course'] as [$label, $valueHtml]) {
-                    $body .= self::row($label, $valueHtml, 'grp-course');
+                    $body .= self::row($label, $valueHtml, 'grp-course', $label === 'Teacher' ? self::icon($d, 'teacher', $courseFontSize * 0.85) : '');
                 }
                 if ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '') {
                     $body .= '<tr><td colspan="3" class="designation-cell">'
@@ -249,8 +256,9 @@ final class CoverBuilder
 
             if (!empty($rows['group'])) {
                 $body .= self::headerRow(
-                    'Group Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
-                    $sectionGapPt
+                    self::icon($d, 'group', ($d->groupHeadingSize ?? $sectionHeaderSize) * 0.8) . 'Group Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    $sectionGapPt,
+                    $d->groupHeadingSize
                 );
                 foreach ($rows['group'] as [$label, $valueHtml]) {
                     $body .= self::row($label, $valueHtml, 'grp-student');
@@ -266,7 +274,7 @@ final class CoverBuilder
                 <div class="topic-wrap" style="margin-top:' . $topicGapPt . 'pt;">
                     <table class="topic-grid" cellpadding="0" cellspacing="0">
                         <tr>
-                            <td class="topic-label">Topic:</td>
+                            <td class="topic-label">' . self::icon($d, 'topic', $topicFontSize * 0.8) . 'Topic:</td>
                             <td class="topic-value">' . $d->topicHtml . '</td>
                         </tr>
                     </table>
@@ -290,8 +298,9 @@ final class CoverBuilder
             $logoBlock = '<div style="text-align:center; margin-bottom:8pt;"><img src="' . $d->logo['uri']
                 . '" style="width:' . $logoW . 'pt; height:' . $logoH . 'pt;" /></div>';
         }
-        $facultyBlock = ($d->showFaculty && $d->faculty !== '')
-            ? '<p class="faculty-name">' . htmlspecialchars($d->faculty, ENT_QUOTES, 'UTF-8', false) . '</p>'
+        $hasFaculty = $d->showFaculty && $d->faculty !== '';
+        $facultyBlock = $hasFaculty
+            ? '<p class="faculty-name faculty-last">' . htmlspecialchars($d->faculty, ENT_QUOTES, 'UTF-8', false) . '</p>'
             : '';
         $titleBlock = $d->showCoverTitle
             ? '<div style="margin-top:' . $sscale(10.0) . 'pt; margin-bottom:' . $sscale(10.0) . 'pt;"><p class="cover-title">'
@@ -303,7 +312,7 @@ final class CoverBuilder
             : '';
 
         $deptBlock = $d->showDeptName
-            ? '<p class="dept-name">' . htmlspecialchars($d->deptName, ENT_QUOTES, 'UTF-8', false) . '</p>'
+            ? '<p class="dept-name' . ($hasFaculty ? ' dept-tight' : '') . '">' . htmlspecialchars($d->deptName, ENT_QUOTES, 'UTF-8', false) . '</p>'
             : '';
 
         $submissionFixed = '';
@@ -321,7 +330,7 @@ final class CoverBuilder
 
                 <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
                     <p style="font-size:' . $submissionFontSize . 'pt;">
-                        <b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false) . '
+                        ' . self::icon($d, 'clock', $submissionFontSize * 0.85) . '<b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false) . '
                     </p>
                 </div>';
             }
@@ -361,13 +370,13 @@ final class CoverBuilder
         margin-bottom: {$deptGapPt}pt !important;
     }
     .faculty-name {
-        font-size: {$fscale($d->deptFontSize * 0.78)}pt;
+        font-size: {$facultyPt}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
         margin-bottom: {$designationGapPt}pt !important;
     }
     .cover-title {
-        font-size: {$fscale(22.0)}pt;
+        font-size: {$coverTitlePt}pt;
         font-weight: bold;
         font-family: {$font($d->primaryFont)} !important;
         color: {$col($d->accentColor)};
@@ -399,7 +408,7 @@ final class CoverBuilder
     .designation {
         margin: {$designationGapPt}pt 0 0 0;
         text-align: center;
-        font-size: {$fscale(16.0)}pt;
+        font-size: {$designationPt}pt;
         font-family: {$font($d->secondaryFont)};
         color: {$col($d->secondaryColor)};
     }
@@ -421,7 +430,6 @@ final class CoverBuilder
         vertical-align: top;
         padding: 0;
         width: auto;
-        padding-left: -30pt;
     }
     .submission {
         padding-bottom: 10pt;
@@ -439,6 +447,10 @@ final class CoverBuilder
         padding-left: {$margins['left']}pt;
         padding-right: {$margins['right']}pt;
     }
+    /* Last on purpose: the department sits tight above the faculty, and the
+       faculty carries the gap that used to sit under the department. */
+    .faculty-last { margin-bottom: {$deptGapPt}pt !important; }
+    .dept-tight { margin-bottom: 1pt !important; }
 </style>
 </head>
 <body>
@@ -449,8 +461,8 @@ final class CoverBuilder
             {$bismillah}
             {$logoBlock}
             {$versityBlock}
-            {$facultyBlock}
             {$deptBlock}
+            {$facultyBlock}
         </div>
         {$titleBlock}
         {$detailsTable}
@@ -490,15 +502,22 @@ HTML;
             . "\n    " . $bar($inset, $inset + $outerW - $t, $t, $outerH);        // right
     }
 
-    private static function headerRow(string $labelHtml, float $paddingTopPt): string
+    /** Inline icon for the classic design, or '' when icons are off. */
+    private static function icon(CoverData $d, string $name, float $pt): string
     {
-        $style = $paddingTopPt > 0 ? ' style="padding-top:' . $paddingTopPt . 'pt;"' : '';
+        return $d->showIcons ? PdfIcons::img($name, $d->primaryColor, $pt) : '';
+    }
+
+    private static function headerRow(string $labelHtml, float $paddingTopPt, ?float $sizePt = null): string
+    {
+        $css = ($paddingTopPt > 0 ? 'padding-top:' . $paddingTopPt . 'pt;' : '') . ($sizePt !== null ? ' font-size:' . $sizePt . 'pt;' : '');
+        $style = $css !== '' ? ' style="' . trim($css) . '"' : '';
         return '<tr><td colspan="3" class="section-h"' . $style . '>' . $labelHtml . '</td></tr>';
     }
 
-    private static function row(string $label, string $valueHtml, string $groupClass): string
+    private static function row(string $label, string $valueHtml, string $groupClass, string $iconHtml = ''): string
     {
-        $labelSafe = htmlspecialchars($label, ENT_QUOTES);
+        $labelSafe = $iconHtml . htmlspecialchars($label, ENT_QUOTES);
         return '
             <tr>
                 <td class="label ' . $groupClass . '">' . $labelSafe . '</td>

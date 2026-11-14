@@ -29,6 +29,7 @@ RUN apt-get update \
         supervisor \
         curl \
         ca-certificates \
+        poppler-utils \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/* /etc/nginx/sites-enabled/default
 

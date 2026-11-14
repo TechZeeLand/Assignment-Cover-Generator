@@ -104,7 +104,7 @@ final class HeroBlockTemplate extends BaseTemplate
 
         $css = self::commonCss($d, $fontScale, $spacingScale, 19.0);
         $css .= <<<CSS
-.dept-name { margin-bottom: 0 !important; }
+.dept-name, .faculty-last { margin-bottom: 0 !important; }
 div.pad { padding: {$padTop}pt {$side}pt 0 {$side}pt; }
 td.hero-cell { padding: {$heroTop}pt {$side}pt {$heroBot}pt {$side}pt; }
 table.grid td.section-h { font-size: {$sHead}pt; padding-bottom: 4pt; }
@@ -161,7 +161,7 @@ CSS;
         if ($d->showTopic) {
             $topic = '<div style="margin-top:' . $gap . 'pt;"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
                 . '<td style="border-left:4pt solid ' . self::e($d->secondaryColor) . '; padding:2pt 0 2pt 14pt;">'
-                . '<p class="topic-label">TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></td></tr></table></div>';
+                . '<p class="topic-label">' . self::iconPt($d, 'topic', $d->accentColor, 13.0) . 'TOPIC</p><p class="topic-text">' . $d->topicHtml . '</p></td></tr></table></div>';
         }
 
         // ---- date chip ----

@@ -43,6 +43,17 @@ final class Db
             last_login_at INTEGER NOT NULL,
             login_count   INTEGER NOT NULL DEFAULT 1
         )');
+        // Email + password accounts: password_hash is NULL for Google-only users;
+        // email_verified is 1 only when Google proved ownership of the address
+        // (there is no SMTP, so password sign-ups can never be verified).
+        $cols = array_column($pdo->query('PRAGMA table_info(users)')->fetchAll(), 'name');
+        if (!in_array('password_hash', $cols, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN password_hash TEXT');
+        }
+        if (!in_array('email_verified', $cols, true)) {
+            $pdo->exec('ALTER TABLE users ADD COLUMN email_verified INTEGER NOT NULL DEFAULT 0');
+            $pdo->exec('UPDATE users SET email_verified = 1'); // every account that existed before came from Google
+        }
         $pdo->exec('CREATE TABLE IF NOT EXISTS profiles (
             user_id    INTEGER PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
             data       TEXT NOT NULL,

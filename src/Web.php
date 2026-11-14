@@ -35,6 +35,17 @@ final class Web
         Router::get('#^/generate(?:\.php)?$#', static function (): void { Kit::redirect('/'); });
         Router::post('#^/generate(?:\.php)?$#', [self::class, 'generate']);
 
+        // Live preview: same POST as /generate, answers with a PNG of page 1.
+        Router::post('#^/preview$#', [self::class, 'preview']);
+
+        // Email + password accounts (Google sign-in stays below).
+        Router::get('#^/auth/signin$#', [AuthPages::class, 'signin']);
+        Router::post('#^/auth/signin$#', [AuthPages::class, 'signin']);
+        Router::get('#^/auth/register$#', [AuthPages::class, 'register']);
+        Router::post('#^/auth/register$#', [AuthPages::class, 'register']);
+        Router::get('#^/auth/password$#', [AuthPages::class, 'password']);
+        Router::post('#^/auth/password$#', [AuthPages::class, 'password']);
+
         Router::get('#^/fonts\.php$#', [self::class, 'fontsList']);
         Router::get('#^/font_file\.php$#', [self::class, 'fontFile']);
         Router::post('#^/upload_font\.php$#', [self::class, 'uploadFont']);
@@ -82,9 +93,13 @@ final class Web
                 . Html::e($user['name']) . '</p><p class="user-pop-email">' . Html::e($user['email']) . '</p>'
                 . '<form method="post" action="/auth/logout">' . Csrf::field() . '<input type="hidden" name="return" value="' . Html::e($ret) . '">'
                 . '<button type="submit" class="user-signout">' . Kit::icon('logout') . ' Sign out</button></form>'
+                . '<a class="user-signout" href="/auth/password">' . ($user['has_password'] ? 'Change password' : 'Set a password') . '</a>'
                 . '<form method="post" action="/auth/delete-account">' . Csrf::field()
                 . '<button type="submit" class="user-delete" data-confirm="Delete your account and all saved details? This cannot be undone.">Delete my account &amp; data</button></form>'
                 . '</div></details>';
+        }
+        if (Auth::emailAvailable()) {
+            return '<a class="google-btn" href="/auth/signin?return=' . rawurlencode($ret) . '"><span>Sign in</span></a>';
         }
         if (Auth::signInAvailable()) {
             return '<a class="google-btn" href="/auth/google?return=' . rawurlencode($ret) . '">' . Icon::svg('google') . '<span>Sign in</span></a>';
@@ -115,6 +130,7 @@ final class Web
             'adsEnabled'   => Ads::enabled(),
             'adsConsent'   => Ads::requiresConsent(),
             'adsClient'    => Ads::publisherId(),
+            'preview'      => PreviewService::available(),
         ];
     }
 
@@ -138,6 +154,7 @@ final class Web
             }
         }
         $canSignIn = Auth::signInAvailable() && $profilesOn;
+        $previewOn = PreviewService::available();
 
         self::$data = [
             'fonts'       => $initialFonts,
@@ -147,7 +164,36 @@ final class Web
 
         Layout::head('', '', ['css' => ['assets/css/acg.css']]);
         require dirname(__DIR__) . '/views/generator.php';
-        Layout::foot(['js' => ['assets/js/app.js']]);
+        Layout::foot(['js' => ['assets/js/app.js', 'assets/js/preview.js']]);
+    }
+
+    /** Live preview: PNG of page 1 of the PDF that /generate would produce (nothing stored or counted). */
+    public static function preview(): void
+    {
+        if (!PreviewService::available()) {
+            Http::json(['ok' => false, 'error' => 'unavailable'], 501);
+        }
+        if (PreviewService::throttled()) {
+            header('Retry-After: 10');
+            Http::json(['ok' => false, 'error' => 'Too many preview requests. Please slow down for a moment.'], 429);
+        }
+        try {
+            $fonts = new FontManager();
+            $data = CoverData::fromRequest($_POST, $fonts);
+            $pdf = PdfService::render($data, $fonts)->Output('', \Mpdf\Output\Destination::STRING_RETURN);
+            $png = PreviewService::pngFromPdf((string) $pdf);
+            if ($png === null) {
+                Http::json(['ok' => false, 'error' => 'Could not draw the preview.'], 500);
+            }
+            header('Content-Type: image/png');
+            header('Cache-Control: no-store');
+            header('Content-Length: ' . strlen($png));
+            echo $png;
+        } catch (\Throwable $e) {
+            error_log('[assignment-cover-generator] preview: ' . $e->getMessage());
+            Http::json(['ok' => false, 'error' => 'Could not draw the preview.'], 500);
+        }
+        exit;
     }
 
     public static function generate(): void
@@ -276,6 +322,10 @@ final class Web
             }
             if (($body['action'] ?? '') === 'delete') {
                 ProfileStore::delete($user['id']);
+                Http::json(['ok' => true]);
+            }
+            if (($body['action'] ?? '') === 'favorites') {
+                ProfileStore::saveFavorites($user['id'], $body['designs'] ?? '');
                 Http::json(['ok' => true]);
             }
             if (($body['action'] ?? '') === 'save' && is_array($body['data'] ?? null)) {

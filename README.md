@@ -13,19 +13,30 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 
 ## Features
 
-- **Twelve cover designs** — a horizontally scrollable picker (with an
+- **Sixteen cover designs** — a horizontally scrollable picker (with an
   **Expand all** button) and live previews that follow your colors.
   *Classic* (the original) · *Professional:* Double Frame, Corner Brackets,
   Official Form, Heritage, Executive · *Modern:* Modern Bands, Side Panel,
-  Minimal Lines, Hero Block, Mosaic, Duo Tone. All use the same form data,
+  Minimal Lines, Hero Block, Mosaic, Duo Tone · *Formal* ("Submitted to / Submitted by / Course Details" layout with the Program line in the header): Formal Frame, Double Line, Header Band, Side Rule. All use the same form data,
   fonts, colors and toggles. Text on a design's own colored areas is always
   given a readable color derived from that background.
 - **More cover fields** — university logo upload, faculty/school line, cover
   title (e.g. "Lab Report No. 3"), session, student email, and group
   assignments (group name + up to 12 members).
-- **Optional Google sign-in** — signed-in users can save their details and
-  have them pre-filled next time. Only a **name and email** are taken from
-  Google; no passwords, no email verification, no SMTP.
+- **Optional sign-in** — with Google (only a **name and email** are taken) or
+  with an **email + password** account (no verification email and no email
+  reset, because there is no SMTP). Signed-in users save the whole form,
+  favorite designs (hearts, pinned first), theme, expanded picker and an
+  Auto-save option.
+- **Icons switch** — small line icons before headings, teacher, topic and
+  date, drawn into the PDF.
+- **Live preview** — page 1 of the real PDF rendered with poppler's
+  `pdftoppm` (installed in the image): a sticky pane on desktop, a floating
+  Preview button + modal on phones. Hidden automatically if poppler is missing.
+- **Resizable everything** — every heading (Student Details/Submitted by,
+  Course Details, Submitted to, Group Details), faculty, program line, cover
+  title and teacher designation can be sized; blank keeps the design default.
+  The department comes before the faculty and each is sized independently.
 - **Admin portal** at `/admin/` — turn designs on/off, see user and PDF
   statistics, configure Google OAuth and AdSense (publisher ID, ad units,
   `ads.txt`), manage users and shared fonts, and edit site settings.
@@ -220,7 +231,7 @@ The admin lives at `/admin`. On a fresh install a random password is printed onc
 
 ### 2. Google sign-in (kept, optional for visitors)
 
-Admin > **Sign-in (Google)** shows the exact redirect URI to register in Google Cloud Console: `<public URL>/auth/google-callback.php`. That address is unchanged from version 1, so existing keys keep working. Set the public URL under Admin > Site & domains (or `TZL_BASE_URL`). After a domain move, add the new redirect URI in Google Cloud Console as well.
+Admin > **Sign-in** (also has the email + password switch) shows the exact redirect URI to register in Google Cloud Console: `<public URL>/auth/google-callback.php`. That address is unchanged from version 1, so existing keys keep working. Set the public URL under Admin > Site & domains (or `TZL_BASE_URL`). After a domain move, add the new redirect URI in Google Cloud Console as well.
 
 ### 3. Ads
 
