@@ -202,6 +202,12 @@ abstract class BaseTemplate implements Template
         return $lines;
     }
 
+    /** The submission date as safe HTML, in its own font when one was chosen. */
+    protected static function dateHtml(CoverData $d): string
+    {
+        return $d->fv('submission-date', self::e($d->submissionDateDisplay));
+    }
+
     protected static function submissionLines(CoverData $d, float $widthPt): int
     {
         return self::estimateLines(
@@ -223,32 +229,32 @@ abstract class BaseTemplate implements Template
     protected static function collectRows(CoverData $d): array
     {
         $student = [];
-        if ($d->showStudentName)    { $student[] = ['Name', $d->studentName]; }
-        if ($d->showStudentId)      { $student[] = ['ID', $d->studentId]; }
-        if ($d->showStudentSection) { $student[] = ['Section', $d->studentSection]; }
-        if ($d->showStudentBatch)   { $student[] = ['Batch', $d->studentBatch]; }
-        if ($d->showStudentProgram) { $student[] = ['Program', $d->studentProgram]; }
-        if ($d->showSemester)       { $student[] = [$d->semesterType, $d->semester]; }
-        if ($d->showStudentSession) { $student[] = ['Session', $d->studentSession]; }
-        if ($d->showStudentEmail)   { $student[] = ['Email', $d->studentEmail]; }
+        if ($d->showStudentName)    { $student[] = ['Name', $d->fv('student-name', $d->studentName)]; }
+        if ($d->showStudentId)      { $student[] = ['ID', $d->fv('student-id', $d->studentId)]; }
+        if ($d->showStudentSection) { $student[] = ['Section', $d->fv('student-section', $d->studentSection)]; }
+        if ($d->showStudentBatch)   { $student[] = ['Batch', $d->fv('student-batch', $d->studentBatch)]; }
+        if ($d->showStudentProgram) { $student[] = ['Program', $d->fv('student-program', $d->studentProgram)]; }
+        if ($d->showSemester)       { $student[] = [$d->semesterType, $d->fv('semester', $d->semester)]; }
+        if ($d->showStudentSession) { $student[] = ['Session', $d->fv('student-session', $d->studentSession)]; }
+        if ($d->showStudentEmail)   { $student[] = ['Email', $d->fv('student-email', $d->studentEmail)]; }
 
         $course = [];
-        if ($d->showCourseCode)        { $course[] = ['Code', $d->courseCode]; }
+        if ($d->showCourseCode)        { $course[] = ['Code', $d->fv('course-code', $d->courseCode)]; }
         if ($d->showCourseTitle)       { $course[] = ['Title', $d->courseTitleHtml]; }
-        if ($d->showCourseTeacherName) { $course[] = ['Teacher', $d->courseTeacherName]; }
+        if ($d->showCourseTeacherName) { $course[] = ['Teacher', $d->fv('course-teacher-name', $d->courseTeacherName)]; }
 
         $designation = ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '')
-            ? $d->courseTeacherDesignation
+            ? $d->fv('course-teacher-designation', $d->courseTeacherDesignation)
             : '';
 
         $group = [];
         if ($d->showGroup) {
             if ($d->groupName !== '') {
-                $group[] = ['Group', $d->groupName];
+                $group[] = ['Group', $d->fv('group-name', $d->groupName)];
             }
             foreach ($d->groupMembers as $i => $member) {
                 $value = $member['name'] . ($member['id'] !== '' ? ' (' . $member['id'] . ')' : '');
-                $group[] = [(string) ($i + 1), $value];
+                $group[] = [(string) ($i + 1), $d->fv('group-members', $value)];
             }
         }
 
@@ -310,23 +316,23 @@ abstract class BaseTemplate implements Template
 
         $html = '';
         if ($d->showBismillah) {
-            $html .= '<p class="bismillah"' . $color('bismillah') . '>&#xFDFD;</p>';
+            $html .= '<p class="bismillah"' . $color('bismillah') . '>' . $d->fv('bismillah', '&#xFDFD;') . '</p>';
         }
         if (($o['logo'] ?? true) !== false) {
             $html .= self::logoHtml($d, $align, isset($o['plate']) ? (string) $o['plate'] : null, (float) ($o['scale'] ?? 1.0));
         }
         if ($d->showVersityName) {
-            $html .= '<h1 class="versity-name"' . $color('versity') . '>' . $d->versityName . '</h1>';
+            $html .= '<h1 class="versity-name"' . $color('versity') . '>' . $d->fv('versity', $d->versityName) . '</h1>';
         }
         // Department first, faculty second. When both show, the department sits
         // tight above the faculty ('dept-tight') and the faculty carries the
         // gap that the design normally puts under the department ('faculty-last').
         $hasFaculty = $d->showFaculty && $d->faculty !== '';
         if ($d->showDeptName) {
-            $html .= '<p class="dept-name' . ($hasFaculty ? ' dept-tight' : '') . '"' . $color('dept') . '>' . $d->deptName . '</p>';
+            $html .= '<p class="dept-name' . ($hasFaculty ? ' dept-tight' : '') . '"' . $color('dept') . '>' . $d->fv('dept', $d->deptName) . '</p>';
         }
         if ($hasFaculty) {
-            $html .= '<p class="faculty-name faculty-last"' . $color('faculty') . '>' . $d->faculty . '</p>';
+            $html .= '<p class="faculty-name faculty-last"' . $color('faculty') . '>' . $d->fv('faculty', $d->faculty) . '</p>';
         }
         return '<div class="header-block" style="text-align:' . $align . ';">' . $html . '</div>';
     }
@@ -344,6 +350,7 @@ abstract class BaseTemplate implements Template
         if ($text === '') {
             return '';
         }
+        $text = $d->fv('cover-title', $text);
         $size   = $d->coverTitleFontSize ?? self::fs((float) ($o['size'] ?? 20.0), (float) ($o['scale'] ?? 1.0));
         $color  = self::e((string) ($o['color'] ?? $d->primaryColor));
         $align  = (string) ($o['align'] ?? 'center');
@@ -471,7 +478,7 @@ abstract class BaseTemplate implements Template
                 : self::icon($d, $sectionIcon[$key], $iconColor);
             $body .= '<tr><td colspan="' . $cols . '" class="section-h"'
                 . $style($padStyle, trim((string) ($o['hStyle'] ?? '') . $hOverride)) . '>' . $hIcon
-                . ($titles[$key] ?? $title . $suffix) . '</td></tr>';
+                . $d->fv($key . '-heading', $titles[$key] ?? $title . $suffix) . '</td></tr>';
 
             $i = 0;
             foreach ($rows[$key] as [$label, $valueHtml]) {

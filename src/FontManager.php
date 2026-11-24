@@ -23,19 +23,69 @@ final class FontManager
     }
 
     /**
-     * Full list of fonts selectable in the UI.
-     * @return array<int, array{key:string,name:string,custom:bool}>
+     * Full list of fonts selectable in the UI. `scripts` tells the picker which
+     * writing systems the font can draw (see FontScripts), so it can show a
+     * sample in the font's own language.
+     *
+     * @return array<int, array{key:string,name:string,custom:bool,scripts:list<string>,v:string}>
      */
     public function listFonts(): array
     {
         $fonts = [];
         foreach (Config::builtInFonts() as $label => $key) {
-            $fonts[] = ['key' => $key, 'name' => $label, 'custom' => false];
+            $path = $this->builtInPath($key);
+            $fonts[] = [
+                'key' => $key, 'name' => $label, 'custom' => false,
+                'scripts' => $path !== null ? FontScripts::detect($path) : ['latin'],
+                'v' => '1',
+            ];
         }
         foreach ($this->readIndex() as $entry) {
-            $fonts[] = ['key' => $entry['key'], 'name' => $entry['name'], 'custom' => true];
+            $file = (string) ($entry['files']['regular'] ?? '');
+            $path = $file !== '' ? $this->storageDir . '/' . basename($file) : '';
+            $fonts[] = [
+                'key' => (string) $entry['key'], 'name' => (string) $entry['name'], 'custom' => true,
+                'scripts' => $path !== '' && is_file($path) ? FontScripts::detect($path) : [],
+                // Changes when the file is replaced, so browsers do not keep an old preview.
+                'v' => $path !== '' && is_file($path) ? (string) filemtime($path) : '0',
+            ];
         }
         return $fonts;
+    }
+
+    /**
+     * Absolute path of a font's file for the browser preview (regular style by default).
+     * Null when the font or variant does not exist.
+     */
+    public function webFile(string $key, string $variant = 'regular'): ?string
+    {
+        if (isset(Config::builtInFontFiles()[$key])) {
+            return $variant === 'regular' ? $this->builtInPath($key) : null;
+        }
+        foreach ($this->readIndex() as $entry) {
+            if (($entry['key'] ?? null) === $key) {
+                $file = $entry['files'][$variant] ?? null;
+                $path = is_string($file) ? $this->storageDir . '/' . basename($file) : '';
+                return $path !== '' && is_file($path) ? $path : null;
+            }
+        }
+        return null;
+    }
+
+    private function builtInPath(string $key): ?string
+    {
+        $file = Config::builtInFontFiles()[$key] ?? null;
+        if ($file === null) {
+            return null;
+        }
+        $dirs = array_merge([Config::assetsFontsPath()], (new \Mpdf\Config\ConfigVariables())->getDefaults()['fontDir']);
+        foreach ($dirs as $dir) {
+            $path = rtrim((string) $dir, '/') . '/' . $file;
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+        return null;
     }
 
     /**
@@ -55,6 +105,10 @@ final class FontManager
         }
         if (empty($files['regular'])) {
             throw new \RuntimeException('A "Regular" font file is required.');
+        }
+
+        if (count($this->readIndex()) >= Config::maxCustomFonts()) {
+            throw new \RuntimeException('The shared font library is full. Please ask the site admin to remove unused fonts.');
         }
 
         $key = $this->slugify($familyName);
@@ -91,6 +145,15 @@ final class FontManager
                 @unlink($this->storageDir . '/' . $storedFile);
             }
             throw $e;
+        }
+
+        // A file that only *starts* like a font but cannot be read would make every cover that
+        // uses it fail, so the regular file is opened and its character table checked now.
+        if (!FontScripts::isReadable($this->storageDir . '/' . $stored['regular'])) {
+            foreach ($stored as $storedFile) {
+                @unlink($this->storageDir . '/' . $storedFile);
+            }
+            throw new \RuntimeException('That file could not be read as a TTF/OTF font (TrueType collections .ttc are not supported).');
         }
 
         $entry = [
@@ -149,7 +212,7 @@ final class FontManager
      * Build the fontDir / fontdata arrays mPDF needs, merging defaults with
      * the bundled Amiri font and any custom uploaded fonts.
      */
-    public function buildMpdfFontConfig(): array
+    public function buildMpdfFontConfig(bool $shaping = true): array
     {
         $defaultFontDirs   = (new \Mpdf\Config\ConfigVariables())->getDefaults()['fontDir'];
         $defaultFontData   = (new \Mpdf\Config\FontVariables())->getDefaults()['fontdata'];
@@ -182,6 +245,12 @@ final class FontManager
                 }] = $filename;
             }
             if (!empty($variants)) {
+                // Bangla, Arabic, Devanagari ... only look right with OpenType shaping: without it
+                // vowel signs land on the wrong side and conjuncts fall apart.
+                $regular = $this->storageDir . '/' . basename((string) ($entry['files']['regular'] ?? ''));
+                if ($shaping && is_file($regular) && FontScripts::needsShaping(FontScripts::detect($regular))) {
+                    $variants['useOTL'] = 0xFF;
+                }
                 $fontData[$entry['key']] = $variants;
             }
         }
@@ -195,6 +264,20 @@ final class FontManager
         $requested = strtolower(trim($requested));
         $known = array_column($this->listFonts(), 'key');
         return in_array($requested, $known, true) ? $requested : 'sans';
+    }
+
+    /**
+     * A per-field font choice: the font key, or null when the field should use
+     * its default font group (blank, unknown or since-deleted font).
+     */
+    public function resolveOptionalKey(mixed $requested): ?string
+    {
+        $requested = is_string($requested) ? strtolower(trim($requested)) : '';
+        if ($requested === '') {
+            return null;
+        }
+        $known = array_column($this->listFonts(), 'key');
+        return in_array($requested, $known, true) ? $requested : null;
     }
 
     // ---- internals ---------------------------------------------------

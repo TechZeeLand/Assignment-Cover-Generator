@@ -100,19 +100,19 @@ CSS;
         // ---- left column ----
         $left = '';
         if (!empty($rows['student'])) {
-            $left .= '<p class="card-title" style="color:' . self::e($leftAccent) . ';">' . self::iconPt($d, 'student', $leftAccent, 14.0) . 'Student Details' . $suffix . '</p>'
+            $left .= '<p class="card-title" style="color:' . self::e($leftAccent) . ';">' . self::iconPt($d, 'student', $leftAccent, 14.0) . $d->fv('student-heading', 'Student Details' . $suffix) . '</p>'
                 . self::stackedRows($d, $rows['student'], [
                     'labelColor' => $leftLabel, 'valueColor' => $leftValue, 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $item,
                 ]);
         }
         if (!empty($rows['group'])) {
-            $left .= '<div style="margin-top:' . $gap . 'pt;"><p class="card-title" style="color:' . self::e($leftAccent) . ';">' . self::iconPt($d, 'group', $leftAccent, 14.0) . 'Group Details' . $suffix . '</p>'
+            $left .= '<div style="margin-top:' . $gap . 'pt;"><p class="card-title" style="color:' . self::e($leftAccent) . ';">' . self::iconPt($d, 'group', $leftAccent, 14.0) . $d->fv('group-heading', 'Group Details' . $suffix) . '</p>'
                 . self::stackedRows($d, $rows['group'], [
                     'labelColor' => $leftLabel, 'valueColor' => $leftValue, 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $item,
                 ]) . '</div>';
         }
         if (self::hasSubmission($d)) {
-            $left .= '<div style="margin-top:' . $gap . 'pt;">' . self::stackedRows($d, [['Submission Date', self::e($d->submissionDateDisplay)]], [
+            $left .= '<div style="margin-top:' . $gap . 'pt;">' . self::stackedRows($d, [['Submission Date', self::dateHtml($d)]], [
                 'labelColor' => $leftLabel, 'valueColor' => $leftAccent, 'labelSize' => 9.5,
                 'valueSize' => min($z['submission'], 18.0), 'gap' => 0.0,
             ]) . '</div>';
@@ -125,7 +125,7 @@ CSS;
             ]);
         $right .= '<div style="height:' . $gap . 'pt; font-size:1pt; line-height:1pt;">&nbsp;</div>';
         if (!empty($rows['course']) || $rows['designation'] !== '') {
-            $right .= '<p class="card-title" style="color:' . self::e($headColor) . ';">' . self::iconPt($d, 'book', $headColor, 14.0) . 'Course Details' . $suffix . '</p>'
+            $right .= '<p class="card-title" style="color:' . self::e($headColor) . ';">' . self::iconPt($d, 'book', $headColor, 14.0) . $d->fv('course-heading', 'Course Details' . $suffix) . '</p>'
                 . self::stackedRows($d, $rows['course'], ['labelSize' => 9.5, 'valueSize' => $sCour, 'gap' => $item]);
             if ($rows['designation'] !== '') {
                 $right .= '<p style="margin:0 0 ' . $item . 'pt 0; font-size:' . $z['designation'] . 'pt; font-family:'

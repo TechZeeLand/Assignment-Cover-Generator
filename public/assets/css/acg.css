@@ -511,3 +511,74 @@ textarea.text-input { resize: vertical; min-height: 90px; font-family: inherit; 
 .auth-or::before, .auth-or::after { content: ""; flex: 1; height: 1px; background: var(--border); }
 .user-pop a.user-signout { display: block; text-align: left; }
 .preview-frame img[hidden], .preview-empty[hidden] { display: none; }
+
+/* ===================== Font pickers ===================== */
+/* A label row with the font button on its right. */
+.field-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.field-head > label, .field-head > .row-check { flex: 1 1 auto; min-width: 0; }
+.field-head > .fpick { flex: none; }
+
+.fpick { position: relative; display: inline-block; max-width: 100%; }
+.fpick-wide { display: block; }
+.fpick-btn {
+    display: inline-flex; align-items: center; gap: 7px; max-width: 100%;
+    padding: 4px 8px 4px 6px; border-radius: 8px; cursor: pointer;
+    border: 1px solid var(--border); background: var(--input-bg); color: var(--text);
+    font: inherit; font-size: .8rem; line-height: 1.3; text-align: left;
+}
+.fpick-wide .fpick-btn { width: 100%; padding: 8px 11px 8px 8px; font-size: .95rem; }
+.fpick-btn:hover { border-color: var(--accent); }
+.fpick-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.fpick-btn[aria-expanded="true"] { border-color: var(--accent); background: var(--accent-soft); }
+.fpick-aa {
+    flex: none; display: inline-grid; place-items: center; min-width: 24px; height: 20px; padding: 0 4px;
+    border-radius: 5px; background: var(--bg); color: var(--muted); font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+}
+.fpick-wide .fpick-aa { height: 24px; min-width: 30px; font-size: .8rem; }
+.fpick-btn.is-set .fpick-aa { background: var(--accent); color: var(--accent-ink); }
+.fpick-btn.is-default .fpick-name { color: var(--muted); }
+.fpick-name { min-width: 0; max-width: 150px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 1.05em; }
+.fpick-wide .fpick-name { max-width: none; flex: 1 1 auto; font-size: 1.1em; }
+.fpick-caret { flex: none; margin-left: auto; font-size: .75rem; color: var(--muted); }
+.fpick-aa-inline { display: inline-block; padding: 0 5px; border-radius: 4px; background: var(--bg); border: 1px solid var(--border); font-weight: 700; font-size: .85em; }
+
+/* The shared dropdown (one element, moved under whichever button opened it). */
+.fpop {
+    position: fixed; z-index: 90; display: flex; flex-direction: column; overflow: hidden;
+    background: var(--panel); color: var(--text); border: 1px solid var(--border);
+    border-radius: 12px; box-shadow: 0 14px 40px rgba(0, 0, 0, .22);
+}
+.fpop[hidden], .fpop-backdrop[hidden], .fpop-head[hidden] { display: none; }
+.fpop-head { display: flex; gap: 6px; padding: 8px; border-bottom: 1px solid var(--border); background: var(--bg); }
+.fpop-search { flex: 1; margin: 0 !important; padding: 7px 10px !important; font-size: .88rem !important; }
+.fpop-close { display: none; flex: none; width: 34px; border: 1px solid var(--border); border-radius: 8px; background: var(--input-bg); color: var(--text); font-size: 1.3rem; line-height: 1; cursor: pointer; }
+.fpop-list { list-style: none; margin: 0; padding: 4px; overflow-y: auto; outline: none; overscroll-behavior: contain; }
+.fo {
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    padding: 8px 10px; border-radius: 8px; cursor: pointer; min-height: 44px;
+}
+.fo.is-active { background: var(--accent-soft); }
+.fo[aria-selected="true"] { box-shadow: inset 3px 0 0 var(--accent); }
+.fo-main { display: flex; align-items: baseline; flex-wrap: wrap; gap: 2px 12px; min-width: 0; }
+.fo-name { font-size: 1.3rem; line-height: 1.35; overflow-wrap: anywhere; }
+.fo-name-ui { font-size: .95rem; font-weight: 600; }
+.fo-sample { font-size: 1.15rem; line-height: 1.5; color: var(--muted); }
+.fo-hint { font-size: .8rem; color: var(--muted); }
+.fo-tags { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 4px; flex: none; }
+.fo-tag { font-size: .68rem; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--border); background: var(--bg); color: var(--muted); white-space: nowrap; }
+.fo-tag-script { background: var(--accent-soft); color: var(--accent-text); border-color: transparent; font-weight: 600; }
+.fo-default { border-bottom: 1px dashed var(--border); border-radius: 8px 8px 0 0; margin-bottom: 4px; }
+
+/* Phones: the list becomes a bottom sheet. */
+.fpop-backdrop { position: fixed; inset: 0; z-index: 89; background: rgba(0, 0, 0, .4); }
+body.fpop-locked { overflow: hidden; }
+@media (max-width: 640px) {
+    .fpop { left: 0 !important; right: 0; bottom: 0; top: auto !important; width: auto !important; max-height: 72vh !important; border-radius: 16px 16px 0 0; }
+    .fpop-close { display: block; }
+    .fo { min-height: 50px; }
+    .fpick-name { max-width: 110px; }
+}
+@media (prefers-reduced-motion: no-preference) {
+    .fpop:not([hidden]) { animation: fpop-in .12s ease-out; }
+    @keyframes fpop-in { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: none; } }
+}

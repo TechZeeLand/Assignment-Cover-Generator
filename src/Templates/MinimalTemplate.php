@@ -171,7 +171,7 @@ CSS;
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;">'
                 . '<p class="foot-label">' . self::iconPt($d, 'clock', $d->primaryColor, 10.0) . 'Submission Date</p>'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . $fSec . '; color:' . $acc . ';">'
-                . self::e($d->submissionDateDisplay) . '</p></div>';
+                . self::dateHtml($d) . '</p></div>';
         }
 
         $details = self::detailsTable($d, self::collectRows($d), [

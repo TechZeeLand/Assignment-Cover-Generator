@@ -158,7 +158,7 @@ CSS;
                 . '<table width="100%" cellpadding="0" cellspacing="0"><tr><td style="background-color:' . self::e($titleBg)
                 . '; border-top:1pt solid ' . $acc . '; border-bottom:1pt solid ' . $acc . '; padding:6pt 10pt; text-align:center;">'
                 . '<p class="cover-title" style="font-size:' . self::fs(17.0, $fontScale) . 'pt; letter-spacing:3pt; color:' . self::e($titleTxt) . ';">'
-                . $d->coverTitle . '</p></td></tr></table></div>';
+                . $d->fv('cover-title', $d->coverTitle) . '</p></td></tr></table></div>';
         } else {
             $titleBar = '<div style="height:' . $gap . 'pt; font-size:1pt; line-height:1pt;">&nbsp;</div>';
         }
@@ -174,7 +174,7 @@ CSS;
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;"><table class="grid" cellpadding="0" cellspacing="0"><tr>'
                 . '<td class="date-l" style="' . $labelCss . ' font-family:' . self::e($d->primaryFont) . ';">' . self::iconPt($d, 'clock', $labelTxt, $sTopic) . 'Submission Date</td>'
                 . '<td class="date-v" style="' . $valueCss . ' color:' . $acc . '; font-family:' . self::e($d->secondaryFont) . ';">'
-                . self::e($d->submissionDateDisplay) . '</td></tr></table></div>';
+                . self::dateHtml($d) . '</td></tr></table></div>';
         }
 
         $body = $frame . "\n" . $date . "\n"

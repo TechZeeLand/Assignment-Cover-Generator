@@ -155,7 +155,7 @@ CSS;
             if (self::hasSubmission($d)) {
                 $textColor = $bands ? $onAcc : $d->accentColor;
                 $text = '<p class="foot-text" style="font-size:' . $z['submission'] . 'pt; color:' . self::e($textColor) . ';">'
-                    . '<b>Submission Date:</b> ' . self::e($d->submissionDateDisplay) . '</p>';
+                    . '<b>Submission Date:</b> ' . self::dateHtml($d) . '</p>';
             }
             $padTopFoot = self::FOOT_PAD;
             if ($bands) {

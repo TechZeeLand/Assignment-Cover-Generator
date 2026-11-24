@@ -129,12 +129,12 @@ CSS;
 
         $left = '';
         if (!empty($rows['student'])) {
-            $left .= $card(self::iconPt($d, 'student', $headColor, 14.0) . 'Student Details' . $suffix, self::stackedRows($d, $rows['student'], [
+            $left .= $card(self::iconPt($d, 'student', $headColor, 14.0) . $d->fv('student-heading', 'Student Details' . $suffix), self::stackedRows($d, $rows['student'], [
                 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $itemGap,
             ]), $headColor);
         }
         if (!empty($rows['group'])) {
-            $left .= '<div style="margin-top:' . $itemGap . 'pt;">' . $card(self::iconPt($d, 'group', $headColor, 14.0) . 'Group Details' . $suffix, self::stackedRows($d, $rows['group'], [
+            $left .= '<div style="margin-top:' . $itemGap . 'pt;">' . $card(self::iconPt($d, 'group', $headColor, 14.0) . $d->fv('group-heading', 'Group Details' . $suffix), self::stackedRows($d, $rows['group'], [
                 'labelSize' => 9.5, 'valueSize' => $sStud, 'gap' => $itemGap,
             ]), $headColor) . '</div>';
         }
@@ -145,7 +145,7 @@ CSS;
                 $inner .= '<p style="margin:0 0 ' . $itemGap . 'pt 0; font-size:' . $z['designation']
                     . 'pt; font-family:' . self::e($d->secondaryFont) . '; color:' . self::e($d->secondaryColor) . ';">' . $rows['designation'] . '</p>';
             }
-            $right = $card(self::iconPt($d, 'book', $headColor, 14.0) . 'Course Details' . $suffix, $inner, $headColor);
+            $right = $card(self::iconPt($d, 'book', $headColor, 14.0) . $d->fv('course-heading', 'Course Details' . $suffix), $inner, $headColor);
         }
 
         $columns = '';
@@ -182,7 +182,7 @@ CSS;
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt;">'
                 . '<p class="foot-label" style="font-family:' . self::e($d->primaryFont) . '; color:' . $pri . ';">' . self::iconPt($d, 'clock', $d->primaryColor, 10.0) . 'Submission Date</p>'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . self::e($d->secondaryFont) . '; color:' . $acc . ';">'
-                . self::e($d->submissionDateDisplay) . '</p></div>';
+                . self::dateHtml($d) . '</p></div>';
         }
 
         $body = $deco . "\n" . '<div class="pad">' . $header . $rules . $title . $columns . $topic . '</div>';

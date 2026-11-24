@@ -139,7 +139,7 @@ CSS;
             $date = '<div style="position:fixed; left:' . $side . 'pt; top:' . round($dateTop, 2) . 'pt; width:'
                 . round(self::PAGE_W - 2 * $side, 2) . 'pt; text-align:center;">'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . $fSec . '; color:' . $acc . ';">'
-                . self::iconPt($d, 'clock', $d->accentColor, $d->submissionFontSize * 0.9) . '<b>Submission Date:</b> ' . self::e($d->submissionDateDisplay) . '</p></div>';
+                . self::iconPt($d, 'clock', $d->accentColor, $d->submissionFontSize * 0.9) . '<b>Submission Date:</b> ' . self::dateHtml($d) . '</p></div>';
         }
 
         // ---- Header + divider ----

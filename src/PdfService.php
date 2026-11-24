@@ -26,12 +26,24 @@ final class PdfService
      */
     public static function render(CoverData $data, FontManager $fonts): \Mpdf\Mpdf
     {
+        try {
+            return self::fit($data, $fonts, true);
+        } catch (\Mpdf\MpdfException $e) {
+            // Some fonts carry OpenType tables mPDF cannot read, and shaping them throws. Make the
+            // cover anyway: the same fonts without shaping (Latin text is unaffected).
+            error_log('[cover] OpenType shaping disabled for this render: ' . $e->getMessage());
+            return self::fit($data, $fonts, false);
+        }
+    }
+
+    private static function fit(CoverData $data, FontManager $fonts, bool $shaping): \Mpdf\Mpdf
+    {
         $fontScale    = 1.0;
         $spacingScale = 1.0;
         $mpdf         = null;
 
         for ($attempt = 0; $attempt < self::MAX_FIT_ATTEMPTS; $attempt++) {
-            $mpdf = self::renderAttempt($data, $fonts, $fontScale, $spacingScale);
+            $mpdf = self::renderAttempt($data, $fonts, $fontScale, $spacingScale, $shaping);
 
             if ($mpdf->page <= 1) {
                 break;
@@ -47,9 +59,9 @@ final class PdfService
         return $mpdf;
     }
 
-    private static function renderAttempt(CoverData $data, FontManager $fonts, float $fontScale, float $spacingScale): \Mpdf\Mpdf
+    private static function renderAttempt(CoverData $data, FontManager $fonts, float $fontScale, float $spacingScale, bool $shaping): \Mpdf\Mpdf
     {
-        $fontConfig = $fonts->buildMpdfFontConfig();
+        $fontConfig = $fonts->buildMpdfFontConfig($shaping);
         $template   = TemplateRegistry::get($data->design);
         $bottomPt   = $template->bottomMarginPt($data, $spacingScale, $fontScale);
 
@@ -75,6 +87,11 @@ final class PdfService
             'fontDir'       => $fontConfig['fontDir'],
             'fontdata'      => $fontConfig['fontdata'],
             'default_font'  => 'sans',
+            // If a chosen font has no glyphs for a character (Cyrillic, Greek, symbols ...), mPDF borrows
+            // one from a backup font instead of printing a solid block. Bangla, Devanagari and
+            // Arabic are handled earlier, per field, in CoverData::fv() - mPDF's own language-based
+            // switch (autoLangToFont) would override a font the user picked on purpose.
+            'useSubstitutions' => true,
             'tempDir'       => Config::tempPath(),
         ]);
 

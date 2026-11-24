@@ -48,5 +48,37 @@ foreach ($paths as $p) {
 }
 function rrm($d) { foreach (glob($d . '/{,.}[!.]*', GLOB_BRACE) ?: [] as $x) { is_dir($x) ? rrm($x) : @unlink($x); } @rmdir($d); }
 rrm($tmp);
+echo "== 3. fonts (script detection, per-field fonts, Bangla fallback)\n";
+$autoload = $root . '/vendor/autoload.php';
+if (is_file($autoload)) {
+    require_once $autoload;
+    $check = static function (string $name, bool $ok) use (&$bad): void {
+        if (!$ok) { $bad++; }
+        printf("  %-5s %s\n", $ok ? 'ok' : 'FAIL', $name);
+    };
+    try {
+        $fontsDir = $root . '/public/assets/fonts';
+        $check('Alata is detected as Latin', \App\FontScripts::detect($fontsDir . '/Alata-Regular.ttf') === ['latin']);
+        $check('Amiri is detected as Arabic', in_array('arabic', \App\FontScripts::detect($fontsDir . '/Amiri-Regular.ttf'), true));
+        $check('garbage is not accepted as a font', !\App\FontScripts::isReadable(__FILE__));
+
+        $d = (new ReflectionClass(\App\CoverData::class))->newInstanceWithoutConstructor();
+        $d->primaryFont = 'alata'; $d->secondaryFont = 'alata'; $d->versityFont = 'alata';
+        $d->fontScripts = ['alata' => ['latin'], 'bnfont' => ['latin', 'bengali']];
+        $check('no override: text is left untouched', $d->fv('topic', 'Hello') === 'Hello');
+        $d->fontOverrides = ['topic' => 'bnfont'];
+        $check('override wraps the field in its font', $d->fv('topic', 'Hello') === '<span style="font-family:bnfont;">Hello</span>');
+        $d->fontOverrides = [];
+        $check('Bangla in a Latin-only font gets a fallback font', str_contains($d->fv('topic', 'আমার'), 'font-family:freeserif'));
+        $d->fontOverrides = ['topic' => 'bnfont'];
+        $check('Bangla in a Bangla font keeps the chosen font only', !str_contains($d->fv('topic', 'আমার'), 'freeserif'));
+        $check('HTML tags are never touched by the fallback', str_contains((new ReflectionClass($d))->getMethod('fv')->invoke($d, 'student-name', '<b>x</b>'), '<b>x</b>'));
+    } catch (Throwable $e) {
+        $bad++;
+        echo '  FAIL font checks crashed: ' . $e->getMessage() . "\n";
+    }
+} else {
+    echo "  skipped (run composer install first)\n";
+}
 echo $bad ? "\n$bad problem(s). Send the FAIL lines to your assistant.\n" : "\nAll good.\n";
 exit($bad ? 1 : 0);

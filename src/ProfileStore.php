@@ -99,6 +99,9 @@ final class ProfileStore
         'group-heading-size'          => 'num',
         'teacher-heading-size'        => 'num',
 
+        // Per-field fonts ("ff-<field>"; blank = the field uses its default font group) are
+        // added from CoverData::FONT_FIELDS in sanitize(), so the two lists cannot drift apart.
+
         // Interface preferences (not part of the cover itself).
         'favorite-designs'            => 'designs',
         'ui-theme'                    => 'theme',
@@ -113,7 +116,11 @@ final class ProfileStore
     public static function sanitize(array $input): array
     {
         $out = [];
-        foreach (self::FIELDS as $name => $type) {
+        $fields = self::FIELDS;
+        foreach (array_keys(CoverData::FONT_FIELDS) as $field) {
+            $fields['ff-' . $field] = 'key';
+        }
+        foreach ($fields as $name => $type) {
             if (!array_key_exists($name, $input)) {
                 continue;
             }

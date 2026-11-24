@@ -62,14 +62,44 @@ final class Config
      */
     public static function builtInFonts(): array
     {
+        // Labels name the font the PDF really uses. (They used to say "Arial" / "Times New Roman" /
+        // "Courier New", but mPDF draws the DejaVu family for those keys - the keys are unchanged,
+        // so saved details keep working.)
         return [
-            'Arial'                => 'sans',
-            'Times New Roman'      => 'serif',
-            'Courier New'          => 'mono',
+            'DejaVu Sans'          => 'sans',
+            'DejaVu Serif'         => 'serif',
+            'DejaVu Sans Mono'     => 'mono',
             'Old English Text MT'  => 'oldenglish',
             'Gandhi Serif'         => 'gandhiserif',
             'Alata'                => 'alata',
+            'Amiri (Arabic)'       => 'amiri',
         ];
+    }
+
+    /**
+     * Font file behind each built-in key, so the browser can preview the very
+     * font the PDF uses. A plain name is looked for in the bundled
+     * public/assets/fonts folder first, then in mPDF's own font folders.
+     *
+     * @return array<string, string> key => regular-style file name
+     */
+    public static function builtInFontFiles(): array
+    {
+        return [
+            'sans'        => 'DejaVuSansCondensed.ttf',
+            'serif'       => 'DejaVuSerifCondensed.ttf',
+            'mono'        => 'DejaVuSansMono.ttf',
+            'oldenglish'  => 'oldenglishtextmt.ttf',
+            'gandhiserif' => 'GandhiSerif-Regular.ttf',
+            'alata'       => 'Alata-Regular.ttf',
+            'amiri'       => 'Amiri-Regular.ttf',
+        ];
+    }
+
+    /** Maximum number of uploaded (shared) fonts, so the library cannot grow without limit. */
+    public static function maxCustomFonts(): int
+    {
+        return 80;
     }
 
     /** Max upload size for a custom font file, in bytes (2 MB). */

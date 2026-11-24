@@ -119,13 +119,13 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
     private function studentRows(CoverData $d): array
     {
         $r = [];
-        if ($d->showStudentName)    { $r[] = ['Name', $d->studentName]; }
-        if ($d->showStudentId)      { $r[] = ['Id', $d->studentId]; }
-        if ($d->showStudentBatch)   { $r[] = ['Batch', $d->studentBatch]; }
-        if ($d->showStudentSection) { $r[] = ['Section', $d->studentSection]; }
-        if ($d->showSemester)       { $r[] = [$d->semesterType, $d->semester]; }
-        if ($d->showStudentSession) { $r[] = ['Session', $d->studentSession]; }
-        if ($d->showStudentEmail)   { $r[] = ['Email', $d->studentEmail]; }
+        if ($d->showStudentName)    { $r[] = ['Name', $d->fv('student-name', $d->studentName)]; }
+        if ($d->showStudentId)      { $r[] = ['Id', $d->fv('student-id', $d->studentId)]; }
+        if ($d->showStudentBatch)   { $r[] = ['Batch', $d->fv('student-batch', $d->studentBatch)]; }
+        if ($d->showStudentSection) { $r[] = ['Section', $d->fv('student-section', $d->studentSection)]; }
+        if ($d->showSemester)       { $r[] = [$d->semesterType, $d->fv('semester', $d->semester)]; }
+        if ($d->showStudentSession) { $r[] = ['Session', $d->fv('student-session', $d->studentSession)]; }
+        if ($d->showStudentEmail)   { $r[] = ['Email', $d->fv('student-email', $d->studentEmail)]; }
         return $r;
     }
 
@@ -134,7 +134,7 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
     {
         $r = [];
         if ($d->showCourseTitle) { $r[] = ['Course Title', $d->courseTitleHtml]; }
-        if ($d->showCourseCode)  { $r[] = ['Course Code', $d->courseCode]; }
+        if ($d->showCourseCode)  { $r[] = ['Course Code', $d->fv('course-code', $d->courseCode)]; }
         return $r;
     }
 
@@ -146,7 +146,7 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
         }
         $style = 'text-align:' . $align . ';' . ($color !== null ? ' color:' . self::e($color) . ';' : '');
         return '<div class="header-block" style="text-align:' . $align . ';"><p class="program" style="' . $style . '">'
-            . 'Program: ' . $d->studentProgram . '</p></div>';
+            . 'Program: ' . $d->fv('student-program', $d->studentProgram) . '</p></div>';
     }
 
     /** Header (Bismillah, logo, university, faculty, department, program). Variants may wrap it. */
@@ -164,7 +164,7 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
         $size = self::headCss($d, $key);
         $pt   = $d->headingSize($key);
         // "Submitted to" has no icon; the others match the heading colour.
-        $html = ($icon === 'teacher' ? '' : ($pt !== null ? self::iconPt($d, $icon, $d->primaryColor, $pt * 0.8) : self::icon($d, $icon))) . $text . $suffix;
+        $html = ($icon === 'teacher' ? '' : ($pt !== null ? self::iconPt($d, $icon, $d->primaryColor, $pt * 0.8) : self::icon($d, $icon))) . $d->fv($key . '-heading', $text . $suffix);
         $inline = $size !== '' ? ' style="' . trim($size) . '"' : '';
         if ($this->ruledHeadings()) {
             return '<div style="margin-top:' . $gapTop . 'pt;"><table width="100%" cellpadding="0" cellspacing="0"><tr>'
@@ -176,15 +176,33 @@ abstract class SubmissionFormatTemplate extends BaseTemplate
     /**
      * @param list<array{0:string,1:string}> $rows
      */
+    /** Rows on the whole cover (set by buildHtml); see rowsTable(). */
+    private int $totalRows = 99;
+
     private function rowsTable(array $rows, string $grp): string
     {
+        // mPDF squeezes the label column to a letter wide ("N a m e") when the whole cover has three
+        // detail rows or fewer, because the value column is width:100%. Only then do labels get an
+        // explicit width, sized from the longest label (in em of the row's own font); every other
+        // cover lays out correctly as it is and is left exactly as before.
+        $labelStyle = $colonStyle = $valueStyle = $tableAttr = '';
+        if ($this->totalRows <= 3) {
+            $longest = 0;
+            foreach ($rows as [$label]) {
+                $longest = max($longest, mb_strlen((string) $label));
+            }
+            $labelStyle = ' style="width:' . number_format($longest * 0.56 + 0.2, 2, '.', '') . 'em;"';
+            $colonStyle = ' style="width:0.8em;"';
+            $valueStyle = ' style="width:auto;"';
+            $tableAttr  = ' width="100%"';
+        }
         $body = '';
         foreach ($rows as [$label, $valueHtml]) {
-            $body .= '<tr><td class="label grp-' . $grp . '">' . self::e($label) . '</td>'
-                . '<td class="colon grp-' . $grp . '">:</td>'
-                . '<td class="value grp-' . $grp . '">' . $valueHtml . '</td></tr>';
+            $body .= '<tr><td class="label grp-' . $grp . '"' . $labelStyle . '>' . self::e($label) . '</td>'
+                . '<td class="colon grp-' . $grp . '"' . $colonStyle . '>:</td>'
+                . '<td class="value grp-' . $grp . '"' . $valueStyle . '>' . $valueHtml . '</td></tr>';
         }
-        return '<div class="blk"><table class="grid" cellpadding="0" cellspacing="0">' . $body . '</table></div>';
+        return '<div class="blk"><table class="grid" cellpadding="0" cellspacing="0"' . $tableAttr . '>' . $body . '</table></div>';
     }
 
     /** "(Lecturer, CGED)" - the brackets are added unless the user already typed them. */
@@ -269,10 +287,10 @@ CSS;
         // ---- Submitted to ----
         $toLines = '';
         if ($d->showCourseTeacherName && $d->courseTeacherName !== '') {
-            $toLines .= '<p class="t-name">' . $d->courseTeacherName . '</p>';
+            $toLines .= '<p class="t-name">' . $d->fv('course-teacher-name', $d->courseTeacherName) . '</p>';
         }
         if ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '') {
-            $toLines .= '<p class="t-des">' . $this->bracketed($d->courseTeacherDesignation) . '</p>';
+            $toLines .= '<p class="t-des">' . $d->fv('course-teacher-designation', $this->bracketed($d->courseTeacherDesignation)) . '</p>';
         }
         if ($toLines !== '') {
             $parts[] = $this->heading($d, 'teacher', 'Submitted to', $suffix, $gap()) . '<div class="blk">' . $toLines . '</div>';
@@ -280,6 +298,7 @@ CSS;
 
         // ---- Submitted by (+ group) ----
         $byRows = $this->studentRows($d);
+        $this->totalRows = count($byRows) + count(self::collectRows($d)['group']) + count($this->courseRows($d));
         if ($byRows !== []) {
             $parts[] = $this->heading($d, 'student', 'Submitted by', $suffix, $gap()) . $this->rowsTable($byRows, 'student');
         }
@@ -298,7 +317,7 @@ CSS;
         if ($d->showSubmissionDate) {
             $parts[] = '<div style="margin-top:' . $gap() . 'pt;"><p class="sub-line">'
                 . self::iconPt($d, 'clock', $d->primaryColor, $dateSize * 0.9)
-                . '<span class="lab">Submission date:</span> ' . self::e($d->submissionDateDisplay) . '</p></div>';
+                . '<span class="lab">Submission date:</span> ' . self::dateHtml($d) . '</p></div>';
         }
 
         // ---- Assignment topic ----

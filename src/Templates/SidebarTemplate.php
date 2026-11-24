@@ -174,7 +174,7 @@ CSS;
                     . '<p style="margin:0 0 4pt 0; font-size:' . self::LABEL_SIZE . 'pt; font-weight:bold; letter-spacing:1.5pt;'
                     . ' text-transform:uppercase; font-family:' . $fPri . '; color:' . $on . ';">Submission Date</p>'
                     . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . $fSec . '; color:' . $on . ';">'
-                    . self::e($d->submissionDateDisplay) . '</p>'
+                    . self::dateHtml($d) . '</p>'
                     . '</div></div>';
             }
             $deco .= self::box(0.0, self::PANEL_W, self::STRIPE_W, self::PAGE_H, $d->primaryColor);
@@ -183,7 +183,7 @@ CSS;
             $deco .= '<div style="position:fixed; left:' . $left . 'pt; top:' . round(self::PAGE_H - 44.0 - $h, 2)
                 . 'pt; width:' . round($contentW, 2) . 'pt;">'
                 . '<p style="margin:0; font-size:' . $z['submission'] . 'pt; font-family:' . $fSec . '; color:' . $acc . ';">'
-                . '<b>Submission Date:</b> ' . self::e($d->submissionDateDisplay) . '</p></div>';
+                . '<b>Submission Date:</b> ' . self::dateHtml($d) . '</p></div>';
         }
 
         $details = self::detailsTable($d, self::collectRows($d), [

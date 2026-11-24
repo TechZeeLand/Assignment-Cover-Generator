@@ -6,75 +6,17 @@
     // ---------------------------------------------------------------
     // Font handling
     // ---------------------------------------------------------------
-    const FONT_SELECT_IDS = ['versity-name-font', 'primary-font', 'secondary-font'];
-    const FONT_SELECT_DEFAULTS = {
-        'versity-name-font': 'oldenglish',
-        'primary-font': 'alata',
-        'secondary-font': 'gandhiserif',
-    };
-    let fontsCache = Array.isArray(window.__INITIAL_FONTS__) ? window.__INITIAL_FONTS__ : [];
-
-    function builtInCssFamily(key) {
-        switch (key) {
-            case 'serif': return '"Times New Roman", Times, serif';
-            case 'mono': return '"Courier New", Courier, monospace';
-            case 'sans':
-            default: return 'Arial, Helvetica, sans-serif';
-        }
-    }
-
-    function cssFamilyFor(font) {
-        if (!font.custom) return builtInCssFamily(font.key);
-        return `"pv-${font.key}", Arial, sans-serif`;
-    }
-
-    // Renders each custom font's own name in that font inside the <select>
-    // dropdowns, so users can preview the look before picking it.
-    function refreshCustomFontFaces() {
-        let styleEl = document.getElementById('custom-font-faces');
-        if (!styleEl) {
-            styleEl = document.createElement('style');
-            styleEl.id = 'custom-font-faces';
-            document.head.appendChild(styleEl);
-        }
-        const rules = fontsCache
-            .filter((f) => f.custom)
-            .map((f) => `@font-face { font-family: "pv-${f.key}"; src: url("/font_file.php?key=${encodeURIComponent(f.key)}&variant=regular") format("truetype"); }`)
-            .join('\n');
-        styleEl.textContent = rules;
-    }
-
-    function populateFontSelects() {
-        FONT_SELECT_IDS.forEach((id) => {
-            const select = document.getElementById(id);
-            const previousValue = select.value;
-            select.innerHTML = '';
-            fontsCache.forEach((font) => {
-                const opt = document.createElement('option');
-                opt.value = font.key;
-                opt.textContent = font.custom ? `${font.name} (custom)` : font.name;
-                opt.style.fontFamily = cssFamilyFor(font);
-                select.appendChild(opt);
-            });
-            const stillExists = fontsCache.some((f) => f.key === previousValue);
-            const wantedDefault = FONT_SELECT_DEFAULTS[id];
-            const defaultAvailable = fontsCache.some((f) => f.key === wantedDefault);
-            const fallback = defaultAvailable ? wantedDefault : (fontsCache[0] ? fontsCache[0].key : 'sans');
-            select.value = stillExists ? previousValue : fallback;
-        });
-        refreshCustomFontFaces();
-    }
-
+    // The font pickers themselves live in fontpicker.js (window.ACGFonts). This file only
+    // refreshes the shared font list from the server.
     async function loadFonts() {
         try {
             const res = await fetch('/fonts.php');
             const data = await res.json();
-            if (data.ok) {
-                fontsCache = data.fonts;
-                populateFontSelects();
+            if (data.ok && window.ACGFonts) {
+                window.ACGFonts.setFonts(data.fonts);
             }
         } catch (e) {
-            // Non-fatal: built-in fonts still work from the embedded initial list.
+            // Non-fatal: the list embedded in the page still works.
             console.warn('Could not refresh font list', e);
         }
     }
@@ -120,8 +62,7 @@
             if (data.ok) {
                 uploadMsg.textContent = `"${data.font.name}" added! It's now available to everyone in the font lists.`;
                 uploadMsg.className = 'upload-msg success';
-                fontsCache = data.fonts;
-                populateFontSelects();
+                if (window.ACGFonts) window.ACGFonts.setFonts(data.fonts);
                 document.getElementById('font-name').value = '';
                 ['font-regular', 'font-bold', 'font-italic', 'font-bolditalic'].forEach((id) => {
                     document.getElementById(id).value = '';
@@ -253,7 +194,6 @@
         });
     });
 
-    populateFontSelects();
     loadFonts();
 
     // ---------------------------------------------------------------
@@ -451,6 +391,7 @@
         });
         form.querySelectorAll('input[type="checkbox"]').forEach((cb) => cb.dispatchEvent(new Event('change', { bubbles: true })));
         form.querySelectorAll('input[type="color"]').forEach((c) => c.dispatchEvent(new Event('input', { bubbles: true })));
+        if (window.ACGFonts) window.ACGFonts.syncAll();
         syncAccentColorState();
         syncDesignColors();
         scrollSelectedIntoView();
@@ -655,14 +596,8 @@
                 cb.dispatchEvent(new Event('change'));
             });
             syncAccentColorState();
-            // The browser's native reset sends the (script-filled) font
-            // <select>s back to their first option; put the real defaults back.
-            FONT_SELECT_IDS.forEach((id) => {
-                const wanted = FONT_SELECT_DEFAULTS[id];
-                if (fontsCache.some((f) => f.key === wanted)) {
-                    document.getElementById(id).value = wanted;
-                }
-            });
+            // Hidden inputs are not touched by the browser's reset: put every font picker back.
+            if (window.ACGFonts) window.ACGFonts.resetAll();
             document.querySelectorAll('.color-field input[type="color"]').forEach((input) => {
                 input.dispatchEvent(new Event('input'));
             });

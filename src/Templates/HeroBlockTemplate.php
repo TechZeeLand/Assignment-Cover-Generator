@@ -169,7 +169,7 @@ CSS;
         [$cw, $ch] = $this->chipSize($d);
         if ($ch > 0) {
             $top = self::PAGE_H - self::CHIP_MARGIN - $ch;
-            $text = '<b>Submission Date:</b> ' . self::e($d->submissionDateDisplay);
+            $text = '<b>Submission Date:</b> ' . self::dateHtml($d);
             if ($hero) {
                 $chip = '<div style="position:fixed; left:' . $side . 'pt; top:' . round($top, 2) . 'pt; width:' . round($cw, 2)
                     . 'pt; height:' . round($ch, 2) . 'pt; background-color:' . $pri . ';">'

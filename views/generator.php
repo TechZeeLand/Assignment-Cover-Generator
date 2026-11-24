@@ -6,10 +6,31 @@ declare(strict_types=1);
  */
 use App\Ads;
 use App\Auth;
+use App\CoverData;
 use App\Html;
 use App\Icon;
 use App\Settings;
 use Tzl\Kit;
+
+/**
+ * A font button for one field (blank = the field uses its default font group).
+ * app JS (fontpicker.js) turns it into a dropdown that shows every font in its own typeface.
+ */
+$fontCaret = Kit::icon('chevron-down', 'fpick-caret');
+$fpick = static function (string $field) use ($fontCaret): string {
+    [$label, $group] = CoverData::FONT_FIELDS[$field];
+    return '<div class="fpick" data-fpick data-group="' . Html::e($group) . '" data-label="' . Html::e($label) . '">'
+        . '<input type="hidden" name="ff-' . $field . '" id="ff-' . $field . '" value="">'
+        . '<button type="button" class="fpick-btn" aria-haspopup="listbox" aria-expanded="false" aria-label="Font for ' . Html::e($label) . '" title="Font for this field">'
+        . '<span class="fpick-aa" aria-hidden="true">Aa</span><span class="fpick-name">Default</span>' . $fontCaret . '</button></div>';
+};
+/** One of the three default font groups (header / primary / secondary). */
+$gpick = static function (string $name, string $default, string $label) use ($fontCaret): string {
+    return '<div class="fpick fpick-wide" data-fpick data-kind="group" data-default="' . Html::e($default) . '" data-label="' . Html::e($label) . '">'
+        . '<input type="hidden" name="' . $name . '" id="' . $name . '" value="' . Html::e($default) . '">'
+        . '<button type="button" class="fpick-btn" aria-haspopup="listbox" aria-expanded="false" aria-labelledby="' . $name . '-lbl ' . $name . '-btn" id="' . $name . '-btn">'
+        . '<span class="fpick-aa" aria-hidden="true">Aa</span><span class="fpick-name">&hellip;</span>' . $fontCaret . '</button></div>';
+};
 ?>
 <main id="main-content" class="layout acg-layout">
 
@@ -171,17 +192,18 @@ use Tzl\Kit;
             <details class="font-block">
                 <summary><?php echo Kit::icon('font'); ?> Choose fonts <span class="font-hint">optional &mdash; good defaults are pre-selected</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
                 <div class="font-body">
+                    <p class="hint">These three are the <strong>defaults</strong>. Every field below also has its own <span class="fpick-aa-inline">Aa</span> font button &mdash; use it to give just that field another font (for example a Bangla font for the topic).</p>
                     <div class="field">
-                        <label for="versity-name-font">University name font</label>
-                        <select name="versity-name-font" id="versity-name-font" class="font-select"></select>
+                        <span class="field-label" id="versity-name-font-lbl">Header font <small>(university name)</small></span>
+                        <?php echo $gpick('versity-name-font', 'oldenglish', 'Header font'); ?>
                     </div>
                     <div class="field">
-                        <label for="primary-font">Primary font <small>(section headers)</small></label>
-                        <select name="primary-font" id="primary-font" class="font-select"></select>
+                        <span class="field-label" id="primary-font-lbl">Primary font <small>(section headers)</small></span>
+                        <?php echo $gpick('primary-font', 'alata', 'Primary font'); ?>
                     </div>
                     <div class="field">
-                        <label for="secondary-font">Secondary font <small>(names, values, body text)</small></label>
-                        <select name="secondary-font" id="secondary-font" class="font-select"></select>
+                        <span class="field-label" id="secondary-font-lbl">Secondary font <small>(names, values, body text)</small></span>
+                        <?php echo $gpick('secondary-font', 'gandhiserif', 'Secondary font'); ?>
                     </div>
                 </div>
             </details>
@@ -218,33 +240,33 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check">
+                <div class="field-head"><label class="row-check">
                     <input type="checkbox" name="bismillah" id="bismillah" checked>
                     <span class="switch" aria-hidden="true"></span>
                     <span class="row-check-label">Show Bismillah (﷽)</span>
-                </label>
+                </label><?php echo $fpick('bismillah'); ?></div>
             </div>
 
             <div class="field-group">
-                <label class="row-check">
+                <div class="field-head"><label class="row-check">
                     <input type="checkbox" name="show-versity-name" id="show-versity-name" checked>
                     <span class="switch" aria-hidden="true"></span>
                     <span class="row-check-label">University name</span>
-                </label>
+                </label><?php echo $fpick('versity'); ?></div>
                 <input type="text" class="text-input" name="versity" id="versity" placeholder="Enter university name">
             </div>
 
             <div class="field-group">
-                <label class="row-check">
+                <div class="field-head"><label class="row-check">
                     <input type="checkbox" name="show-dept-name" id="show-dept-name" checked>
                     <span class="switch" aria-hidden="true"></span>
                     <span class="row-check-label">Department name</span>
-                </label>
+                </label><?php echo $fpick('dept'); ?></div>
                 <input type="text" class="text-input" name="dept-name" id="dept-name" placeholder="Enter department">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-faculty" id="show-faculty"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Faculty / School <small>(optional)</small></span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-faculty" id="show-faculty"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Faculty / School <small>(optional)</small></span></label><?php echo $fpick('faculty'); ?></div>
                 <input type="text" class="text-input" name="faculty" id="faculty" placeholder="e.g. Faculty of Arts and Social Sciences">
             </div>
 
@@ -266,11 +288,11 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check">
+                <div class="field-head"><label class="row-check">
                     <input type="checkbox" name="show-cover-title" id="show-cover-title">
                     <span class="switch" aria-hidden="true"></span>
                     <span class="row-check-label">Cover title <small>(e.g. "Lab Report No. 3")</small></span>
-                </label>
+                </label><?php echo $fpick('cover-title'); ?></div>
                 <div class="field-row">
                     <div class="field">
                         <label for="assignment-type">Type</label>
@@ -333,27 +355,27 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-name" id="show-student-name" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Name</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-name" id="show-student-name" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Name</span></label><?php echo $fpick('student-name'); ?></div>
                 <input type="text" class="text-input" name="student-name" id="student-name" placeholder="Enter student name">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-id" id="show-student-id" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">ID</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-id" id="show-student-id" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">ID</span></label><?php echo $fpick('student-id'); ?></div>
                 <input type="text" class="text-input" name="student-id" id="student-id" placeholder="Enter student ID">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-section" id="show-student-section" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Section</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-section" id="show-student-section" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Section</span></label><?php echo $fpick('student-section'); ?></div>
                 <input type="text" class="text-input" name="student-section" id="student-section" placeholder="Enter section">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-batch" id="show-student-batch" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Batch</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-batch" id="show-student-batch" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Batch</span></label><?php echo $fpick('student-batch'); ?></div>
                 <input type="text" class="text-input" name="student-batch" id="student-batch" placeholder="Enter batch">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-program" id="show-student-program" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Program</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-program" id="show-student-program" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Program</span></label><?php echo $fpick('student-program'); ?></div>
                 <input type="text" class="text-input" name="student-program" id="student-program" placeholder="Enter program">
             </div>
 
@@ -365,22 +387,22 @@ use Tzl\Kit;
                         <option value="Trimester" selected>Trimester</option>
                     </select>
                 </div>
-                <label class="row-check"><input type="checkbox" name="show-semester" id="show-semester" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Semester value</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-semester" id="show-semester" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Semester value</span></label><?php echo $fpick('semester'); ?></div>
                 <input type="text" class="text-input" name="semester" id="semester" placeholder="e.g. Summer">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-session" id="show-student-session"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Session / academic year <small>(optional)</small></span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-session" id="show-student-session"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Session / academic year <small>(optional)</small></span></label><?php echo $fpick('student-session'); ?></div>
                 <input type="text" class="text-input" name="student-session" id="student-session" placeholder="e.g. 2025-2026">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-student-email" id="show-student-email"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Email <small>(optional)</small></span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-student-email" id="show-student-email"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Email <small>(optional)</small></span></label><?php echo $fpick('student-email'); ?></div>
                 <input type="text" class="text-input" name="student-email" id="student-email" placeholder="e.g. you@example.com">
             </div>
 
             <details class="font-block">
-                <summary><?php echo Kit::icon('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
+                <summary><?php echo Kit::icon('text-size'); ?> Sizes &amp; heading font <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
                 <div class="font-body font-grid">
                     <div class="field field-narrow">
                         <label for="student-font-size">Font size for this section <small>(pt)</small></label>
@@ -390,6 +412,7 @@ use Tzl\Kit;
                         <label for="student-heading-size">Heading &ldquo;Student Details&rdquo; / &ldquo;Submitted by&rdquo; <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="student-heading-size" id="student-heading-size" min="8" max="60" step="1" placeholder="auto">
                     </div>
+                    <div class="field"><span class="field-label">Heading font <small>(same heading)</small></span><?php echo $fpick('student-heading'); ?></div>
                 </div>
             </details>
         </section>
@@ -402,12 +425,12 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-course-code" id="show-course-code" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Course code</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-course-code" id="show-course-code" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Course code</span></label><?php echo $fpick('course-code'); ?></div>
                 <input type="text" class="text-input" name="course-code" id="course-code" placeholder="e.g. ENG 0232-2417">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-course-title" id="show-course-title" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Course title</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-course-title" id="show-course-title" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Course title</span></label><?php echo $fpick('course-title'); ?></div>
                 <div class="richtext" data-target="course-title-html">
                     <div class="richtext-toolbar">
                         <button type="button" data-cmd="bold" title="Bold"><b>B</b></button>
@@ -419,17 +442,17 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-course-teacher-name" id="show-course-teacher-name" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Teacher name</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-course-teacher-name" id="show-course-teacher-name" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Teacher name</span></label><?php echo $fpick('course-teacher-name'); ?></div>
                 <input type="text" class="text-input" name="course-teacher-name" id="course-teacher-name" placeholder="Enter teacher name">
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-course-teacher-designation" id="show-course-teacher-designation" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Teacher designation</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-course-teacher-designation" id="show-course-teacher-designation" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Teacher designation</span></label><?php echo $fpick('course-teacher-designation'); ?></div>
                 <input type="text" class="text-input" name="course-teacher-designation" id="course-teacher-designation" placeholder="e.g. Assistant Professor">
             </div>
 
             <details class="font-block">
-                <summary><?php echo Kit::icon('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
+                <summary><?php echo Kit::icon('text-size'); ?> Sizes &amp; heading font <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
                 <div class="font-body font-grid">
                     <div class="field field-narrow">
                         <label for="course-font-size">Font size for this section <small>(pt)</small></label>
@@ -439,10 +462,12 @@ use Tzl\Kit;
                         <label for="course-heading-size">Heading &ldquo;Course Details&rdquo; <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="course-heading-size" id="course-heading-size" min="8" max="60" step="1" placeholder="auto">
                     </div>
+                    <div class="field"><span class="field-label">Heading font <small>(same heading)</small></span><?php echo $fpick('course-heading'); ?></div>
                     <div class="field">
                         <label for="teacher-heading-size">Heading &ldquo;Submitted to&rdquo; <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="teacher-heading-size" id="teacher-heading-size" min="8" max="60" step="1" placeholder="auto">
                     </div>
+                    <div class="field"><span class="field-label">Heading font <small>(same heading)</small></span><?php echo $fpick('teacher-heading'); ?></div>
                     <div class="field">
                         <label for="designation-font-size">Teacher designation <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="designation-font-size" id="designation-font-size" min="8" max="60" step="1" placeholder="auto">
@@ -459,23 +484,24 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-group" id="show-group"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Show group details</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-group" id="show-group"><span class="switch" aria-hidden="true"></span><span class="row-check-label">Show group details</span></label><?php echo $fpick('group-name'); ?></div>
                 <input type="text" class="text-input" name="group-name" id="group-name" placeholder="Group name or number, e.g. Group 4" maxlength="60">
             </div>
             <div class="field-group">
                 <div class="field">
-                    <label for="group-members">Members <small>(one per line &mdash; Name, ID &mdash; up to 12)</small></label>
+                    <div class="field-head"><label for="group-members">Members <small>(one per line &mdash; Name, ID &mdash; up to 12)</small></label><?php echo $fpick('group-members'); ?></div>
                     <textarea class="text-input" name="group-members" id="group-members" rows="5" maxlength="900" placeholder="Azlan Aziz, ME601001&#10;Another Member, ME601002"></textarea>
                 </div>
             </div>
 
             <details class="font-block">
-                <summary><?php echo Kit::icon('text-size'); ?> Font size <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
+                <summary><?php echo Kit::icon('text-size'); ?> Sizes &amp; heading font <span class="font-hint">optional</span><?php echo Kit::icon('chevron-down', 'caret'); ?></summary>
                 <div class="font-body font-grid">
                     <div class="field">
                         <label for="group-heading-size">Heading &ldquo;Group Details&rdquo; <small>(pt)</small></label>
                         <input type="number" class="text-input input-narrow" name="group-heading-size" id="group-heading-size" min="8" max="60" step="1" placeholder="auto">
                     </div>
+                    <div class="field"><span class="field-label">Heading font <small>(same heading)</small></span><?php echo $fpick('group-heading'); ?></div>
                 </div>
             </details>
         </section>
@@ -490,7 +516,7 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-topic" id="show-topic" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Topic</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-topic" id="show-topic" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Topic</span></label><?php echo $fpick('topic'); ?></div>
                 <div class="richtext" data-target="topic-html">
                     <div class="richtext-toolbar">
                         <button type="button" data-cmd="bold" title="Bold"><b>B</b></button>
@@ -502,7 +528,7 @@ use Tzl\Kit;
             </div>
 
             <div class="field-group">
-                <label class="row-check"><input type="checkbox" name="show-submission-date" id="show-submission-date" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Submission date</span></label>
+                <div class="field-head"><label class="row-check"><input type="checkbox" name="show-submission-date" id="show-submission-date" checked><span class="switch" aria-hidden="true"></span><span class="row-check-label">Submission date</span></label><?php echo $fpick('submission-date'); ?></div>
                 <input type="date" class="text-input" name="submission-date" id="submission-date">
             </div>
 

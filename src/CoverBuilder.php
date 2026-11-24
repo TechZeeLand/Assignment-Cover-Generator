@@ -177,46 +177,46 @@ final class CoverBuilder
         $rows = [];
 
         if ($d->showStudentName) {
-            $rows['student'][] = ['Name', $d->studentName];
+            $rows['student'][] = ['Name', $d->fv('student-name', $d->studentName)];
         }
         if ($d->showStudentId) {
-            $rows['student'][] = ['ID', $d->studentId];
+            $rows['student'][] = ['ID', $d->fv('student-id', $d->studentId)];
         }
         if ($d->showStudentSection) {
-            $rows['student'][] = ['Section', $d->studentSection];
+            $rows['student'][] = ['Section', $d->fv('student-section', $d->studentSection)];
         }
         if ($d->showStudentBatch) {
-            $rows['student'][] = ['Batch', $d->studentBatch];
+            $rows['student'][] = ['Batch', $d->fv('student-batch', $d->studentBatch)];
         }
         if ($d->showStudentProgram) {
-            $rows['student'][] = ['Program', $d->studentProgram];
+            $rows['student'][] = ['Program', $d->fv('student-program', $d->studentProgram)];
         }
         if ($d->showSemester) {
-            $rows['student'][] = [$d->semesterType, $d->semester];
+            $rows['student'][] = [$d->semesterType, $d->fv('semester', $d->semester)];
         }
         if ($d->showStudentSession) {
-            $rows['student'][] = ['Session', $d->studentSession];
+            $rows['student'][] = ['Session', $d->fv('student-session', $d->studentSession)];
         }
         if ($d->showStudentEmail) {
-            $rows['student'][] = ['Email', $d->studentEmail];
+            $rows['student'][] = ['Email', $d->fv('student-email', $d->studentEmail)];
         }
 
         if ($d->showCourseCode) {
-            $rows['course'][] = ['Code', $d->courseCode];
+            $rows['course'][] = ['Code', $d->fv('course-code', $d->courseCode)];
         }
         if ($d->showCourseTitle) {
             $rows['course'][] = ['Title', $d->courseTitleHtml];
         }
         if ($d->showCourseTeacherName) {
-            $rows['course'][] = ['Teacher', $d->courseTeacherName];
+            $rows['course'][] = ['Teacher', $d->fv('course-teacher-name', $d->courseTeacherName)];
         }
 
         if ($d->showGroup) {
             if ($d->groupName !== '') {
-                $rows['group'][] = ['Group', $d->groupName];
+                $rows['group'][] = ['Group', $d->fv('group-name', $d->groupName)];
             }
             foreach ($d->groupMembers as $i => $member) {
-                $rows['group'][] = [(string) ($i + 1), $member['name'] . ($member['id'] !== '' ? ' (' . $member['id'] . ')' : '')];
+                $rows['group'][] = [(string) ($i + 1), $d->fv('group-members', $member['name'] . ($member['id'] !== '' ? ' (' . $member['id'] . ')' : ''))];
             }
         }
 
@@ -229,7 +229,7 @@ final class CoverBuilder
 
             if ($hasStudent) {
                 $body .= self::headerRow(
-                    self::icon($d, 'student', ($d->studentHeadingSize ?? $sectionHeaderSize) * 0.8) . 'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    self::icon($d, 'student', ($d->studentHeadingSize ?? $sectionHeaderSize) * 0.8) . $d->fv('student-heading', 'Student Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false)),
                     $hasStudent ? $sectionGapPt : 0.0,
                     $d->studentHeadingSize
                 );
@@ -240,7 +240,7 @@ final class CoverBuilder
 
             if ($hasCourse) {
                 $body .= self::headerRow(
-                    self::icon($d, 'book', ($d->courseHeadingSize ?? $sectionHeaderSize) * 0.8) . 'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    self::icon($d, 'book', ($d->courseHeadingSize ?? $sectionHeaderSize) * 0.8) . $d->fv('course-heading', 'Course Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false)),
                     $hasStudent ? $sectionGapPt : 0.0,
                     $d->courseHeadingSize
                 );
@@ -249,14 +249,14 @@ final class CoverBuilder
                 }
                 if ($d->showCourseTeacherDesignation && $d->courseTeacherDesignation !== '') {
                     $body .= '<tr><td colspan="3" class="designation-cell">'
-                        . '<p class="designation">' . htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES, 'UTF-8', false) . '</p>'
+                        . '<p class="designation">' . $d->fv('course-teacher-designation', htmlspecialchars($d->courseTeacherDesignation, ENT_QUOTES, 'UTF-8', false)) . '</p>'
                         . '</td></tr>';
                 }
             }
 
             if (!empty($rows['group'])) {
                 $body .= self::headerRow(
-                    self::icon($d, 'group', ($d->groupHeadingSize ?? $sectionHeaderSize) * 0.8) . 'Group Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false),
+                    self::icon($d, 'group', ($d->groupHeadingSize ?? $sectionHeaderSize) * 0.8) . $d->fv('group-heading', 'Group Details ' . htmlspecialchars($d->headerSuffix, ENT_QUOTES, 'UTF-8', false)),
                     $sectionGapPt,
                     $d->groupHeadingSize
                 );
@@ -282,7 +282,7 @@ final class CoverBuilder
         }
 
         $bismillah = $d->showBismillah
-            ? '<p class="bismillah">&#xFDFD;</p>'
+            ? '<p class="bismillah">' . $d->fv('bismillah', '&#xFDFD;') . '</p>'
             : '';
 
         // Optional extras - all empty unless the form turned them on, so the
@@ -300,19 +300,19 @@ final class CoverBuilder
         }
         $hasFaculty = $d->showFaculty && $d->faculty !== '';
         $facultyBlock = $hasFaculty
-            ? '<p class="faculty-name faculty-last">' . htmlspecialchars($d->faculty, ENT_QUOTES, 'UTF-8', false) . '</p>'
+            ? '<p class="faculty-name faculty-last">' . $d->fv('faculty', htmlspecialchars($d->faculty, ENT_QUOTES, 'UTF-8', false)) . '</p>'
             : '';
         $titleBlock = $d->showCoverTitle
             ? '<div style="margin-top:' . $sscale(10.0) . 'pt; margin-bottom:' . $sscale(10.0) . 'pt;"><p class="cover-title">'
-                . htmlspecialchars($d->coverTitle, ENT_QUOTES, 'UTF-8', false) . '</p></div>'
+                . $d->fv('cover-title', htmlspecialchars($d->coverTitle, ENT_QUOTES, 'UTF-8', false)) . '</p></div>'
             : '';
 
         $versityBlock = $d->showVersityName
-            ? '<h1 class="versity-name">' . htmlspecialchars($d->versityName, ENT_QUOTES, 'UTF-8', false) . '</h1>'
+            ? '<h1 class="versity-name">' . $d->fv('versity', htmlspecialchars($d->versityName, ENT_QUOTES, 'UTF-8', false)) . '</h1>'
             : '';
 
         $deptBlock = $d->showDeptName
-            ? '<p class="dept-name' . ($hasFaculty ? ' dept-tight' : '') . '">' . htmlspecialchars($d->deptName, ENT_QUOTES, 'UTF-8', false) . '</p>'
+            ? '<p class="dept-name' . ($hasFaculty ? ' dept-tight' : '') . '">' . $d->fv('dept', htmlspecialchars($d->deptName, ENT_QUOTES, 'UTF-8', false)) . '</p>'
             : '';
 
         $submissionFixed = '';
@@ -330,7 +330,7 @@ final class CoverBuilder
 
                 <div class="submission" style="position:fixed; left:' . $submissionLeft . 'pt; top:' . round($submissionTop, 2) . 'pt; width:' . $submissionWidth . 'pt;">
                     <p style="font-size:' . $submissionFontSize . 'pt;">
-                        ' . ($d->showIcons ? PdfIcons::img('clock', $d->accentColor, $submissionFontSize * 0.85) : '') . '<b>Submission Date:</b> ' . htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false) . '
+                        ' . ($d->showIcons ? PdfIcons::img('clock', $d->accentColor, $submissionFontSize * 0.85) : '') . '<b>Submission Date:</b> ' . $d->fv('submission-date', htmlspecialchars($d->submissionDateDisplay, ENT_QUOTES, 'UTF-8', false)) . '
                     </p>
                 </div>';
             }

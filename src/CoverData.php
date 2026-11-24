@@ -25,6 +25,118 @@ final class CoverData
     private const MIN_FONT_SIZE_PT = 8.0;
     private const MAX_FONT_SIZE_PT = 60.0;
 
+    /**
+     * Fields that can have their own font. key => [label, default font group].
+     * The form posts the choice as "ff-<key>" (blank = use the group font:
+     * 'versity' = header font, 'primary', 'secondary'; 'amiri' = the Bismillah's own font).
+     */
+    public const FONT_FIELDS = [
+        'bismillah'                  => ['Bismillah', 'amiri'],
+        'versity'                    => ['University name', 'versity'],
+        'dept'                       => ['Department name', 'secondary'],
+        'faculty'                    => ['Faculty / School', 'secondary'],
+        'cover-title'                => ['Cover title', 'primary'],
+        'student-name'               => ['Student name', 'secondary'],
+        'student-id'                 => ['Student ID', 'secondary'],
+        'student-section'            => ['Section', 'secondary'],
+        'student-batch'              => ['Batch', 'secondary'],
+        'student-program'            => ['Program', 'secondary'],
+        'semester'                   => ['Semester value', 'secondary'],
+        'student-session'            => ['Session', 'secondary'],
+        'student-email'              => ['Email', 'secondary'],
+        'course-code'                => ['Course code', 'secondary'],
+        'course-title'               => ['Course title', 'secondary'],
+        'course-teacher-name'        => ['Teacher name', 'secondary'],
+        'course-teacher-designation' => ['Teacher designation', 'secondary'],
+        'group-name'                 => ['Group name', 'secondary'],
+        'group-members'              => ['Group members', 'secondary'],
+        'topic'                      => ['Topic', 'secondary'],
+        'submission-date'            => ['Submission date', 'secondary'],
+        'student-heading'            => ['Student heading', 'primary'],
+        'course-heading'             => ['Course heading', 'primary'],
+        'teacher-heading'            => ['"Submitted to" heading', 'primary'],
+        'group-heading'              => ['Group heading', 'primary'],
+    ];
+
+    /** @var array<string,string> field key => font key, only for fields that have their own font */
+    public array $fontOverrides = [];
+
+    /** @var array<string,list<string>> font key => scripts it can draw (filled by fromRequest) */
+    public array $fontScripts = [];
+
+    /**
+     * Fallback font for text the field's font cannot draw. Only the scripts whose letters
+     * would otherwise print as blocks are listed.
+     */
+    private const SCRIPT_FALLBACK = [
+        // [regex for a run of that script, script key (see FontScripts), fallback font key]
+        ['/[\x{0980}-\x{09FF}\x{200C}\x{200D}]+/u', 'bengali', 'freeserif'],
+        ['/[\x{0900}-\x{097F}\x{200C}\x{200D}]+/u', 'devanagari', 'freeserif'],
+        ['/[\x{0600}-\x{06FF}\x{0750}-\x{077F}\x{FB50}-\x{FDFF}\x{FE70}-\x{FEFF}]+/u', 'arabic', 'amiri'],
+    ];
+
+    /**
+     * Wraps already-safe HTML in this field's own font, or returns it untouched
+     * when the field uses its default font - so covers made without per-field
+     * fonts render exactly as before.
+     *
+     * Either way, Bangla / Devanagari / Arabic text that the font in effect cannot draw is
+     * switched to a font that can (instead of printing solid blocks).
+     */
+    public function fv(string $field, string $html): string
+    {
+        if ($html === '') {
+            return $html;
+        }
+        $key = $this->fontOverrides[$field] ?? null;
+        $html = $this->withScriptFallback($html, $key ?? $this->defaultFontFor($field));
+        if ($key === null) {
+            return $html;
+        }
+        return '<span style="font-family:' . htmlspecialchars($key, ENT_QUOTES) . ';">' . $html . '</span>';
+    }
+
+    /** The font a field uses when it has no override of its own. */
+    private function defaultFontFor(string $field): string
+    {
+        return match (self::FONT_FIELDS[$field][1] ?? 'secondary') {
+            'primary' => $this->primaryFont,
+            'versity' => $this->versityFont,
+            'amiri'   => 'amiri',
+            default   => $this->secondaryFont,
+        };
+    }
+
+    private function withScriptFallback(string $html, string $fontKey): string
+    {
+        $have = $this->fontScripts[$fontKey] ?? null;
+        if ($have === null || $have === [] || !preg_match('/[\x{0600}-\x{09FF}\x{FB50}-\x{FEFF}]/u', $html)) {
+            return $html; // unknown font, or nothing that needs a fallback
+        }
+        $parts = preg_split('/(<[^>]*>)/', $html, -1, PREG_SPLIT_DELIM_CAPTURE);
+        if ($parts === false) {
+            return $html;
+        }
+        foreach ($parts as $i => $part) {
+            if ($part === '' || $part[0] === '<') {
+                continue; // a tag
+            }
+            foreach (self::SCRIPT_FALLBACK as [$pattern, $script, $fallback]) {
+                if (in_array($script, $have, true)) {
+                    continue;
+                }
+                $part = (string) preg_replace_callback($pattern, static function (array $m) use ($fallback): string {
+                    // A lone joiner is not text.
+                    return preg_match('/[^\x{200C}\x{200D}]/u', $m[0]) === 1
+                        ? '<span style="font-family:' . $fallback . ';">' . $m[0] . '</span>'
+                        : $m[0];
+                }, $part);
+            }
+            $parts[$i] = $part;
+        }
+        return implode('', $parts);
+    }
+
     /** Key of the selected cover design (see Templates\TemplateRegistry). */
     public string $design;
 
@@ -157,6 +269,16 @@ final class CoverData
         $c->primaryFont   = $fonts->resolveFontKey((string) ($data['primary-font'] ?? 'alata'));
         $c->secondaryFont = $fonts->resolveFontKey((string) ($data['secondary-font'] ?? 'gandhiserif'));
 
+        foreach ($fonts->listFonts() as $f) {
+            $c->fontScripts[$f['key']] = $f['scripts'];
+        }
+        foreach (array_keys(self::FONT_FIELDS) as $field) {
+            $key = $fonts->resolveOptionalKey($data['ff-' . $field] ?? null);
+            if ($key !== null) {
+                $c->fontOverrides[$field] = $key;
+            }
+        }
+
         $c->primaryColor   = Sanitize::color($data['primary-color'] ?? null, '#000000');
         $c->secondaryColor = Sanitize::color($data['secondary-color'] ?? null, '#000000');
 
@@ -228,7 +350,7 @@ final class CoverData
         $c->courseCode     = Sanitize::text($data['course-code'] ?? '', 40);
 
         $c->showCourseTitle   = Sanitize::bool($data['show-course-title'] ?? null);
-        $c->courseTitleHtml   = Sanitize::richText($data['course-title-html'] ?? ($data['course-title'] ?? ''), 300);
+        $c->courseTitleHtml   = $c->fv('course-title', Sanitize::richText($data['course-title-html'] ?? ($data['course-title'] ?? ''), 300));
 
         $c->showCourseTeacherName = Sanitize::bool($data['show-course-teacher-name'] ?? null);
         $c->courseTeacherName     = Sanitize::text($data['course-teacher-name'] ?? '', 80);
@@ -237,7 +359,7 @@ final class CoverData
         $c->courseTeacherDesignation     = Sanitize::text($data['course-teacher-designation'] ?? '', 120);
 
         $c->showTopic     = Sanitize::bool($data['show-topic'] ?? null);
-        $c->topicHtml     = Sanitize::richText($data['topic-html'] ?? ($data['topic'] ?? ''), 400);
+        $c->topicHtml     = $c->fv('topic', Sanitize::richText($data['topic-html'] ?? ($data['topic'] ?? ''), 400));
 
         $c->showSubmissionDate = Sanitize::bool($data['show-submission-date'] ?? null);
         $c->submissionDateDisplay = self::formatDate((string) ($data['submission-date'] ?? ''));

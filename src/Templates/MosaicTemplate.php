@@ -154,7 +154,7 @@ CSS;
             $date = '<div style="position:fixed; left:' . round($left, 2) . 'pt; top:' . round(self::PAGE_H - self::DATE_BOTTOM - $h, 2)
                 . 'pt; width:' . round($w, 2) . 'pt; text-align:right;"><p style="margin:0; font-size:' . $z['submission']
                 . 'pt; font-family:' . self::e($d->secondaryFont) . '; color:' . $acc . ';"><b>Submission Date:</b> '
-                . self::e($d->submissionDateDisplay) . '</p></div>';
+                . self::dateHtml($d) . '</p></div>';
         }
 
         // ---- content ----

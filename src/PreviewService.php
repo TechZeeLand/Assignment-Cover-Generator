@@ -34,16 +34,20 @@ final class PreviewService
         return function_exists('proc_open') && self::binary() !== null;
     }
 
-    /** Per-IP limit (the preview is the one expensive public endpoint). Counts this request. */
-    public static function throttled(): bool
+    /**
+     * Per-IP limit (the preview is the one expensive public endpoint; font uploads use it too,
+     * with their own prefix). Counts this request.
+     */
+    public static function throttled(string $prefix = 'p:', int $max = self::MAX_PER_MINUTE, int $window = 60): bool
     {
         try {
             $pdo = Db::pdo();
-            $key = 'p:' . Http::clientIp();
-            $pdo->prepare('DELETE FROM login_attempts WHERE ts < :t')->execute([':t' => time() - 900]);
+            $key = $prefix . Http::clientIp();
+            // Rows live for a day at most; each bucket only counts its own window.
+            $pdo->prepare('DELETE FROM login_attempts WHERE ts < :t')->execute([':t' => time() - 86400]);
             $stmt = $pdo->prepare('SELECT COUNT(*) FROM login_attempts WHERE ip = :k AND ts > :t');
-            $stmt->execute([':k' => $key, ':t' => time() - 60]);
-            if ((int) $stmt->fetchColumn() >= self::MAX_PER_MINUTE) {
+            $stmt->execute([':k' => $key, ':t' => time() - $window]);
+            if ((int) $stmt->fetchColumn() >= $max) {
                 return true;
             }
             $pdo->prepare('INSERT INTO login_attempts (ip, ts) VALUES (:k, :t)')->execute([':k' => $key, ':t' => time()]);

@@ -52,6 +52,19 @@ Fill in a form, click **Generate**, get a print-ready PDF.
 - **Custom fonts** — pick from the built-in fonts, or upload your own
   `.ttf`/`.otf` files right from the app. Uploaded fonts are saved on the
   server and become available to everyone using the app.
+- **A font for every field** — three default font groups (header, primary,
+  secondary) plus an **Aa** button on every field (university name, student
+  name, topic, headings ...) that overrides the default for just that field,
+  e.g. a Bangla font for the topic only. Leave it on "Default" to follow the
+  group. Choices are part of "Save my details".
+- **Font list that shows the fonts** — every option in the font dropdown is
+  drawn in its own typeface, with a sample and a language tag (Bangla, Arabic,
+  ...) for non-Latin fonts, plus search.
+- **Bangla / Arabic / Devanagari done right** — uploaded fonts for these scripts
+  are shaped with OpenType (conjuncts and vowel signs come out correctly), and
+  if text is typed in a font that lacks its letters, that text is switched to a
+  font that has them instead of printing blocks. Legacy Bijoy-style fonts
+  (SutonnyMJ ...) work too, but need Bijoy/ANSI text, not Unicode Bangla.
 - **Rich text** — bold/italic formatting for the Course Title and Topic fields.
 - **Full color control** — separate primary/secondary colors, plus an optional
   distinct color for the title and border.
@@ -264,23 +277,21 @@ Then open `http://localhost:1025`.
 ├── docker-compose.yml       # Portainer / docker compose stack definition
 ├── public/                  # Web root
 │   ├── index.php             # The form page
-│   ├── generate.php          # Handles POST -> builds & streams the PDF
 │   ├── auth/                  # Google sign-in start / callback / sign-out / delete account
 │   ├── api/profile.php        # Save / load / delete a signed-in user's saved details
 │   ├── admin/                 # Admin portal (dashboard, designs, sign-in, ads, users, ...)
 │   ├── cookie-policy.php      # Cookie policy (plus privacy-policy.php, terms-and-conditions.php)
 │   ├── ads-txt.php            # Serves /ads.txt from the admin settings
-│   ├── fonts.php              # Returns the current font list as JSON
-│   ├── upload_font.php        # Handles custom font uploads
-│   ├── font_file.php           # Streams a stored font file (for the font-select dropdown preview)
 │   └── assets/
 │       ├── css/style.css        # All styling (responsive)
 │       ├── js/app.js             # Rich text, font upload, and field-toggle logic
+│       ├── js/fontpicker.js      # The font dropdown (each font shown in its own typeface)
 │       ├── icons/{ui,social,other}/*.svg  # The SVG icon collection (inlined by src/Icon.php)
 │       └── fonts/Amiri-Regular.ttf  # Bundled font for the Bismillah glyph
 ├── src/                      # PHP application code (PSR-4: App\)
 │   ├── Config.php              # Central constants (paths, built-in fonts, limits)
 │   ├── FontManager.php          # Built-in + custom font registry, mPDF font config
+│   ├── FontScripts.php          # Reads a font's character table (which languages it covers)
 │   ├── Sanitize.php              # Input sanitization (text, color, rich text)
 │   ├── Icon.php                   # Inlines SVG icons from public/assets/icons/
 │   ├── Templates/                 # One class per cover design + TemplateRegistry
@@ -304,8 +315,9 @@ Then open `http://localhost:1025`.
   `SameSite=Lax` cookies (and `Secure` over HTTPS), the Google flow uses
   `state`, `nonce` and PKCE, and uploaded logos are re-encoded through GD.
 - Font uploads are validated by file extension **and** a binary signature
-  check (so a renamed `.exe` won't pass as a `.ttf`), size-limited to 2 MB
-  per file, and stored with sanitized, generated filenames.
+  check (so a renamed `.exe` won't pass as a `.ttf`), opened to make sure the
+  font is readable, size-limited to 2 MB per file, rate-limited per network
+  (12 uploads/hour, 80 fonts in total) and stored with generated filenames.
 - Font uploads are open to anyone who can reach the app, by design (per the
   project's goal of a shared, growing font library). If you're deploying
   this somewhere more exposed than a home server/LAN, switch uploads off in
@@ -340,9 +352,13 @@ Then open `http://localhost:1025`.
   `public/assets/icons/ui/` (brand glyphs go in `social/`) and use it with
   `<?php echo \App\Icon::svg('my-icon'); ?>`. It inherits the text color and is
   sized from CSS (`1em` by default).
-- **Add a built-in font:** add an entry to `Config::builtInFonts()` — but
-  note built-ins are expected to map to mPDF's core font aliases (`sans`,
-  `serif`, `mono`); for anything else, use the in-app font uploader instead.
+- **Add a built-in font:** put the `.ttf` in `public/assets/fonts/`, then add it
+  to `Config::builtInFonts()` (name), `Config::builtInFontFiles()` (file) and
+  the mPDF font data in `FontManager::buildMpdfFontConfig()`. Or just use the
+  in-app font uploader. Note `sans`/`serif`/`mono` are mPDF's DejaVu fonts.
+- **Add a field that can have its own font:** add it to `CoverData::FONT_FIELDS`,
+  wrap its output with `$d->fv('<key>', $html)` in the templates, and add
+  `$fpick('<key>')` next to its input in `views/generator.php`.
 - **Change the page size/margins:** see `PdfService::render()`.
 
 ## Credits

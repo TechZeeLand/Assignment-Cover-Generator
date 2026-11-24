@@ -165,7 +165,7 @@ final class Web
 
         Layout::head('', '', ['css' => ['assets/css/acg.css']]);
         require dirname(__DIR__) . '/views/generator.php';
-        Layout::foot(['js' => ['assets/js/app.js', 'assets/js/preview.js']]);
+        Layout::foot(['js' => ['assets/js/fontpicker.js', 'assets/js/app.js', 'assets/js/preview.js']]);
     }
 
     /** Live preview: PNG of page 1 of the PDF that /generate would produce (nothing stored or counted). */
@@ -239,33 +239,19 @@ final class Web
     {
         $key = (string) ($_GET['key'] ?? '');
         $variant = (string) ($_GET['variant'] ?? 'regular');
-        if (!preg_match('/^[a-z0-9\-]{1,32}$/', $key) || !in_array($variant, ['regular', 'bold', 'italic', 'bolditalic'], true)) {
+        if (!preg_match('/^[a-z0-9\-]{1,40}$/', $key) || !in_array($variant, ['regular', 'bold', 'italic', 'bolditalic'], true)) {
             http_response_code(400);
             exit('Invalid request.');
         }
-        $indexFile = Config::fontsStoragePath() . '/index.json';
-        $index = is_file($indexFile) ? json_decode((string) file_get_contents($indexFile), true) : [];
-        $index = is_array($index) ? $index : [];
-
-        $filename = null;
-        foreach ($index as $entry) {
-            if (($entry['key'] ?? null) === $key) {
-                $filename = $entry['files'][$variant] ?? null;
-                break;
-            }
-        }
-        if ($filename === null) {
+        $path = (new FontManager())->webFile($key, $variant);
+        if ($path === null) {
             http_response_code(404);
             exit('Font not found.');
         }
-        $path = Config::fontsStoragePath() . '/' . basename((string) $filename);
-        if (!is_file($path)) {
-            http_response_code(404);
-            exit('Font file missing.');
-        }
         $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
         header('Content-Type: ' . ($ext === 'otf' ? 'font/otf' : 'font/ttf'));
-        header('Cache-Control: public, max-age=86400');
+        // The picker adds ?v=<file time>, so a long cache is safe.
+        header('Cache-Control: public, max-age=604800');
         header('X-Content-Type-Options: nosniff');
         header('Content-Length: ' . (string) filesize($path));
         readfile($path);
@@ -277,6 +263,10 @@ final class Web
         try {
             if (!Settings::bool('font_uploads_enabled')) {
                 Http::json(['ok' => false, 'error' => 'Font uploads are turned off on this site.'], 403);
+            }
+            if (PreviewService::throttled('u:', 12, 3600)) {
+                header('Retry-After: 600');
+                Http::json(['ok' => false, 'error' => 'Too many uploads from your network. Please try again in a little while.'], 429);
             }
             $fonts = new FontManager();
             $familyName = (string) ($_POST['font-name'] ?? '');
